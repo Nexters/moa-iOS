@@ -1,0 +1,98 @@
+# SwiftLint Configuration
+
+##############################
+# 기본 설정
+##############################
+
+disabled_rules:
+  - trailing_whitespace
+  - todo
+  - force_cast
+  - function_parameter_count
+  - type_body_length
+  - file_length
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - contains_over_first_not_nil
+  - sorted_imports
+  - weak_delegate
+  - closure_spacing
+  - fatal_error_message
+  - redundant_nil_coalescing
+  - prefer_self_type_over_type_of_self
+  - vertical_parameter_alignment_on_call
+
+##############################
+# 경로 설정
+##############################
+
+included:
+  - Moa
+
+excluded:
+  - Pods
+  - Carthage
+  - DerivedData
+  - Tuist
+  - .build
+  - fastlane
+  - Generated
+
+##############################
+# Rule 세부 설정
+##############################
+
+line_length:
+  warning: 120
+  error: 180
+  ignores_comments: true
+  ignores_urls: true
+
+function_body_length:
+  warning: 60
+  error: 100
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+type_name:
+  min_length: 3
+  max_length:
+    warning: 40
+    error: 50
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+    - URL
+    - x
+    - y
+    - z
+
+nesting:
+  type_level:
+    warning: 2
+
+trailing_comma:
+  mandatory_comma: true
+
+vertical_whitespace:
+  max_empty_lines: 2
+
+##############################
+# 커스텀 룰
+##############################
+
+custom_rules:
+  no_force_unwrap:
+    name: "Force Unwrap"
+    regex: '(\s|^)[^=]!=?\s'
+    message: "Force unwrap은 정말 필요한 경우만 사용하세요"
+    severity: warning
