@@ -7,6 +7,12 @@
 
 import UIKit
 
+/*
+ UI에서 직접 팔레트를 사용하지 않고, Semantic에 기반한 색상 사용
+ 화면/컴포넌트에서 App.Color.*만 사용하고, 내부 구현(Palette)은 직접 참조하지 않음
+ 실제 색상 값은 하단의 Palette에서 관리되며, 디자인 변경시 매핑만 수정
+ */
+
 enum AppColor {
     enum Background {
         static let primary = Palette.Grayscale.gray90
@@ -62,6 +68,7 @@ enum AppColor {
     }
 }
 
+// MARK: - Assets의 Color를 코드 상수로 매핑한 값들
 private extension AppColor {
     enum Palette {
         enum Dim {
