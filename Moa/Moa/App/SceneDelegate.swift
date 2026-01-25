@@ -10,7 +10,7 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    private var router: AppRouting?
 
     func scene(
         _ scene: UIScene,
@@ -19,14 +19,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
         
+        let navigationController = UINavigationController()
+        let router = AppRouter(navigationController: navigationController)
+        self.router = router
+        
         let window = UIWindow(windowScene: windowScene)
-        
-        // 첫 화면을 코드로 설정 (스토리보드 없음)
-        let rootVC = UINavigationController(rootViewController: SplashViewController())
-        window.rootViewController = rootVC
-        
-        self.window = window
+        window.rootViewController = navigationController
         window.makeKeyAndVisible()
+        self.window = window
+        router.start()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
