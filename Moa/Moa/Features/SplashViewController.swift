@@ -24,7 +24,7 @@ final class SplashViewController: BaseViewController {
     }
     
     override func setupUI() {
-        view.backgroundColor = .green
+        view.backgroundColor = AppColor.IconAndText.green
     }
     
     override func bind() {

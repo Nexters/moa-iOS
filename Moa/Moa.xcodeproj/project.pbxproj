@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 		8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8D3FA17F2F23DF9A00EAE229 /* SnapKit */; };
+		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
