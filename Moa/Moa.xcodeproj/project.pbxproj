@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 		8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8D3FA17F2F23DF9A00EAE229 /* SnapKit */; };
+		CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE8182F279DA800CC8D17 /* CombineMoya */; };
+		CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE81A2F279DA800CC8D17 /* Moya */; };
+		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,7 +44,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */,
 				8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */,
+				CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +92,8 @@
 			name = Moa;
 			packageProductDependencies = (
 				8D3FA17F2F23DF9A00EAE229 /* SnapKit */,
+				CD2DE8182F279DA800CC8D17 /* CombineMoya */,
+				CD2DE81A2F279DA800CC8D17 /* Moya */,
 			);
 			productName = Moa;
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
@@ -119,6 +125,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DAC508E2F20FF7100FAA818 /* Products */;
@@ -400,6 +407,14 @@
 				minimumVersion = 5.7.1;
 			};
 		};
+		CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -407,6 +422,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		CD2DE8182F279DA800CC8D17 /* CombineMoya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = CombineMoya;
+		};
+		CD2DE81A2F279DA800CC8D17 /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
