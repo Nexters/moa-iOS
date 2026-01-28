@@ -11,7 +11,9 @@ import Moya
 final class AppContainer {
     
     static let shared = AppContainer()
-
+    
+    private init() {}
+    
     // MARK: - Network
     lazy var moyaProvider: MoyaProvider<MultiTarget> = {
 
