@@ -14,9 +14,14 @@ protocol AppRouting: AnyObject {
 
 final class AppRouter: AppRouting {
     private let navigationController: UINavigationController
+    private let container: AppContainer
     
-    init(navigationController: UINavigationController) {
+    init(
+        navigationController: UINavigationController,
+        container: AppContainer
+    ) {
         self.navigationController = navigationController
+        self.container = container
     }
     
     func start() {
