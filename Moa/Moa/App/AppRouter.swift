@@ -35,6 +35,7 @@ final class AppRouter: AppRouting {
             let vc = SplashViewController(viewModel: vm, router: self)
             navigationController.setViewControllers([vc], animated: animated)
         case .login:
+            print("로그인으로 이동")
             break
         case .home:
             break

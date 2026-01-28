@@ -11,20 +11,9 @@ import Combine
 
 final class SplashViewController: BaseViewController {
     private let viewModel: SplashViewModel
-    private unowned let router: AppRouting
+    private weak var router: AppRouting?
     
-    private let stackView: UIStackView = {
-        let v = UIStackView()
-        v.axis = .vertical
-        v.spacing = 12
-        v.alignment = .fill
-        v.distribution = .fill
-        return v
-    }()
-    
-    private let primaryButton = AppButton()
-    private let secondaryButton = AppButton()
-    private let tertiaryButton = AppButton()
+    private let logoImageView = UIImageView()
     
     init(viewModel: SplashViewModel, router: AppRouting) {
         self.viewModel = viewModel
@@ -38,25 +27,16 @@ final class SplashViewController: BaseViewController {
     
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
-        view.addSubview(stackView)
         
-        stackView.addArrangedSubview(primaryButton)
-        stackView.addArrangedSubview(secondaryButton)
-        stackView.addArrangedSubview(tertiaryButton)
+        logoImageView.image = UIImage(resource: .Logo.splash)
+        logoImageView.contentMode = .scaleAspectFit
         
-        primaryButton.setTitle("Primary", for: .normal)
-        primaryButton.applyStyle(.primary())
+        view.addSubview(logoImageView)
         
-        secondaryButton.setTitle("Secondary", for: .normal)
-        secondaryButton.applyStyle(.secondary())
-        
-        tertiaryButton.setTitle("Tertiary(Disabled)", for: .normal)
-        tertiaryButton.applyStyle(.tertiary())
-        tertiaryButton.isEnabled = false
-        
-        stackView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
+        logoImageView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().multipliedBy(0.9)
+            make.width.lessThanOrEqualToSuperview().multipliedBy(0.5)
         }
     }
     
@@ -65,7 +45,7 @@ final class SplashViewController: BaseViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] route in
                 guard let self else { return }
-                self.router.navigate(to: route, animated: true)
+                self.router?.navigate(to: route, animated: true)
             }
             .store(in: &cancellables)
     }
