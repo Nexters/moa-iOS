@@ -15,7 +15,7 @@ final class SplashViewModel {
     
     var route: AnyPublisher<AppRoute, Never> { routeSubject.eraseToAnyPublisher() }
     
-    init(minDisplayTime: TimeInterval = 2.0) {
+    init(minDisplayTime: TimeInterval = 1.0) {
         self.minDisplayTime = minDisplayTime
     }
     

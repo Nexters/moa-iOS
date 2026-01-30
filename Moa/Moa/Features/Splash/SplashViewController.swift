@@ -26,8 +26,6 @@ final class SplashViewController: BaseViewController {
     }
     
     override func setupUI() {
-        view.backgroundColor = AppColor.Background.primary
-        
         logoImageView.image = UIImage(resource: .Logo.splash)
         logoImageView.contentMode = .scaleAspectFit
         

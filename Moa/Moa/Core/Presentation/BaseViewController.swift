@@ -13,8 +13,13 @@ class BaseViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupBaseUI()
         setupUI()
         bind()
+    }
+    
+    private func setupBaseUI() {
+        view.backgroundColor = AppColor.Background.primary
     }
     
     func setupUI() {}
