@@ -75,6 +75,8 @@ identifier_name:
     - x
     - y
     - z
+  allowed_symbols:
+    - _
 
 nesting:
   type_level:
