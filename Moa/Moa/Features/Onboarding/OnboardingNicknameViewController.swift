@@ -168,7 +168,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     }
     
     @objc private func didTapRandomChange() {
-        // TODO: 닉네임 랜덤 변경 로직
+        viewModel.makeRandomNickname()
         updateNextButtonState()
     }
     
