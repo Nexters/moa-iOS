@@ -8,7 +8,7 @@
 import Combine
 
 class BaseViewModel<Output> {
-    fileprivate let outputSubject = PassthroughSubject<Output, Never>()
+    private let outputSubject = PassthroughSubject<Output, Never>()
     var outputs: AnyPublisher<Output, Never> { outputSubject.eraseToAnyPublisher() }
 
     func send(_ output: Output) {

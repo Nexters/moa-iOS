@@ -29,7 +29,7 @@ final class AppRouter: AppRouting {
         navigate(to: .splash, animated: false)
     }
     
-    func navigate(to route: AppRoute, animated: Bool) {
+    func navigate(to route: AppRoute, animated: Bool = true) {
         switch route {
         case .splash:
             navigationController.setViewControllers([makeSplash()], animated: animated)
@@ -66,7 +66,7 @@ private extension AppRouter {
         let coordinator = OnboardingCoordinator(
             finish: { [weak self] in
                 self?.onboardingCoordinator = nil
-                self?.navigate(to: .home, animated: true)
+                self?.navigate(to: .home)
             }
         )
         
