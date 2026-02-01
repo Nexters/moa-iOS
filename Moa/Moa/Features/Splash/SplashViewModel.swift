@@ -8,12 +8,13 @@
 import Foundation
 import Combine
 
-final class SplashViewModel {
+enum SplashOutput {
+    case loginChecked(isLoggedIn: Bool)
+}
+
+final class SplashViewModel: BaseViewModel<SplashOutput> {
     private let minDisplayTime: TimeInterval
-    private let routeSubject = PassthroughSubject<AppRoute, Never>()
     private var cancellables = Set<AnyCancellable>()
-    
-    var route: AnyPublisher<AppRoute, Never> { routeSubject.eraseToAnyPublisher() }
     
     init(minDisplayTime: TimeInterval = 1.0) {
         self.minDisplayTime = minDisplayTime
@@ -24,7 +25,7 @@ final class SplashViewModel {
             .delay(for: .seconds(minDisplayTime), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 // TODO: 로그인 여부 검증 및 분기 (로그인/홈)
-                self?.routeSubject.send(.login)
+                self?.send(.loginChecked(isLoggedIn: false))
             }
             .store(in: &cancellables)
     }

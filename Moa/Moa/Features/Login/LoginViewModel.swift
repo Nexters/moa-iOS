@@ -8,7 +8,13 @@
 import Foundation
 import Combine
 
-final class LoginViewModel {
-    private let routeSubject = PassthroughSubject<AppRoute, Never>()
-    var route: AnyPublisher<AppRoute, Never> { routeSubject.eraseToAnyPublisher() }
+enum LoginOutput {
+    case loginSucceed
+}
+
+final class LoginViewModel: BaseViewModel<LoginOutput> {
+    func didTapLogin() {
+        // TODO: 로그인 로직
+        send(.loginSucceed)
+    }
 }

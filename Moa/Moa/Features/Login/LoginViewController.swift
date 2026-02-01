@@ -60,22 +60,40 @@ final class LoginViewController: BaseViewController {
         loginButtonStackView.addArrangedSubview(appleLoginButton)
         
         logoImageView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(0)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(-16)
             make.centerX.equalToSuperview()
             make.width.equalToSuperview()
             make.height.equalTo(logoImageView.snp.width).multipliedBy(0.8)
+            make.bottom.lessThanOrEqualTo(loginButtonStackView.snp.top).offset(-24)
         }
         
-        kakaoLoginButton.snp.makeConstraints { $0.height.equalTo(64) }
-        appleLoginButton.snp.makeConstraints { $0.height.equalTo(64) }
+        [kakaoLoginButton, appleLoginButton].forEach { $0.snp.makeConstraints { $0.height.equalTo(64) } }
         
         loginButtonStackView.snp.makeConstraints { make in
-            make.left.right.equalTo(view.safeAreaLayoutGuide).inset(20)
-            make.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide).inset(24)
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
         }
     }
     
-//    override func bind() {
-//        <#code#>
-//    }
+    override func bind() {
+        bindOutput(viewModel.outputs) { [weak router] output in
+            switch output {
+            case .loginSucceed:
+                router?.navigate(to: .onboarding, animated: true)
+            }
+        }
+    }
+    
+    override func setupActions() {
+        kakaoLoginButton.addTarget(self, action: #selector(didTapKakao), for: .touchUpInside)
+        appleLoginButton.addTarget(self, action: #selector(didTapApple), for: .touchUpInside)
+    }
+    
+    @objc private func didTapKakao() {
+        viewModel.didTapLogin()
+    }
+    
+    @objc private func didTapApple() {
+        viewModel.didTapLogin()
+    }
 }

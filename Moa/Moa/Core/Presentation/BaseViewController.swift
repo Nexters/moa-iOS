@@ -15,6 +15,7 @@ class BaseViewController: UIViewController {
         super.viewDidLoad()
         setupBaseUI()
         setupUI()
+        setupActions()
         bind()
     }
     
@@ -23,5 +24,16 @@ class BaseViewController: UIViewController {
     }
     
     func setupUI() {}
+    func setupActions() {}
     func bind() {}
+    
+    func bindOutput<Output>(
+        _ publisher: AnyPublisher<Output, Never>,
+        handler: @escaping (Output) -> Void
+    ) {
+        publisher
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: handler)
+            .store(in: &cancellables)
+    }
 }

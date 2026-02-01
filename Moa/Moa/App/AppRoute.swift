@@ -10,6 +10,7 @@ import Foundation
 enum AppRoute {
     case splash
     case login
+    case onboarding
     case home
     case settings
     case history

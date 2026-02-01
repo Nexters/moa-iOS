@@ -39,13 +39,13 @@ final class SplashViewController: BaseViewController {
     }
     
     override func bind() {
-        viewModel.route
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] route in
-                guard let self else { return }
-                self.router?.navigate(to: route, animated: true)
+        bindOutput(viewModel.outputs) { [weak router] output in
+            switch output {
+            case let .loginChecked(isLoggedIn):
+                let destination: AppRoute = isLoggedIn ? .home : .login
+                router?.navigate(to: destination, animated: false)
             }
-            .store(in: &cancellables)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
