@@ -9,58 +9,65 @@ import UIKit
 import SnapKit
 
 final class HomeNavigationBarView: UIView {
-
-    private let titleLabel = UILabel()
-    private let calendarButton = AppIconButton()
-    private let settingButton = AppIconButton()
-
+    
+    // MARK: - UI Components
+    
+    private lazy var titleImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(resource: .Image.moaLogoTypo)
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private lazy var calendarButton: AppIconButton = {
+        AppIconButton(image: UIImage(resource: .Image.calendar))
+    }()
+    
+    private lazy var settingButton: AppIconButton = {
+        AppIconButton(image: UIImage(resource: .Image.setting))
+    }()
+    
+    private lazy var rightStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [calendarButton, settingButton])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 0
+        return stack
+    }()
+    
+    private lazy var containerStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [
+            titleImageView,
+            UIView(),
+            rightStackView
+        ])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        return stack
+    }()
+    
+    // MARK: - Init
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
         setupLayout()
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
-
-    private func setupUI() {
-        titleLabel.text = "Moa"
-        titleLabel.textColor = .white
-        titleLabel.font = AppTypography.t3_500.font()
-
-        calendarButton.setImage(UIImage(systemName: "calendar"), for: .normal)
-        settingButton.setImage(UIImage(systemName: "gearshape"), for: .normal)
-
-        calendarButton.tintColor = .white
-        settingButton.tintColor = .white
-    }
-
+    
+    // MARK: - Layout
+    
     private func setupLayout() {
-        let rightStack = UIStackView(arrangedSubviews: [
-            calendarButton,
-            settingButton
-        ])
-        rightStack.axis = .horizontal
-        rightStack.spacing = 16
-        rightStack.alignment = .center
-
-        let container = UIStackView(arrangedSubviews: [
-            titleLabel,
-            UIView(),
-            rightStack
-        ])
-        container.axis = .horizontal
-        container.alignment = .center
-
-        addSubview(container)
-
-        container.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(20)
+        
+        addSubview(containerStackView)
+        
+        containerStackView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
-
-        [calendarButton, settingButton].forEach {
-            $0.snp.makeConstraints {
-                $0.width.height.equalTo(32)
-            }
+        
+        titleImageView.snp.makeConstraints {
+            $0.top.bottom.equalToSuperview()
+            $0.leading.equalToSuperview().inset(4)
         }
     }
 }
