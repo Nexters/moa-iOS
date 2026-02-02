@@ -12,8 +12,13 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Constants
     
     private enum Constant {
+        static let nickname = "닉네임"
+        static let nicknameSuffix = "로 시작할래요"
+        static let nicknamePlaceholder = "닉네임을 입력해주세요"
+        static let nicknameHint = "10자까지 입력할 수 있어요"
+        static let randomChange = "랜덤변경"
+        static let next = "다음"
         static let nicknameMaxLength: Int = 10
-        static let nicknameHintText = "10자까지 입력할 수 있어요"
     }
     
     // MARK: - Dependencies
@@ -35,8 +40,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     /// "닉네임"
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "닉네임"
-        label.textColor = AppColor.IconAndText.highEmphasis
+        label.text = Constant.nickname
         label.applyTextStyle(.init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
@@ -49,7 +53,7 @@ final class OnboardingNicknameViewController: BaseViewController {
         tf.textInsets = .init(top: 16, left: 20, bottom: 16, right: 20)
         tf.text = "1억꿈꾸는악어"
         tf.attributedPlaceholder = NSAttributedString(
-            string: "닉네임을 입력해주세요",
+            string: Constant.nicknamePlaceholder,
             attributes: [
                 .foregroundColor: AppColor.IconAndText.disabled,
                 .font: AppTypography.h3_700.font()
@@ -73,8 +77,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     /// "로 시작할래요"
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "로 시작할래요"
-        label.textColor = AppColor.IconAndText.highEmphasis
+        label.text = Constant.nicknameSuffix
         label.applyTextStyle(.init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
@@ -87,7 +90,7 @@ final class OnboardingNicknameViewController: BaseViewController {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(resource: .Icon.iconRefresh).withRenderingMode(.alwaysOriginal)
         
-        var title = AttributedString("랜덤변경")
+        var title = AttributedString(Constant.randomChange)
         title.font = AppTypography.b2_500.font()
         title.foregroundColor = AppColor.IconAndText.highEmphasis
         config.attributedTitle = title
@@ -104,7 +107,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     private let nicknameHintLabel: UILabel = {
         let label = UILabel()
-        label.text = Constant.nicknameHintText
+        label.text = Constant.nicknameHint
         label.applyTextStyle(.init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.lowEmphasis
@@ -190,7 +193,7 @@ final class OnboardingNicknameViewController: BaseViewController {
 
 private extension OnboardingNicknameViewController {
     func configureViews() {
-        nextButton.setTitle("다음", for: .normal)
+        nextButton.setTitle(Constant.next, for: .normal)
         nextButton.applyStyle(.primary())
         
         spacerTop.backgroundColor = .clear
