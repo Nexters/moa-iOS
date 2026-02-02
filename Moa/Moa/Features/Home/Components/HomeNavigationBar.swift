@@ -66,7 +66,7 @@ final class HomeNavigationBarView: UIView {
         }
         
         titleImageView.snp.makeConstraints {
-            $0.top.bottom.equalToSuperview()
+            $0.top.bottom.equalTo(containerStackView)
             $0.leading.equalToSuperview().inset(4)
         }
     }
