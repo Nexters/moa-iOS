@@ -8,21 +8,25 @@
 import Foundation
 import Combine
 
-final class SplashViewModel {
+enum SplashOutput {
+    case loginChecked(isLoggedIn: Bool)
+}
+
+final class SplashViewModel: BaseViewModel<SplashOutput> {
     private let minDisplayTime: TimeInterval
-    private let routeSubject = PassthroughSubject<AppRoute, Never>()
-    var route: AnyPublisher<AppRoute, Never> { routeSubject.eraseToAnyPublisher() }
+    private var cancellables = Set<AnyCancellable>()
     
     init(minDisplayTime: TimeInterval = 1.0) {
         self.minDisplayTime = minDisplayTime
     }
     
     func start() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + minDisplayTime) { [weak self] in
-            guard let self else { return }
-            
-            // TODO: 로그인 여부 검증 및 분기 (로그인/홈)
-            self.routeSubject.send(.login)
-        }
+        Just(())
+            .delay(for: .seconds(minDisplayTime), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                // TODO: 로그인 여부 검증 및 분기 (로그인/홈)
+                self?.send(.loginChecked(isLoggedIn: false))
+            }
+            .store(in: &cancellables)
     }
 }
