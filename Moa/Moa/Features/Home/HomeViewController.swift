@@ -38,8 +38,6 @@ final class HomeViewController: BaseViewController {
     }
     
     override func setupUI() {
-        view.backgroundColor = AppColor.Background.primary
-        
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
 
@@ -76,4 +74,9 @@ final class HomeViewController: BaseViewController {
             $0.bottom.equalToSuperview().inset(24)
         }
     }
+}
+
+@available(iOS 17.0)
+#Preview {
+    HomeViewController()
 }
