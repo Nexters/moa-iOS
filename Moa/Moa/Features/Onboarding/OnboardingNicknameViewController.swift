@@ -19,6 +19,7 @@ final class OnboardingNicknameViewController: BaseViewController {
         static let randomChange = "랜덤변경"
         static let next = "다음"
         static let nicknameMaxLength: Int = 10
+        static let defaultNickname = "1억꿈꾸는악어"
     }
     
     // MARK: - Dependencies
@@ -26,7 +27,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     private let viewModel: OnboardingNicknameViewModel
     private let onNext: (() -> Void)
     
-    // MARK: - UI
+    // MARK: - UI Components
     
     private let stackView: UIStackView = {
         let v = UIStackView()
@@ -51,7 +52,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     private let nicknameTextField: UITextField = {
         let tf = PaddingTextField()
         tf.textInsets = .init(top: 16, left: 20, bottom: 16, right: 20)
-        tf.text = "1억꿈꾸는악어"
+        tf.text = Constant.defaultNickname
         tf.attributedPlaceholder = NSAttributedString(
             string: Constant.nicknamePlaceholder,
             attributes: [
@@ -118,6 +119,8 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     private let nextButton = AppButton()
     
+    // MARK: - Layout Components
+    
     // 상하단 비율(1:2) 유지 용도
     private let spacerTop = UIView()
     private let spacerBottom = UIView()
@@ -131,6 +134,8 @@ final class OnboardingNicknameViewController: BaseViewController {
         v.alignment = .center
         return v
     }()
+    
+    // MARK: - Init
     
     init(
         viewModel: OnboardingNicknameViewModel,
@@ -158,8 +163,8 @@ final class OnboardingNicknameViewController: BaseViewController {
     override func setupActions() {
         nicknameTextField.delegate = self
         nicknameTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
-        randomChangeButton.addTarget(self, action: #selector(didTapRandomChange), for: .touchUpInside)
-        nextButton.addTarget(self, action: #selector(didTapNext), for: .touchUpInside)
+        randomChangeButton.addTarget(self, action: #selector(randomChangeButtonTapped), for: .touchUpInside)
+        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         updateNextButtonState()
     }
@@ -170,26 +175,21 @@ final class OnboardingNicknameViewController: BaseViewController {
         updateNextButtonState()
     }
     
-    @objc private func didTapRandomChange() {
+    @objc private func randomChangeButtonTapped() {
         viewModel.makeRandomNickname()
         updateNextButtonState()
     }
     
-    @objc private func didTapNext() {
+    @objc private func nextButtonTapped() {
         onNext()
     }
     
-    @objc private func didTapBackground() {
+    @objc private func backgroundTapped() {
         view.endEditing(true)
     }
-    
-    private func updateNextButtonState() {
-        let text = nicknameTextField.text ?? ""
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        nextButton.isEnabled = !trimmed.isEmpty
-    }
 }
+
+// MARK: - UI Configuration
 
 private extension OnboardingNicknameViewController {
     func configureViews() {
@@ -246,12 +246,6 @@ private extension OnboardingNicknameViewController {
             make.leading.trailing.equalTo(ctaContainer)
         }
     }
-    
-    func setupGesture() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapBackground))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-    }
 }
 
 // MARK: - UITextFieldDelegate
@@ -281,5 +275,22 @@ extension OnboardingNicknameViewController: UITextFieldDelegate {
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         nicknameHintLabel.isHidden = true
+    }
+}
+
+// MARK: - Private Methods
+
+private extension OnboardingNicknameViewController {
+    func updateNextButtonState() {
+        let text = nicknameTextField.text ?? ""
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        nextButton.isEnabled = !trimmed.isEmpty
+    }
+    
+    func setupGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
     }
 }

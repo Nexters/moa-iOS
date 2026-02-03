@@ -26,7 +26,7 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     private let viewModel: OnboardingWorkplaceViewModel
     private let onNext: (() -> Void)
     
-    // MARK: - UI
+    // MARK: - UI Components
     
     private let stackView: UIStackView = {
         let v = UIStackView()
@@ -100,6 +100,8 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     
     private let nextButton = AppButton()
     
+    // MARK: - Layout Components
+    
     // 상하단 비율(1:2) 유지 용도
     private let spacerTop = UIView()
     private let spacerBottom = UIView()
@@ -113,6 +115,8 @@ final class OnboardingWorkplaceViewController: BaseViewController {
         v.alignment = .center
         return v
     }()
+    
+    // MARK: - Init
     
     init(
         viewModel: OnboardingWorkplaceViewModel,
@@ -139,21 +143,23 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     
     override func setupActions() {
         workplaceTextView.delegate = self
-        nextButton.addTarget(self, action: #selector(didTapNext), for: .touchUpInside)
+        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         updateNextButtonState()
     }
     
     // MARK: - Actions
     
-    @objc private func didTapNext() {
+    @objc private func nextButtonTapped() {
         onNext()
     }
     
-    @objc private func didTapBackground() {
+    @objc private func backgroundTapped() {
         view.endEditing(true)
     }
 }
+
+// MARK: - UI Configuration
 
 private extension OnboardingWorkplaceViewController {
     func configureViews() {
@@ -216,13 +222,9 @@ private extension OnboardingWorkplaceViewController {
             make.leading.trailing.equalTo(ctaContainer)
         }
     }
-    
-    func setupGesture() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapBackground))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-    }
 }
+
+// MARK: - UITextViewDelegate
 
 extension OnboardingWorkplaceViewController: UITextViewDelegate {
     func textView(
@@ -258,7 +260,8 @@ extension OnboardingWorkplaceViewController: UITextViewDelegate {
     }
 }
 
-// MARK: - Helpers
+// MARK: - Private Methods
+
 private extension OnboardingWorkplaceViewController {
     func updatePlaceholderVisibility() {
         let text = workplaceTextView.text ?? ""
@@ -270,5 +273,11 @@ private extension OnboardingWorkplaceViewController {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         
         nextButton.isEnabled = !trimmed.isEmpty
+    }
+    
+    func setupGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
     }
 }
