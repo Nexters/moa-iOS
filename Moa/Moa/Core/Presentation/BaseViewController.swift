@@ -27,6 +27,10 @@ class BaseViewController: UIViewController {
     func setupActions() {}
     func bind() {}
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+
     func bindOutput<Output>(
         _ publisher: AnyPublisher<Output, Never>,
         handler: @escaping (Output) -> Void
