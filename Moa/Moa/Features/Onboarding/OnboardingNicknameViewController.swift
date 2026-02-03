@@ -154,8 +154,9 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
-        configureViews()
-        buildHierarchy()
+        setupButton()
+        setupSpacers()
+        setupHierarchy()
         setupLayout()
         setupGesture()
     }
@@ -192,15 +193,17 @@ final class OnboardingNicknameViewController: BaseViewController {
 // MARK: - UI Configuration
 
 private extension OnboardingNicknameViewController {
-    func configureViews() {
+    func setupButton() {
         nextButton.setTitle(Constant.next, for: .normal)
         nextButton.applyStyle(.primary())
-        
+    }
+    
+    func setupSpacers() {
         spacerTop.backgroundColor = .clear
         spacerBottom.backgroundColor = .clear
     }
     
-    func buildHierarchy() {
+    func setupHierarchy() {
         stackView.addArrangedSubViews([
             spacerTop,
             titleLabel,
@@ -209,13 +212,12 @@ private extension OnboardingNicknameViewController {
             randomChangeButton,
             spacerBottom
         ])
-        
         stackView.setCustomSpacing(32, after: subtitleLabel)
-        
-        view.addSubViews([stackView, ctaContainer])
         
         ctaContainer.addSubview(ctaStack)
         ctaStack.addArrangedSubViews([nicknameHintLabel, nextButton])
+        
+        view.addSubViews([stackView, ctaContainer])
     }
     
     func setupLayout() {

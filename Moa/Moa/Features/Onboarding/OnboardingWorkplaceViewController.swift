@@ -135,8 +135,9 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
-        configureViews()
-        buildHierarchy()
+        setupButton()
+        setupSpacers()
+        setupHierarchy()
         setupLayout()
         setupGesture()
     }
@@ -162,15 +163,17 @@ final class OnboardingWorkplaceViewController: BaseViewController {
 // MARK: - UI Configuration
 
 private extension OnboardingWorkplaceViewController {
-    func configureViews() {
+    func setupButton() {
         nextButton.setTitle(Constant.next, for: .normal)
         nextButton.applyStyle(.primary())
-        
+    }
+    
+    func setupSpacers() {
         spacerTop.backgroundColor = .clear
         spacerBottom.backgroundColor = .clear
     }
     
-    func buildHierarchy() {
+    func setupHierarchy() {
         stackView.addArrangedSubViews([
             spacerTop,
             titleLabel,
@@ -178,13 +181,12 @@ private extension OnboardingWorkplaceViewController {
             subtitleLabel,
             spacerBottom
         ])
-        
         workplaceTextView.addSubview(workplacePlaceholderLabel)
-        
-        view.addSubViews([stackView, ctaContainer])
         
         ctaContainer.addSubview(ctaStack)
         ctaStack.addArrangedSubViews([workplaceHintLabel, nextButton])
+        
+        view.addSubViews([stackView, ctaContainer])
     }
     
     func setupLayout() {
