@@ -15,6 +15,7 @@ protocol AppRouting: AnyObject {
 final class AppRouter: AppRouting {
     private let navigationController: UINavigationController
     private let container: AppContainer
+    private var onboardingCoordinator: OnboardingCoordinator?
     
     init(
         navigationController: UINavigationController,
@@ -28,14 +29,18 @@ final class AppRouter: AppRouting {
         navigate(to: .splash, animated: false)
     }
     
-    func navigate(to route: AppRoute, animated: Bool) {
+    func navigate(to route: AppRoute, animated: Bool = true) {
         switch route {
         case .splash:
-            let vm = SplashViewModel()
-            let vc = SplashViewController(viewModel: vm, router: self)
-            navigationController.setViewControllers([vc], animated: animated)
+            navigationController.setViewControllers([makeSplash()], animated: animated)
+            
         case .login:
-            break
+            navigationController.setViewControllers([makeLogin()], animated: false) // 스플래시 -> 로그인 넘어갈때는 애니메이션 false 처리
+            
+        case .onboarding:
+            guard onboardingCoordinator == nil else { return }
+            startOnboarding(animated: animated)
+            
         case .home:
             break
         case .settings:
@@ -43,5 +48,29 @@ final class AppRouter: AppRouting {
         case .history:
             break
         }
+    }
+}
+
+private extension AppRouter {
+    func makeSplash() -> UIViewController {
+        let vm = SplashViewModel()
+        return SplashViewController(viewModel: vm, router: self)
+    }
+    
+    func makeLogin() -> UIViewController {
+        let vm = LoginViewModel()
+        return LoginViewController(viewModel: vm, router: self)
+    }
+    
+    func startOnboarding(animated: Bool) {
+        let coordinator = OnboardingCoordinator(
+            finish: { [weak self] in
+                self?.onboardingCoordinator = nil
+                self?.navigate(to: .home)
+            }
+        )
+        
+        onboardingCoordinator = coordinator
+        coordinator.start(from: navigationController, animated: animated)
     }
 }
