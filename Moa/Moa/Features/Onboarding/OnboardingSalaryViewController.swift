@@ -12,7 +12,13 @@ final class OnboardingSalaryViewController: BaseViewController {
     // MARK: - Constants
     
     private enum Constant {
-        
+        static let title = "얼마씩 받고 있나요?"
+        static let subtitle = "세전, 세후 상관없이 보고 싶은 금액을 입력해주세요."
+        static let salaryType = "급여 유형"
+        static let monthlySalary = "월급"
+        static let annualSalary = "연봉"
+        static let amount = "금액"
+        static let won = "원"
     }
     
     // MARK: - Dependencies
