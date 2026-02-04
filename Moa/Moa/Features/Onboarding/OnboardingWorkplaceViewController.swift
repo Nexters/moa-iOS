@@ -1,30 +1,29 @@
 //
-//  OnboardingNicknameViewController.swift
+//  OnboardingWorkplaceViewController.swift
 //  Moa
 //
-//  Created by mirim on 1/30/26.
+//  Created by mirim on 2/1/26.
 //
 
 import UIKit
 import SnapKit
 
-final class OnboardingNicknameViewController: BaseViewController {
+final class OnboardingWorkplaceViewController: BaseViewController {
     // MARK: - Constants
     
     private enum Constant {
-        static let nickname = "닉네임"
-        static let nicknameSuffix = "로 시작할래요"
-        static let nicknamePlaceholder = "닉네임을 입력해주세요"
-        static let nicknameHint = "10자까지 입력할 수 있어요"
-        static let randomChange = "랜덤변경"
+        static let workplace = "근무지"
+        static let workplaceSuffix = "에서 일해요"
+        static let workplacePlaceholder = "근무지를 입력해주세요"
+        static let workplaceHint = "20자까지 입력할 수 있어요"
         static let next = "다음"
-        static let nicknameMaxLength: Int = 10
-        static let defaultNickname = "1억꿈꾸는악어"
+        static let workplaceMaxLength: Int = 20
+        static let textViewMinHeight: CGFloat = 70
     }
     
     // MARK: - Dependencies
     
-    private let viewModel: OnboardingNicknameViewModel
+    private let viewModel: OnboardingWorkplaceViewModel
     private let onNext: (() -> Void)
     
     // MARK: - UI Components
@@ -38,10 +37,10 @@ final class OnboardingNicknameViewController: BaseViewController {
         return v
     }()
     
-    /// "닉네임"
+    /// "근무지"
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = Constant.nickname
+        label.text = Constant.workplace
         label.applyTextStyle(.init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
@@ -49,36 +48,38 @@ final class OnboardingNicknameViewController: BaseViewController {
         return label
     }()
     
-    private let nicknameTextField: UITextField = {
-        let tf = PaddingTextField()
-        tf.textInsets = .init(top: 16, left: 20, bottom: 16, right: 20)
-        tf.text = Constant.defaultNickname
-        tf.attributedPlaceholder = NSAttributedString(
-            string: Constant.nicknamePlaceholder,
-            attributes: [
-                .foregroundColor: AppColor.IconAndText.disabled,
-                .font: AppTypography.h3_700.font()
-            ]
-        )
+    private let workplaceTextView: UITextView = {
+        let tv = UITextView()
+        tv.isScrollEnabled = false // 아래로 늘어나도록
+        tv.textContainerInset = .init(top: 16, left: 20, bottom: 16, right: 20)
+        tv.textContainer.lineFragmentPadding = 0
         
-        tf.clearButtonMode = .never
-        tf.autocapitalizationType = .none
-        tf.autocorrectionType = .no
-        tf.returnKeyType = .done
+        tv.backgroundColor = AppColor.Background.secondary
+        tv.font = AppTypography.h3_700.font()
+        tv.textColor = AppColor.IconAndText.green
+        tv.layer.cornerRadius = 16
         
-        tf.backgroundColor = AppColor.Background.secondary
-        tf.font = AppTypography.h3_700.font()
-        tf.textColor = AppColor.IconAndText.green
-        
-        tf.layer.cornerRadius = 16
-        tf.textAlignment = .center
-        return tf
+        tv.autocapitalizationType = .none
+        tv.autocorrectionType = .no
+        tv.returnKeyType = .done
+        tv.textAlignment = .center
+        return tv
     }()
     
-    /// "로 시작할래요"
+    private let workplacePlaceholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = Constant.workplacePlaceholder
+        label.textColor = AppColor.IconAndText.disabled
+        label.font = AppTypography.h3_700.font()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+    
+    /// "에서 일해요"
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = Constant.nicknameSuffix
+        label.text = Constant.workplaceSuffix
         label.applyTextStyle(.init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
@@ -86,29 +87,9 @@ final class OnboardingNicknameViewController: BaseViewController {
         return label
     }()
     
-    private let randomChangeButton: UIButton = {
-        let btn = UIButton()
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(resource: .Icon.iconRefresh).withRenderingMode(.alwaysOriginal)
-        
-        var title = AttributedString(Constant.randomChange)
-        title.font = AppTypography.b2_500.font()
-        title.foregroundColor = AppColor.IconAndText.highEmphasis
-        config.attributedTitle = title
-        
-        config.imagePlacement = .leading
-        config.imagePadding = 4
-        config.background.backgroundColor = AppColor.Container.secondary
-        config.background.cornerRadius = 8
-        config.contentInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
-        
-        btn.configuration = config
-        return btn
-    }()
-    
-    private let nicknameHintLabel: UILabel = {
+    private let workplaceHintLabel: UILabel = {
         let label = UILabel()
-        label.text = Constant.nicknameHint
+        label.text = Constant.workplaceHint
         label.applyTextStyle(.init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.lowEmphasis
@@ -138,8 +119,8 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Init
     
     init(
-        viewModel: OnboardingNicknameViewModel,
-        onNext: @escaping (() -> Void)
+        viewModel: OnboardingWorkplaceViewModel,
+        onNext: @escaping () -> Void
     ) {
         self.viewModel = viewModel
         self.onNext = onNext
@@ -162,24 +143,13 @@ final class OnboardingNicknameViewController: BaseViewController {
     }
     
     override func setupActions() {
-        nicknameTextField.delegate = self
-        nicknameTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
-        randomChangeButton.addTarget(self, action: #selector(randomChangeButtonTapped), for: .touchUpInside)
+        workplaceTextView.delegate = self
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         updateNextButtonState()
     }
     
     // MARK: - Actions
-    
-    @objc private func textDidChange() {
-        updateNextButtonState()
-    }
-    
-    @objc private func randomChangeButtonTapped() {
-        viewModel.makeRandomNickname()
-        updateNextButtonState()
-    }
     
     @objc private func nextButtonTapped() {
         onNext()
@@ -192,7 +162,7 @@ final class OnboardingNicknameViewController: BaseViewController {
 
 // MARK: - UI Configuration
 
-private extension OnboardingNicknameViewController {
+private extension OnboardingWorkplaceViewController {
     func setupButton() {
         nextButton.setTitle(Constant.next, for: .normal)
         nextButton.applyStyle(.primary())
@@ -207,15 +177,14 @@ private extension OnboardingNicknameViewController {
         stackView.addArrangedSubViews([
             spacerTop,
             titleLabel,
-            nicknameTextField,
+            workplaceTextView,
             subtitleLabel,
-            randomChangeButton,
             spacerBottom
         ])
-        stackView.setCustomSpacing(32, after: subtitleLabel)
+        workplaceTextView.addSubview(workplacePlaceholderLabel)
         
         ctaContainer.addSubview(ctaStack)
-        ctaStack.addArrangedSubViews([nicknameHintLabel, nextButton])
+        ctaStack.addArrangedSubViews([workplaceHintLabel, nextButton])
         
         view.addSubViews([stackView, ctaContainer])
     }
@@ -225,14 +194,21 @@ private extension OnboardingNicknameViewController {
             make.height.equalTo(spacerBottom.snp.height).multipliedBy(0.5) // top = bottom * 1/2
         }
         
-        nicknameTextField.snp.makeConstraints { make in
+        workplaceTextView.snp.makeConstraints { make in
             make.leading.trailing.equalTo(stackView).inset(AppSpacing.screenHorizontal)
+        }
+        
+        workplacePlaceholderLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().inset(20)
         }
         
         stackView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-            make.bottom.equalTo(nextButton.snp.top)
+            make.bottom.equalTo(ctaContainer.snp.top)
         }
         
         ctaStack.snp.makeConstraints { make in
@@ -250,41 +226,52 @@ private extension OnboardingNicknameViewController {
     }
 }
 
-// MARK: - UITextFieldDelegate
+// MARK: - UITextViewDelegate
 
-extension OnboardingNicknameViewController: UITextFieldDelegate {
-    func textField(
-        _ textField: UITextField,
-        shouldChangeCharactersIn range: NSRange,
-        replacementString string: String
+extension OnboardingWorkplaceViewController: UITextViewDelegate {
+    func textView(
+        _ textView: UITextView,
+        shouldChangeTextIn range: NSRange,
+        replacementText text: String
     ) -> Bool {
-        
-        if let marked = textField.markedTextRange,
-            textField.position(from: marked.start, offset: 0) != nil {
+        if let marked = textView.markedTextRange,
+           textView.position(from: marked.start, offset: 0) != nil {
             return true
         }
         
-        let current = textField.text ?? ""
-        guard let textRange = Range(range, in: current) else { return false }
-        let next = current.replacingCharacters(in: textRange, with: string)
+        let current = textView.text ?? ""
+        guard let r = Range(range, in: current) else { return false }
         
-        return next.count <= Constant.nicknameMaxLength
+        let next = current.replacingCharacters(in: r, with: text)
+        return next.count <= Constant.workplaceMaxLength
     }
     
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        nicknameHintLabel.isHidden = false
+    func textViewDidChange(_ textView: UITextView) {
+        updatePlaceholderVisibility() // placeholder 토글
+        updateNextButtonState() // [다음] 버튼 활성화
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        nicknameHintLabel.isHidden = true
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        workplaceHintLabel.isHidden = false
+        updatePlaceholderVisibility()
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        workplaceHintLabel.isHidden = true
+        updatePlaceholderVisibility()
     }
 }
 
 // MARK: - Private Methods
 
-private extension OnboardingNicknameViewController {
+private extension OnboardingWorkplaceViewController {
+    func updatePlaceholderVisibility() {
+        let text = workplaceTextView.text ?? ""
+        workplacePlaceholderLabel.isHidden = !text.isEmpty
+    }
+    
     func updateNextButtonState() {
-        let text = nicknameTextField.text ?? ""
+        let text = workplaceTextView.text ?? ""
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         
         nextButton.isEnabled = !trimmed.isEmpty
