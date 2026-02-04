@@ -21,6 +21,12 @@ final class HomeViewController: BaseViewController {
         date: "test",
         location: "을지로 을지로"
     )
+    
+    private lazy var moneyImageView: UIImageView = {
+        let view = UIImageView()
+        view.image = UIImage(resource: .Image.imageEmptyMoney)
+        return view
+    }()
 
     private let monthlySalaryView = MonthlySalaryView(
         month: 2,
@@ -61,6 +67,7 @@ private extension HomeViewController {
 
         contentView.addSubViews([
             navigationBarView,
+            moneyImageView,
             dateLocationInfoView,
             monthlySalaryView,
             todayWorkSummaryView
@@ -81,14 +88,20 @@ private extension HomeViewController {
             $0.top.leading.trailing.equalToSuperview()
             $0.height.equalTo(56)
         }
-
+        
         dateLocationInfoView.snp.makeConstraints {
             $0.top.equalTo(navigationBarView.snp.bottom).offset(20)
             $0.centerX.equalToSuperview()
         }
+        
+        moneyImageView.snp.makeConstraints {
+            $0.top.equalTo(dateLocationInfoView.snp.bottom).offset(28)
+            $0.width.height.equalTo(80)
+            $0.centerX.equalToSuperview()
+        }
 
         monthlySalaryView.snp.makeConstraints {
-            $0.top.equalTo(dateLocationInfoView.snp.bottom).offset(54)
+            $0.top.equalTo(moneyImageView.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview().inset(17)
         }
 
