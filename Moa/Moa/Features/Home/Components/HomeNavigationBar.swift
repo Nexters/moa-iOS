@@ -14,17 +14,17 @@ final class HomeNavigationBarView: UIView {
     
     private lazy var titleImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .Image.moaLogoTypo)
+        imageView.image = UIImage(resource: .Logo.moaTypo)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
     private lazy var calendarButton: AppIconButton = {
-        AppIconButton(image: UIImage(resource: .Image.calendar))
+        AppIconButton(image: UIImage(resource: .Icon.iconCalendar))
     }()
     
     private lazy var settingButton: AppIconButton = {
-        AppIconButton(image: UIImage(resource: .Image.setting))
+        AppIconButton(image: UIImage(resource: .Icon.iconSetting))
     }()
     
     private lazy var rightStackView: UIStackView = {

@@ -40,10 +40,7 @@ final class HomeViewController: BaseViewController {
     override func setupUI() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-
-        contentView.addSubview(navigationBarView)
-        contentView.addSubview(monthlySalaryView)
-        contentView.addSubview(todayWorkSummaryView)
+        contentView.addSubViews([navigationBarView, monthlySalaryView, todayWorkSummaryView])
 
         scrollView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)

@@ -29,7 +29,7 @@ final class KeyValueRowView: UIView {
 
     private lazy var chevronImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .Image.arrowRight2)
+        imageView.image = UIImage(resource: .Icon.iconArrowRight2)
         imageView.tintColor = AppColor.IconAndText.highEmphasis
         imageView.contentMode = .scaleAspectFit
         imageView.isHidden = true
