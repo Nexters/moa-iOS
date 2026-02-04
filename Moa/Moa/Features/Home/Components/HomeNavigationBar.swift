@@ -14,7 +14,7 @@ final class HomeNavigationBarView: UIView {
     
     private lazy var titleImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .moaTypoLogo)
+        imageView.image = UIImage(resource: .Logo.moaTypo)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
