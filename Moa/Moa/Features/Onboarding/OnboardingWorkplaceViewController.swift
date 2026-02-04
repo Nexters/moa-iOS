@@ -265,16 +265,20 @@ extension OnboardingWorkplaceViewController: UITextViewDelegate {
 // MARK: - Private Methods
 
 private extension OnboardingWorkplaceViewController {
+    var workplaceText: String {
+        workplaceTextView.text ?? ""
+    }
+    
+    var isWorkplaceValid: Bool {
+        !workplaceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
     func updatePlaceholderVisibility() {
-        let text = workplaceTextView.text ?? ""
-        workplacePlaceholderLabel.isHidden = !text.isEmpty
+        workplacePlaceholderLabel.isHidden = !workplaceText.isEmpty
     }
     
     func updateNextButtonState() {
-        let text = workplaceTextView.text ?? ""
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        nextButton.isEnabled = !trimmed.isEmpty
+        nextButton.isEnabled = isWorkplaceValid
     }
     
     func setupGesture() {
