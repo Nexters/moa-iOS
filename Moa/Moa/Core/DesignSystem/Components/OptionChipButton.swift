@@ -16,12 +16,14 @@ final class OptionChipButton: BaseChipButton {
                 contentInsets: .init(top: 16.0, leading: 20.0, bottom: 16.0, trailing: 20.0),
                 fontNormal: AppTypography.t2_500.font(),
                 fontSelected: AppTypography.t2_700.font(),
-                bgNormal: AppColor.Background.primary,
-                bgSelected: AppColor.Background.primary,
+                bgNormal: AppColor.Container.primary,
+                bgSelected: AppColor.Container.primary,
                 fgNormal: AppColor.IconAndText.disabled,
                 fgSelected: AppColor.IconAndText.highEmphasis
             )
         )
+        
+        togglesSelectionOnTap = false // 단일 선택 세그먼트 -> 외부에서 제어
     }
     
     required init?(coder: NSCoder) {
