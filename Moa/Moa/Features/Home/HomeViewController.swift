@@ -15,56 +15,83 @@ final class HomeViewController: BaseViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
-    private lazy var navigationBarView = HomeNavigationBarView()
+    private let navigationBarView = HomeNavigationBarView()
 
-    private lazy var monthlySalaryView = MonthlySalaryView(
+    private let dateLocationInfoView = DateLocationInfoView(
+        date: "test",
+        location: "을지로 을지로"
+    )
+
+    private let monthlySalaryView = MonthlySalaryView(
         month: 2,
         amount: 1_500_000,
         baseAmount: 1_200_000,
         shouldAnimate: true
     )
 
-    private lazy var todayWorkSummaryView = TodayWorkSummaryView(
+    private let todayWorkSummaryView = TodayWorkSummaryView(
         wage: "150,000원",
         workTime: "09:00 - 18:00"
     )
-    
+
+    // MARK: - Lifecycle
+
     init() {
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    // MARK: - Setup
+
     override func setupUI() {
+        setupHierarchy()
+        setupConstraints()
+    }
+}
+
+// MARK: - Layout
+private extension HomeViewController {
+
+    func setupHierarchy() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-        contentView.addSubViews([navigationBarView, monthlySalaryView, todayWorkSummaryView])
 
+        contentView.addSubViews([
+            navigationBarView,
+            dateLocationInfoView,
+            monthlySalaryView,
+            todayWorkSummaryView
+        ])
+    }
+
+    func setupConstraints() {
         scrollView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
         contentView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-            $0.width.equalToSuperview()
+            $0.edges.equalTo(scrollView.contentLayoutGuide)
+            $0.width.equalTo(scrollView.frameLayoutGuide)
         }
 
-        // Navigation Bar
         navigationBarView.snp.makeConstraints {
-            $0.top.equalToSuperview()
-            $0.leading.trailing.equalToSuperview()
+            $0.top.leading.trailing.equalToSuperview()
             $0.height.equalTo(56)
         }
 
-        // Monthly Salary
+        dateLocationInfoView.snp.makeConstraints {
+            $0.top.equalTo(navigationBarView.snp.bottom).offset(20)
+            $0.centerX.equalToSuperview()
+        }
+
         monthlySalaryView.snp.makeConstraints {
-            $0.top.equalTo(navigationBarView.snp.bottom).offset(54)
+            $0.top.equalTo(dateLocationInfoView.snp.bottom).offset(54)
             $0.leading.trailing.equalToSuperview().inset(17)
         }
 
-        // Today Work Summary
         todayWorkSummaryView.snp.makeConstraints {
             $0.top.equalTo(monthlySalaryView.snp.bottom).offset(36)
             $0.leading.trailing.equalToSuperview().inset(20)
@@ -72,6 +99,7 @@ final class HomeViewController: BaseViewController {
         }
     }
 }
+
 
 @available(iOS 17.0)
 #Preview {
