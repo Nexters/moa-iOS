@@ -9,6 +9,9 @@ import UIKit
 import SnapKit
 
 final class HomeViewController: BaseViewController {
+    override var prefersNavigationBarHidden: Bool {
+        true
+    }
     
     // MARK: - Constants
     private enum Constant {
@@ -113,7 +116,7 @@ private extension HomeViewController {
         
         // Scroll
         scrollView.contentInset.bottom = 64 + startWorkButton.intrinsicContentSize.height + 16
-
+        
         scrollView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
