@@ -53,10 +53,7 @@ final class TodayWorkSummaryView: UIView {
     private func setupUI() {
         addSubview(containerView)
 
-        containerView.addSubview(wageRowView)
-        containerView.addSubview(dividerView)
-        containerView.addSubview(timeRowView)
-
+        containerView.addSubViews([wageRowView, dividerView, timeRowView])
         containerView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }

@@ -92,9 +92,7 @@ final class MonthlySalaryView: UIView {
     // MARK: - Setup UI
 
     private func setupUI() {
-        addSubview(titleLabel)
-        addSubview(amountStackView)
-        addSubview(subtitleLabel)
+        addSubViews([titleLabel, amountStackView, subtitleLabel])
 
         titleLabel.snp.makeConstraints {
             $0.top.equalToSuperview()
