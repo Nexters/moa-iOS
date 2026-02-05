@@ -66,7 +66,7 @@ final class OnboardingNicknameViewController: BaseViewController {
         tf.autocorrectionType = .no
         tf.returnKeyType = .done
         
-        tf.backgroundColor = AppColor.Background.secondary
+        tf.backgroundColor = AppColor.Container.primary
         tf.font = AppTypography.h3_700.font()
         tf.textColor = AppColor.IconAndText.green
         
@@ -153,7 +153,9 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Setup
     
     override func setupUI() {
-        replaceSystemBackButtonWithAppBackButton()
+        replaceSystemBackButtonWithAppBackButton {
+            // TODO: 팝업 노출
+        }
         setupButton()
         setupSpacers()
         setupHierarchy()
@@ -241,7 +243,7 @@ private extension OnboardingNicknameViewController {
         
         ctaContainer.snp.makeConstraints { make in
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-            make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-24)
+            make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-AppSpacing.ctaBottom)
         }
         
         nextButton.snp.makeConstraints { make in
