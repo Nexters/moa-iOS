@@ -15,7 +15,6 @@ final class OnboardingSalaryViewController: BaseViewController {
     private enum Constant {
         static let title = "얼마씩 받고 있나요?"
         static let subtitle = "세전, 세후 상관없이 보고 싶은 금액을 입력해주세요."
-        static let salaryType = "급여 유형"
         static let amount = "금액"
         static let won = "원"
         static let next = "다음"
@@ -63,7 +62,6 @@ final class OnboardingSalaryViewController: BaseViewController {
         return label
     }()
     
-    // TODO: 텍스트 필드 금액 format
     private let amountTextField: UITextField = {
         let tf = PaddingTextField()
         tf.textInsets = .init(top: 16, left: 20, bottom: 16, right: 0)
@@ -102,6 +100,7 @@ final class OnboardingSalaryViewController: BaseViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 10
+        stack.distribution = .fill
         stack.backgroundColor = AppColor.Container.primary
         stack.layer.cornerRadius = 16
         return stack
@@ -109,7 +108,20 @@ final class OnboardingSalaryViewController: BaseViewController {
     
     private let nextButton = AppButton()
     
+    private lazy var commaFormatter = CommaNumberTextFieldFormatter(
+        textField: amountTextField,
+        maxDigits: SalaryType.monthly.maxDigits
+    )
+    
     // MARK: - Layout Components
+    
+    // 금액 "원" 우측 정렬 용도
+    private let trailingSpacer: UIView = {
+        let v = UIView()
+        v.setContentHuggingPriority(.required, for: .horizontal)
+        v.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return v
+    }()
     
     // 키보드 위로 올라오는 CTA 영역 (다음)
     private let ctaContainer = UIView()
@@ -148,6 +160,7 @@ final class OnboardingSalaryViewController: BaseViewController {
         salaryTypeView.onChange = { [weak self] type in
             guard let self else { return }
             self.viewModel.selectSalaryType(type)
+            self.commaFormatter.updateMaxDigits(type.maxDigits)
             self.updateNextButtonState()
         }
         
@@ -157,6 +170,7 @@ final class OnboardingSalaryViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func textDidChange() {
+        commaFormatter.reformatNow()
         updateNextButtonState()
     }
     
@@ -178,7 +192,7 @@ private extension OnboardingSalaryViewController {
     }
     
     func setupHierarchy() {
-        amountTextFieldStack.addArrangedSubViews([amountTextField, currencyLabel])
+        amountTextFieldStack.addArrangedSubViews([amountTextField, currencyLabel, trailingSpacer])
         ctaContainer.addSubview(nextButton)
         
         view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, ctaContainer])
@@ -210,20 +224,25 @@ private extension OnboardingSalaryViewController {
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         
-        currencyLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        currencyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        trailingSpacer.snp.makeConstraints { make in
+            make.width.equalTo(20)
+        }
         
-        amountTextField.setContentHuggingPriority(.required, for: .horizontal)
-        amountTextField.setContentCompressionResistancePriority(.required, for: .horizontal)
+        currencyLabel.setContentHuggingPriority(.required, for: .horizontal)
+        currencyLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         
-        // FIXME: 하단 padding 수정
+        amountTextField.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        amountTextField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
         ctaContainer.snp.makeConstraints { make in
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
             make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-AppSpacing.ctaBottom)
         }
         
         nextButton.snp.makeConstraints { make in
+            make.top.bottom.equalTo(ctaContainer)
             make.leading.trailing.equalTo(ctaContainer)
+            make.height.greaterThanOrEqualTo(64)
         }
     }
 }
@@ -232,16 +251,10 @@ private extension OnboardingSalaryViewController {
 
 private extension OnboardingSalaryViewController {
     func updateNextButtonState() {
-        let text = amountTextField.text ?? ""
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let convertedToNumber = Int(trimmed)
+        let digits = (amountTextField.text ?? "").filter(\.isNumber)
+        let amount = Int(digits) ?? 0
         
-        guard let amount = convertedToNumber, amount != .zero else {
-            nextButton.isEnabled = false
-            return
-        }
-        
-        nextButton.isEnabled = true
+        nextButton.isEnabled = amount > 0
     }
     
     func setupGesture() {
@@ -261,7 +274,12 @@ extension OnboardingSalaryViewController: UITextFieldDelegate {
     ) -> Bool {
         if textField.markedTextRange != nil { return true }
         if string.isEmpty { return true }
+        guard string.allSatisfy(\.isNumber) else { return false }
         
-        return string.allSatisfy { $0.isNumber }
+        let currentDigitsCount = (textField.text ?? "").filter(\.isNumber).count
+        let addingDigitsCount = string.filter(\.isNumber).count
+        let limit = viewModel.selectedSalaryType.maxDigits
+        
+        return (currentDigitsCount + addingDigitsCount) <= limit
     }
 }

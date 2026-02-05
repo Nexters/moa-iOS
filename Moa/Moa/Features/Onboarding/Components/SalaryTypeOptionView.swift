@@ -14,13 +14,15 @@ final class SalaryTypeOptionView: UIView {
     
     private enum Constant {
         static let salaryType = "급여 유형"
+        static let monthly = "월급"
+        static let yearly = "연봉"
     }
     
     // MARK: - Public
     
     var onChange: ((SalaryType) -> Void)?
     
-    private(set) var selected: SalaryType = .monthly {
+    private var selected: SalaryType = .monthly {
         didSet { applySelection() }
     }
     
@@ -42,8 +44,8 @@ final class SalaryTypeOptionView: UIView {
         return label
     }()
     
-    private let monthlyButton = OptionChipButton(title: SalaryType.monthly.rawValue)
-    private let yearlyButton = OptionChipButton(title: SalaryType.yearly.rawValue)
+    private let monthlyButton = OptionChipButton(title: Constant.monthly)
+    private let yearlyButton = OptionChipButton(title: Constant.yearly)
     
     private let stackView: UIStackView = {
         let stack = UIStackView()

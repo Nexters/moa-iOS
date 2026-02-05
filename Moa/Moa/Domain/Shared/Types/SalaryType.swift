@@ -7,7 +7,14 @@
 
 import Foundation
 
-enum SalaryType: String {
-    case monthly = "월급"
-    case yearly = "연봉"
+enum SalaryType {
+    case monthly
+    case yearly
+    
+    var maxDigits: Int {
+        switch self {
+        case .monthly: 9
+        case .yearly: 10
+        }
+    }
 }
