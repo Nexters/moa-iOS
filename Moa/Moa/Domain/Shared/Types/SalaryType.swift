@@ -9,5 +9,5 @@ import Foundation
 
 enum SalaryType: String {
     case monthly = "월급"
-    case annual = "연봉"
+    case yearly = "연봉"
 }
