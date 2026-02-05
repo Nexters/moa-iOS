@@ -45,7 +45,7 @@ class BaseChipButton: UIButton {
         configuration = config
         
         configurationUpdateHandler = { [weak self] button in
-            guard let self, let button = button as? BaseChipButton else { return }
+            guard self != nil, let button = button as? BaseChipButton else { return }
             button.apply()
         }
         
@@ -66,7 +66,7 @@ class BaseChipButton: UIButton {
     
     private func apply() {
         var title = AttributedString(currentTitle ?? "")
-        title.font = style.fontSelected
+        title.font = isSelected ? style.fontSelected : style.fontNormal
         
         let bg: UIColor
         let fg: UIColor
