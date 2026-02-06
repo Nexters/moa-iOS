@@ -42,7 +42,8 @@ final class AppRouter: AppRouting {
             startOnboarding(animated: animated)
             
         case .home:
-            break
+            navigationController.setViewControllers([makeHome()], animated: animated)
+            
         case .settings:
             break
         case .history:
@@ -72,5 +73,9 @@ private extension AppRouter {
         
         onboardingCoordinator = coordinator
         coordinator.start(from: navigationController, animated: animated)
+    }
+    
+    func makeHome() -> UIViewController {
+        return HomeViewController()
     }
 }
