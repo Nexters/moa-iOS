@@ -6,14 +6,22 @@
 //
 
 import UIKit
+import SnapKit
 
 final class WeekdayChipButton: BaseChipButton {
+    
+    private enum Constant {
+        static let minHeight: CGFloat = 44
+        static let inset: CGFloat = 10
+        static let cornerRadius: CGFloat = 8
+    }
+    
     init(title: String) {
         super.init(
             title: title,
             style: .init(
-                cornerRadius: 8.0,
-                contentInsets: .init(top: 10.0, leading: 10.0, bottom: 10.0, trailing: 10.0),
+                cornerRadius: Constant.cornerRadius,
+                contentInsets: .init(top: Constant.inset, leading: Constant.inset, bottom: Constant.inset, trailing: Constant.inset),
                 fontNormal: AppTypography.b1_500.font(),
                 fontSelected: AppTypography.b1_600.font(),
                 bgNormal: AppColor.Container.primary,
@@ -22,6 +30,10 @@ final class WeekdayChipButton: BaseChipButton {
                 fgSelected: AppColor.IconAndText.highEmphasisReverse
             )
         )
+        
+        snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(Constant.minHeight)
+        }
     }
     
     required init?(coder: NSCoder) {
