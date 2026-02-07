@@ -14,10 +14,11 @@ final class AppIconButton: UIButton {
     init(
         image: UIImage?,
         iconSize: CGFloat = 24,
-        buttonSize: CGFloat = 44
+        buttonSize: CGFloat = 44,
+        tintColor: UIColor
     ) {
         super.init(frame: .zero)
-        setup(image: image, iconSize: iconSize, buttonSize: buttonSize)
+        setup(image: image, iconSize: iconSize, buttonSize: buttonSize, tintColor: tintColor)
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -27,11 +28,12 @@ final class AppIconButton: UIButton {
     private func setup(
         image: UIImage?,
         iconSize: CGFloat,
-        buttonSize: CGFloat
+        buttonSize: CGFloat,
+        tintColor: UIColor
     ) {
         var config = UIButton.Configuration.plain()
 
-        config.image = image
+        config.image = image?.withRenderingMode(.alwaysTemplate)
         config.preferredSymbolConfigurationForImage =
             UIImage.SymbolConfiguration(pointSize: iconSize)
 
@@ -44,7 +46,7 @@ final class AppIconButton: UIButton {
         )
 
         self.configuration = config
-        self.tintColor = AppColor.IconAndText.highEmphasis
+        self.tintColor = tintColor
 
         self.snp.makeConstraints {
             $0.size.equalTo(buttonSize)
