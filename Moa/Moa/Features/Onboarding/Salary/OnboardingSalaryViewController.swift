@@ -102,7 +102,7 @@ final class OnboardingSalaryViewController: BaseViewController {
         stack.spacing = 10
         stack.distribution = .fill
         stack.backgroundColor = AppColor.Container.primary
-        stack.layer.cornerRadius = 16
+        stack.layer.cornerRadius = 12
         return stack
     }()
     
