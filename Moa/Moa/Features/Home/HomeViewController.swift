@@ -20,7 +20,6 @@ final class HomeViewController: BaseViewController {
         static let todayVacation = "오늘 휴가예요"
         
         static let navigationBarHeight: CGFloat = 56
-        static let horizontalInset: CGFloat = 20
         static let salaryInset: CGFloat = 17
         static let actionSpacing: CGFloat = 16
         static let bottomInset: CGFloat = 24
@@ -158,7 +157,7 @@ private extension HomeViewController {
         // Summary
         todayWorkSummaryView.snp.makeConstraints {
             $0.top.equalTo(mainInfoContainerView.snp.bottom).offset(36)
-            $0.leading.trailing.equalToSuperview().inset(Constant.horizontalInset)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         
         // Bottom Action Group
@@ -172,7 +171,7 @@ private extension HomeViewController {
         }
         
         startWorkButton.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview().inset(Constant.horizontalInset)
+            $0.top.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.top.equalTo(autoWorkIndicator.snp.bottom).offset(12)
         }
         
@@ -182,11 +181,4 @@ private extension HomeViewController {
             $0.bottom.equalToSuperview().inset(Constant.bottomInset)
         }
     }
-}
-
-
-@available(iOS 17.0)
-#Preview {
-    HomeViewController()
-    
 }
