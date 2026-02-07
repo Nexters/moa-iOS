@@ -50,12 +50,23 @@ final class OnboardingCoordinator {
             return vc
             
         case .salary:
-            let vc = UIViewController() // TODO: 급여 뷰컨으로 변경
-            // vc.onNext = { [weak self] in self?.go(.workPolicy) }
+            let vm = OnboardingSalaryViewModel()
+            let vc = OnboardingSalaryViewController(
+                viewModel: vm,
+                onNext: { [weak self] in
+                    self?.go(.workPolicy)
+                }
+            )
             return vc
+            
         case .workPolicy:
-            let vc = UIViewController() // TODO: 근무조건 뷰컨으로 변경
-            // vc.onFinish = { [weak self] in self?.complete() }
+            let vm = OnboardingWorkPolicyViewModel()
+            let vc = OnboardingWorkPolicyViewController(
+                viewModel: vm,
+                onNext: { [weak self] in
+                    self?.complete()
+                }
+            )
             return vc
         }
     }

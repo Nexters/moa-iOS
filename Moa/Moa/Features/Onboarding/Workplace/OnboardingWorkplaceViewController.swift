@@ -54,7 +54,7 @@ final class OnboardingWorkplaceViewController: BaseViewController {
         tv.textContainerInset = .init(top: 16, left: 20, bottom: 16, right: 20)
         tv.textContainer.lineFragmentPadding = 0
         
-        tv.backgroundColor = AppColor.Background.secondary
+        tv.backgroundColor = AppColor.Container.primary
         tv.font = AppTypography.h3_700.font()
         tv.textColor = AppColor.IconAndText.green
         tv.layer.cornerRadius = 16
@@ -152,6 +152,7 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func nextButtonTapped() {
+        view.endEditing(true)
         onNext()
     }
     
@@ -217,7 +218,7 @@ private extension OnboardingWorkplaceViewController {
         
         ctaContainer.snp.makeConstraints { make in
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-            make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-24)
+            make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-AppSpacing.ctaBottom)
         }
         
         nextButton.snp.makeConstraints { make in
@@ -265,16 +266,20 @@ extension OnboardingWorkplaceViewController: UITextViewDelegate {
 // MARK: - Private Methods
 
 private extension OnboardingWorkplaceViewController {
+    var workplaceText: String {
+        workplaceTextView.text ?? ""
+    }
+    
+    var isWorkplaceValid: Bool {
+        !workplaceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
     func updatePlaceholderVisibility() {
-        let text = workplaceTextView.text ?? ""
-        workplacePlaceholderLabel.isHidden = !text.isEmpty
+        workplacePlaceholderLabel.isHidden = !workplaceText.isEmpty
     }
     
     func updateNextButtonState() {
-        let text = workplaceTextView.text ?? ""
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        nextButton.isEnabled = !trimmed.isEmpty
+        nextButton.isEnabled = isWorkplaceValid
     }
     
     func setupGesture() {

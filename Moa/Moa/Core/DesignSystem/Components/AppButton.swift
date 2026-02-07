@@ -110,7 +110,7 @@ extension AppButton.Style {
     static func primary(
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
-        verticalPadding: CGFloat = 16.0,
+        verticalPadding: CGFloat = 19.0,
         horizontalPadding: CGFloat? = nil
     ) -> AppButton.Style {
         .init(
@@ -135,7 +135,7 @@ extension AppButton.Style {
     static func secondary(
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
-        verticalPadding: CGFloat = 16.0,
+        verticalPadding: CGFloat = 19.0,
         horizontalPadding: CGFloat? = nil
     ) -> AppButton.Style {
         .init(
@@ -160,7 +160,7 @@ extension AppButton.Style {
     static func tertiary(
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
-        verticalPadding: CGFloat = 16.0,
+        verticalPadding: CGFloat = 19.0,
         horizontalPadding: CGFloat? = nil
     ) -> AppButton.Style {
         .init(
