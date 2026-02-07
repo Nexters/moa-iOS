@@ -35,8 +35,10 @@ final class IconTextView: UIView {
     
     private lazy var textLabel: UILabel = {
         let label = UILabel()
-        label.font = AppTypography.b2_400.font()
-        label.textColor = AppColor.IconAndText.highEmphasis
+        label.applyTextStyle(.init(
+            typography: AppTypography.b2_400,
+            color: AppColor.IconAndText.highEmphasis
+        ))
         label.numberOfLines = 1
         return label
     }()

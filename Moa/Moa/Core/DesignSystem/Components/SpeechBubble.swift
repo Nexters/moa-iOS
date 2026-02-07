@@ -17,8 +17,10 @@ final class SpeechBubble: UIView {
     
     private lazy var contentLabel: UILabel = {
         let label = UILabel()
-        label.font = AppTypography.b2_400.font()
-        label.textColor = AppColor.IconAndText.highEmphasis
+        label.applyTextStyle(.init(
+            typography: AppTypography.b2_400,
+            color: AppColor.IconAndText.highEmphasis
+        ))
         label.textAlignment = .center
         label.numberOfLines = 1
         return label
@@ -65,12 +67,12 @@ final class SpeechBubble: UIView {
         let width = bounds.width
         let height = bounds.height - tailHeight
         
-        // 말풍선
+        // 말풍선 본체
         let rect = CGRect(x: 0, y: 0, width: width, height: height)
         let roundedRect = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
         bubblePath.append(roundedRect)
         
-        // 하단 중앙 삼각형
+        // 하단 중앙 삼각형 꼬리
         let tailWidth: CGFloat = 17.32
         let centerX = width / 2
         let tailTop = height
