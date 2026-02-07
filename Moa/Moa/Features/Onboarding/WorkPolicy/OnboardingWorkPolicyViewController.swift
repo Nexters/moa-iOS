@@ -50,6 +50,13 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     private let workingTimeRangeRowView = TimeRangeRowView()
     
+    private lazy var workingHourSection: UIStackView = {
+        let v = UIStackView(arrangedSubviews: [workingHoursLabel, workingTimeRangeRowView])
+        v.axis = .vertical
+        v.spacing = 8
+        return v
+    }()
+    
     private let lunchBreakTimeLabel: UILabel = {
         let label = UILabel()
         label.text = Constant.lunchBreakTime
@@ -61,6 +68,35 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }()
     
     private let lunchBreakTimeRangeRowView = TimeRangeRowView()
+    
+    private lazy var lunchBreakTimeSection: UIStackView = {
+        let v = UIStackView(arrangedSubviews: [lunchBreakTimeLabel, lunchBreakTimeRangeRowView])
+        v.axis = .vertical
+        v.spacing = 8
+        return v
+    }()
+
+    private lazy var contentStack: UIStackView = {
+        let v = UIStackView(arrangedSubviews: [
+            titleLabel,
+            weekdaySelectionView,
+            workingHourSection,
+            lunchBreakTimeSection
+        ])
+        v.axis = .vertical
+        v.alignment = .fill
+        v.spacing = 24
+        v.isLayoutMarginsRelativeArrangement = true
+        v.directionalLayoutMargins = .init(
+            top: 20,
+            leading: AppSpacing.screenHorizontal,
+            bottom: 0,
+            trailing: AppSpacing.screenHorizontal
+        )
+        
+        v.setCustomSpacing(32, after: titleLabel)
+        return v
+    }()
     
     private let nextButton = AppButton()
     
@@ -106,44 +142,11 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }
     
     private func setupLayout() {
-        view.addSubViews([
-            titleLabel,
-            weekdaySelectionView,
-            workingHoursLabel,
-            workingTimeRangeRowView,
-            lunchBreakTimeLabel,
-            lunchBreakTimeRangeRowView,
-            nextButton
-        ])
+        view.addSubViews([contentStack, nextButton])
         
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-        }
-        
-        weekdaySelectionView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(32)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-        }
-        
-        workingHoursLabel.snp.makeConstraints { make in
-            make.top.equalTo(weekdaySelectionView.snp.bottom).offset(24)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-        }
-        
-        workingTimeRangeRowView.snp.makeConstraints { make in
-            make.top.equalTo(workingHoursLabel.snp.bottom).offset(8)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-        }
-        
-        lunchBreakTimeLabel.snp.makeConstraints { make in
-            make.top.equalTo(workingTimeRangeRowView.snp.bottom).offset(24)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
-        }
-        
-        lunchBreakTimeRangeRowView.snp.makeConstraints { make in
-            make.top.equalTo(lunchBreakTimeLabel.snp.bottom).offset(8)
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
+        contentStack.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
         }
         
         nextButton.snp.makeConstraints { make in
