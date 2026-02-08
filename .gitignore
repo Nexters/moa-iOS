@@ -108,7 +108,7 @@ xcuserdata
 ### Xcode ###
 
 # Config secrets (xcconfig)
-Config/Secrets.xcconfig
+/Moa/Moa/Config/Secrets.xcconfig
 
 ## Xcode 8 and earlier
 
