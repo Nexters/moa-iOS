@@ -22,22 +22,22 @@ final class TimeRangeRowView: UIControl {
     }()
     
     private let startTimeLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.t2_700,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         label.textAlignment = .center
         label.text = "09:00"
         return label
     }()
     
     private let endTimeLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.t2_700,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         label.textAlignment = .center
         label.text = "18:00"
         return label
