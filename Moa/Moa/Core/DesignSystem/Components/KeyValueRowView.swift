@@ -34,7 +34,7 @@ final class KeyValueRowView: UIView {
     
     private lazy var chevronImageBtn: AppIconButton = {
         let iconBtn = AppIconButton(
-            image: .Icon.iconArrowRight2,
+            image: .Icon.iconChevronRight,
             iconSize: 18,
             buttonSize: 24,
             tintColor: AppColor.IconAndText.lowEmphasis
