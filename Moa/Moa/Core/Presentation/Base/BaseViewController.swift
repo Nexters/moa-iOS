@@ -11,6 +11,11 @@ import Combine
 class BaseViewController: UIViewController {
     var cancellables = Set<AnyCancellable>()
     
+    // 네비게이션 바 숨김 여부
+    var prefersNavigationBarHidden: Bool {
+        false
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupBaseUI()
@@ -29,7 +34,10 @@ class BaseViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: false)
+        navigationController?.setNavigationBarHidden(
+            prefersNavigationBarHidden,
+            animated: animated
+        )
     }
     
     func bindOutput<Output>(

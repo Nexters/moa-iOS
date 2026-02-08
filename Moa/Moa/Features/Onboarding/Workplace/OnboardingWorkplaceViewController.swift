@@ -69,8 +69,10 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     private let workplacePlaceholderLabel: UILabel = {
         let label = UILabel()
         label.text = Constant.workplacePlaceholder
-        label.textColor = AppColor.IconAndText.disabled
-        label.font = AppTypography.h3_700.font()
+        label.applyTextStyle(.init(
+            typography: AppTypography.h3_700,
+            color: AppColor.IconAndText.disabled
+        ))
         label.numberOfLines = 0
         label.textAlignment = .center
         return label

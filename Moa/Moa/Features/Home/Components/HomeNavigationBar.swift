@@ -20,11 +20,17 @@ final class HomeNavigationBarView: UIView {
     }()
     
     private lazy var calendarButton: AppIconButton = {
-        AppIconButton(image: UIImage(resource: .Icon.iconCalendar))
+        AppIconButton(
+            image: UIImage(resource: .Icon.iconCalendar),
+            tintColor: AppColor.IconAndText.highEmphasis
+        )
     }()
     
     private lazy var settingButton: AppIconButton = {
-        AppIconButton(image: UIImage(resource: .Icon.iconSetting))
+        AppIconButton(
+            image: UIImage(resource: .Icon.iconSetting),
+            tintColor: AppColor.IconAndText.highEmphasis
+        )
     }()
     
     private lazy var rightStackView: UIStackView = {

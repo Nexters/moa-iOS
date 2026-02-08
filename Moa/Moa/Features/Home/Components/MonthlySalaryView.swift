@@ -16,25 +16,31 @@ final class MonthlySalaryView: UIView {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "\(month)월 누적 월급"
-        label.textColor = AppColor.IconAndText.highEmphasis
-        label.font = AppTypography.t3_500.font()
+        label.applyTextStyle(.init(
+            typography: AppTypography.t3_500,
+            color: AppColor.IconAndText.highEmphasis
+        ))
         label.textAlignment = .center
         return label
     }()
 
     private lazy var amountLabel: UILabel = {
         let label = UILabel()
-        label.textColor = AppColor.IconAndText.green
-        label.font = AppTypography.h1_700.font()
-        label.text = "0"
+        label.text = targetAmount.description
+        label.applyTextStyle(.init(
+            typography: AppTypography.h1_700,
+            color: AppColor.IconAndText.green
+        ))
         return label
     }()
 
     private lazy var unitLabel: UILabel = {
         let label = UILabel()
         label.text = "원"
-        label.textColor = AppColor.IconAndText.mediumEmphasis
-        label.font = AppTypography.h3_500.font()
+        label.applyTextStyle(.init(
+            typography: AppTypography.h3_500,
+            color: AppColor.IconAndText.mediumEmphasis
+        ))
         return label
     }()
 
@@ -49,8 +55,10 @@ final class MonthlySalaryView: UIView {
     private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.textColor = AppColor.IconAndText.mediumEmphasis
-        label.font = AppTypography.b1_400.font()
+        label.applyTextStyle(.init(
+            typography: AppTypography.b1_400,
+            color: AppColor.IconAndText.mediumEmphasis
+        ))
         return label
     }()
 
@@ -87,7 +95,9 @@ final class MonthlySalaryView: UIView {
         configureAmount()
     }
 
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     // MARK: - Setup UI
 
@@ -111,7 +121,8 @@ final class MonthlySalaryView: UIView {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Configuration
+    
     private func configureAmount() {
         if shouldAnimate {
             startCounterAnimation()
@@ -123,20 +134,19 @@ final class MonthlySalaryView: UIView {
 
     private func configureSubtitle() {
         let diff = targetAmount - baseAmount
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        let diffFormatted = formatter.string(from: NSNumber(value: diff)) ?? "\(diff)"
+        let diffFormatted = AppNumberFormatter.decimalString(from: diff)
 
         let fullText = "기본 월급보다 +\(diffFormatted)원 더 일했어요"
         let attributed = NSMutableAttributedString(string: fullText)
 
-        let grayColor = UIColor(white: 0.6, alpha: 1)
+        // 전체 텍스트 스타일 적용
         attributed.addAttribute(
             .foregroundColor,
-            value: grayColor,
-            range: NSRange(fullText.startIndex..., in: fullText)
+            value: AppColor.IconAndText.mediumEmphasis,
+            range: NSRange(location: 0, length: fullText.count)
         )
 
+        // 강조할 부분 스타일 적용
         let greenPart = "+\(diffFormatted)원"
         if let range = fullText.range(of: greenPart) {
             attributed.addAttribute(
@@ -150,7 +160,7 @@ final class MonthlySalaryView: UIView {
     }
 }
 
-// MARK: - Counter Rolling Animatio'
+// MARK: - Counter Rolling Animation
 private extension MonthlySalaryView {
 
     func startCounterAnimation() {
@@ -165,7 +175,7 @@ private extension MonthlySalaryView {
     }
 
     @objc
-    private func updateCounter() {
+    func updateCounter() {
         let elapsed = CACurrentMediaTime() - animationStartTime
         var progress = CGFloat(elapsed) / animationDuration
         progress = min(progress, 1.0)
