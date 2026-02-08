@@ -35,12 +35,12 @@ final class SalaryTypeOptionView: UIView {
     // MARK: - UI Components
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.salaryType
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
         return label
     }()
     

@@ -14,33 +14,33 @@ final class MonthlySalaryView: UIView {
     // MARK: - UI Components
     
     private lazy var titleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = "\(month)월 누적 월급"
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.t3_500,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         label.textAlignment = .center
         return label
     }()
 
     private lazy var amountLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = targetAmount.description
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.h1_700,
             color: AppColor.IconAndText.green
-        ))
+        )
         return label
     }()
 
     private lazy var unitLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = "원"
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.h3_500,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
         return label
     }()
 
@@ -53,12 +53,12 @@ final class MonthlySalaryView: UIView {
     }()
 
     private lazy var subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.textAlignment = .center
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.b1_400,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
+        label.textAlignment = .center
         return label
     }()
 

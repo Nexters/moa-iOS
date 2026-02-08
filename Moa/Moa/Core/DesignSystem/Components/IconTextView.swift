@@ -34,11 +34,11 @@ final class IconTextView: UIView {
     }()
     
     private lazy var textLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.b2_400,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         label.numberOfLines = 1
         return label
     }()

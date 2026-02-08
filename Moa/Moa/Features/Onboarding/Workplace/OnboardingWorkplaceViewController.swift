@@ -39,12 +39,12 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     
     /// "근무지"
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.workplace
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         return label
     }()
     
@@ -67,12 +67,12 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     }()
     
     private let workplacePlaceholderLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.workplacePlaceholder
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.h3_700,
             color: AppColor.IconAndText.disabled
-        ))
+        )
         label.numberOfLines = 0
         label.textAlignment = .center
         return label
@@ -80,22 +80,22 @@ final class OnboardingWorkplaceViewController: BaseViewController {
     
     /// "에서 일해요"
     private let subtitleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.workplaceSuffix
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         return label
     }()
     
     private let workplaceHintLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.workplaceHint
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.lowEmphasis
-        ))
+        )
         label.isHidden = true
         return label
     }()

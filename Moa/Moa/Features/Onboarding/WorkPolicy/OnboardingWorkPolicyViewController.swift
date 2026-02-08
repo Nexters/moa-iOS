@@ -27,24 +27,24 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - UI Components
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.title
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.t1_700,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         return label
     }()
     
     private let weekdaySelectionView = WeekdaySelectionView()
     
     private let workingHoursLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.workingHours
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
         return label
     }()
     
@@ -58,12 +58,12 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }()
     
     private let lunchBreakTimeLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = Constant.lunchBreakTime
-        label.applyTextStyle(.init(
+        label.textStyle = .init(
             typography: AppTypography.b2_500,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
         return label
     }()
     

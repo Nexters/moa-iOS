@@ -14,20 +14,20 @@ final class KeyValueRowView: UIView {
     // MARK: - UI
     
     private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.b1_400,
             color: AppColor.IconAndText.mediumEmphasis
-        ))
+        )
         return label
     }()
     
     private lazy var valueLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
+        let label = StyledLabel()
+        label.textStyle = .init(
             typography: AppTypography.b1_600,
             color: AppColor.IconAndText.highEmphasis
-        ))
+        )
         label.setContentHuggingPriority(.required, for: .horizontal)
         return label
     }()
