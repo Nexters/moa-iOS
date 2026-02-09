@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 8D1A50692F38EAB6002A78C4 /* KakaoSDK */; };
 		8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8D3FA17F2F23DF9A00EAE229 /* SnapKit */; };
+		8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */; };
 		CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE8182F279DA800CC8D17 /* CombineMoya */; };
 		CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE81A2F279DA800CC8D17 /* Moya */; };
 		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
@@ -48,6 +49,7 @@
 				CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */,
 				8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */,
 				8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */,
+				8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */,
 				CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -97,6 +99,7 @@
 				CD2DE8182F279DA800CC8D17 /* CombineMoya */,
 				CD2DE81A2F279DA800CC8D17 /* Moya */,
 				8D1A50692F38EAB6002A78C4 /* KakaoSDK */,
+				8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */,
 			);
 			productName = Moa;
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
@@ -130,6 +133,7 @@
 				8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */,
 				CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */,
 				8D1A50682F38EAB6002A78C4 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DAC508E2F20FF7100FAA818 /* Products */;
@@ -191,6 +195,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Moa/Moa.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -208,7 +213,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.moa;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.ios.moa;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -232,6 +237,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Moa/Moa.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -249,7 +255,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.moa;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.ios.moa;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -431,6 +437,14 @@
 				minimumVersion = 5.7.1;
 			};
 		};
+		8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.9.0;
+			};
+		};
 		CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Moya/Moya.git";
@@ -451,6 +465,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 		CD2DE8182F279DA800CC8D17 /* CombineMoya */ = {
 			isa = XCSwiftPackageProductDependency;
