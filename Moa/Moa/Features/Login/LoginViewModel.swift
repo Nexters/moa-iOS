@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+import KakaoSDKUser
+import KakaoSDKAuth
 
 enum LoginOutput {
     case loginSucceed
@@ -14,7 +16,15 @@ enum LoginOutput {
 
 final class LoginViewModel: BaseViewModel<LoginOutput> {
     func didTapLogin() {
-        // TODO: 로그인 로직
-        send(.loginSucceed)
+        if UserApi.isKakaoTalkLoginAvailable() {
+            UserApi.shared.loginWithKakaoTalk { [weak self] oauthToken, error in
+                if let error {
+                    print("카카오로 로그인 실패: \(error)")
+                } else {
+                    print("idToken: \(oauthToken?.idToken)")
+                    self?.send(.loginSucceed)
+                }
+            }
+        }
     }
 }
