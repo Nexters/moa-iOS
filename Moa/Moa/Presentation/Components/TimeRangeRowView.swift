@@ -21,25 +21,27 @@ final class TimeRangeRowView: UIControl {
         return stack
     }()
     
-    private let startTimeLabel: UILabel = {
+    private lazy var startTimeLabel: StyledLabel = {
         let label = StyledLabel()
-        label.textStyle = .init(
-            typography: AppTypography.t2_700,
-            color: AppColor.IconAndText.highEmphasis
+        label.setStyle(
+            .init(
+                typography: AppTypography.t2_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         label.textAlignment = .center
-        label.text = "09:00"
         return label
     }()
     
-    private let endTimeLabel: UILabel = {
+    private lazy var endTimeLabel: StyledLabel = {
         let label = StyledLabel()
-        label.textStyle = .init(
-            typography: AppTypography.t2_700,
-            color: AppColor.IconAndText.highEmphasis
+        label.setStyle(
+            .init(
+                typography: AppTypography.t2_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         label.textAlignment = .center
-        label.text = "18:00"
         return label
     }()
     
@@ -68,8 +70,8 @@ final class TimeRangeRowView: UIControl {
     // MARK: - Public
     
     func configure(start: String, end: String) {
-        startTimeLabel.text = start
-        endTimeLabel.text = end
+        startTimeLabel.setText(start)
+        endTimeLabel.setText(end)
     }
     
     // MARK: - Private

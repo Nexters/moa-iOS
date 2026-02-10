@@ -28,10 +28,12 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     private let titleLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.title
-        label.textStyle = .init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
+        label.setText(
+            Constant.title,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         return label
     }()
@@ -40,10 +42,12 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     private let workingHoursLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.workingHours
-        label.textStyle = .init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
+        label.setText(
+            Constant.workingHours,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
         )
         return label
     }()
@@ -59,10 +63,12 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     private let lunchBreakTimeLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.lunchBreakTime
-        label.textStyle = .init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
+        label.setText(
+            Constant.lunchBreakTime,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
         )
         return label
     }()
@@ -121,6 +127,7 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupButton()
         setupLayout()
+        workingTimeRangeRowView.configure(start: "09:00", end: "18:00")
         lunchBreakTimeRangeRowView.configure(start: "12:00", end: "13:00")
     }
     

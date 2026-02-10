@@ -33,11 +33,13 @@ final class IconTextView: UIView {
         return imageView
     }()
     
-    private lazy var textLabel: UILabel = {
+    private lazy var textLabel: StyledLabel = {
         let label = StyledLabel()
-        label.textStyle = .init(
-            typography: AppTypography.b2_400,
-            color: AppColor.IconAndText.highEmphasis
+        label.setStyle(
+            .init(
+                typography: AppTypography.b2_400,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         label.numberOfLines = 1
         return label
@@ -82,6 +84,6 @@ final class IconTextView: UIView {
     // MARK: - Configuration
     func configure(type: IconTextViewType, text: String) {
         iconImageView.image = type.icon?.withRenderingMode(.alwaysTemplate)
-        textLabel.text = text
+        textLabel.setText(text)
     }
 }

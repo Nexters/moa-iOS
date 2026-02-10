@@ -11,25 +11,30 @@ final class StyledLabel: UILabel {
 
     // MARK: - Style
 
-    var textStyle: TextStyle? {
-        didSet { reapplyStyle() }
+    private var textStyle: TextStyle?
+    
+    // MARK: - Source of truth
+    
+    private var rawText: String = ""
+    
+    // MARK: Public API
+    
+    func setText(_ text: String?, style: TextStyle? = nil) {
+        rawText = text ?? ""
+        if let style { self.textStyle = style }
+        applyStyle()
     }
-
-    // MARK: - Overrides
-
-    override var text: String? {
-        didSet { reapplyStyle() }
-    }
-
-    override var textAlignment: NSTextAlignment {
-        didSet { reapplyStyle() }
+    
+    func setStyle(_ style: TextStyle) {
+        self.textStyle = style
+        applyStyle()
     }
 
     // MARK: - Private
 
-    private func reapplyStyle() {
+    private func applyStyle() {
         guard let style = textStyle else { return }
-        let content = text ?? ""
+        let content = rawText
         attributedText = style.makeAttributedString(content, alignment: textAlignment)
     }
 }

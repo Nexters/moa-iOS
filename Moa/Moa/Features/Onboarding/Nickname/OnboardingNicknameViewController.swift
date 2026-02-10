@@ -41,10 +41,12 @@ final class OnboardingNicknameViewController: BaseViewController {
     /// "닉네임"
     private let titleLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.nickname
-        label.textStyle = .init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
+        label.setText(
+            Constant.nickname,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         return label
     }()
@@ -78,10 +80,12 @@ final class OnboardingNicknameViewController: BaseViewController {
     /// "로 시작할래요"
     private let subtitleLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.nicknameSuffix
-        label.textStyle = .init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
+        label.setText(
+            Constant.nicknameSuffix,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
         )
         return label
     }()
@@ -108,10 +112,12 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     private let nicknameHintLabel: UILabel = {
         let label = StyledLabel()
-        label.text = Constant.nicknameHint
-        label.textStyle = .init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.lowEmphasis
+        label.setText(
+            Constant.nicknameHint,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.lowEmphasis
+            )
         )
         label.isHidden = true
         return label
