@@ -24,7 +24,7 @@ struct BottomSheetConfiguration {
         handleHeight: 5,
         handleWidth: 32,
         handleTopPadding: 16,
-        dimmedAlpha: 0.6,
+        dimmedAlpha: 0.0,
         springDamping: 0.8,
         springVelocity: 0.5
     )
@@ -118,7 +118,6 @@ final class BottomSheetViewController: UIViewController {
         let view = UIView()
         view.backgroundColor = AppColor.Container.primary
         view.layer.cornerRadius = configuration.cornerRadius
-        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         view.clipsToBounds = true
         return view
     }()
@@ -146,7 +145,6 @@ final class BottomSheetViewController: UIViewController {
 
         super.init(nibName: nil, bundle: nil)
         
-        transitioningDelegate = self
         modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
     }
@@ -198,7 +196,6 @@ final class BottomSheetViewController: UIViewController {
 
         containerViewHeightConstraint?.update(offset: totalHeight)
 
-        // 처음에는 아래에 숨김
         containerViewBottomConstraint?.update(offset: totalHeight)
         view.layoutIfNeeded()
     }
@@ -306,50 +303,47 @@ final class BottomSheetViewController: UIViewController {
     // MARK: - Gesture Handlers
     @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
         let translation = gesture.translation(in: view)
-        let verticalMovement = max(translation.y, 0)
-        let percent = min(verticalMovement / defaultHeight, 1)
+        let velocity = gesture.velocity(in: view)
+
+        let offset = max(translation.y, 0)
 
         switch gesture.state {
         case .began:
-            isInteracting = true
-            interactionController = UIPercentDrivenInteractiveTransition()
-            dismiss(animated: true)
+            break
 
         case .changed:
-            interactionController?.update(percent)
+            containerViewBottomConstraint?.update(offset: offset)
+            view.layoutIfNeeded()
 
         case .ended, .cancelled:
-            isInteracting = false
+            let shouldDismiss =
+                offset > defaultHeight * 0.3 ||
+                velocity.y > 1200
 
-            if percent > 0.3 || gesture.velocity(in: view).y > 1000 {
-                interactionController?.finish()
+            if shouldDismiss {
+                animateDismiss()
             } else {
-                interactionController?.cancel()
-            }
+                // 원래 위치로 복귀
+                containerViewBottomConstraint?.update(offset: 0)
 
-            interactionController = nil
+                UIView.animate(
+                    withDuration: 0.25,
+                    delay: 0,
+                    usingSpringWithDamping: configuration.springDamping,
+                    initialSpringVelocity: configuration.springVelocity,
+                    options: .curveEaseOut
+                ) {
+                    self.view.layoutIfNeeded()
+                }
+            }
 
         default:
             break
         }
     }
+
     
     @objc private func dimmedViewTapped() {
         animateDismiss()
-    }
-}
-
-// MARK: - UIViewControllerTransitioningDelegate
-extension BottomSheetViewController: UIViewControllerTransitioningDelegate {
-    func animationController(
-        forDismissed dismissed: UIViewController
-    ) -> UIViewControllerAnimatedTransitioning? {
-        BottomSheetDismissAnimator(configuration: configuration)
-    }
-
-    func interactionControllerForDismissal(
-        using animator: UIViewControllerAnimatedTransitioning
-    ) -> UIViewControllerInteractiveTransitioning? {
-        isInteracting ? interactionController : nil
     }
 }
