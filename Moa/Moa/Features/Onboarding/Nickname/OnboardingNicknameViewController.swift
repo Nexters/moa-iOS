@@ -40,12 +40,14 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     /// "닉네임"
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.nickname
-        label.applyTextStyle(.init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.nickname,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         return label
     }()
     
@@ -77,12 +79,14 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     /// "로 시작할래요"
     private let subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.nicknameSuffix
-        label.applyTextStyle(.init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.nicknameSuffix,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         return label
     }()
     
@@ -107,12 +111,14 @@ final class OnboardingNicknameViewController: BaseViewController {
     }()
     
     private let nicknameHintLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.nicknameHint
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.lowEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.nicknameHint,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.lowEmphasis
+            )
+        )
         label.isHidden = true
         return label
     }()

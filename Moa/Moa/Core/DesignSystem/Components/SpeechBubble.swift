@@ -15,12 +15,14 @@ final class SpeechBubble: UIView {
     private let tailHeight: CGFloat = 9.34
     private let cornerRadius: CGFloat = 16
     
-    private lazy var contentLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_400,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+    private lazy var contentLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b2_400,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         label.textAlignment = .center
         label.numberOfLines = 1
         return label
@@ -87,6 +89,6 @@ final class SpeechBubble: UIView {
     
     // MARK: - Configuration
     func configure(text: String) {
-        contentLabel.text = text
+        contentLabel.setText(text)
     }
 }

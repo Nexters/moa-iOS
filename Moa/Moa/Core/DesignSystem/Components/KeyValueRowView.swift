@@ -13,21 +13,25 @@ final class KeyValueRowView: UIView {
     
     // MARK: - UI
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
-            typography: AppTypography.b1_400,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+    private lazy var titleLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b1_400,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     
-    private lazy var valueLabel: UILabel = {
-        let label = UILabel()
-        label.applyTextStyle(.init(
-            typography: AppTypography.b1_600,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+    private lazy var valueLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b1_600,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         label.setContentHuggingPriority(.required, for: .horizontal)
         return label
     }()
@@ -87,14 +91,14 @@ final class KeyValueRowView: UIView {
     // MARK: - Configure
     
     private func configure(title: String, value: String, showsChevron: Bool) {
-        titleLabel.text = title
-        valueLabel.text = value
+        titleLabel.setText(title)
+        valueLabel.setText(value)
         chevronImageBtn.isHidden = !showsChevron
     }
     
     // MARK: - Public API
     
     func updateValue(_ value: String) {
-        valueLabel.text = value
+        valueLabel.setText(value)
     }
 }

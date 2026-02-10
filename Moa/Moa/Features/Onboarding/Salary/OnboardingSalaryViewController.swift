@@ -29,23 +29,27 @@ final class OnboardingSalaryViewController: BaseViewController {
     
     /// "얼마씩 받고 있나요?"
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.title
-        label.applyTextStyle(.init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.title,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         return label
     }()
     
     /// "세전, 세후 상관없이 보고 싶은 금액을 입력해주세요."
     private let subTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.subtitle
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_400,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.subtitle,
+            style: .init(
+                typography: AppTypography.b2_400,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     
@@ -53,12 +57,14 @@ final class OnboardingSalaryViewController: BaseViewController {
     
     /// "금액"
     private let amountLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.amount
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.amount,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     
@@ -87,12 +93,14 @@ final class OnboardingSalaryViewController: BaseViewController {
     }()
     
     private let currencyLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.won
-        label.applyTextStyle(.init(
-            typography: AppTypography.b1_400,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.won,
+            style: .init(
+                typography: AppTypography.b1_400,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     

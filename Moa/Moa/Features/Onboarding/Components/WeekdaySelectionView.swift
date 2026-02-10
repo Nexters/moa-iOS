@@ -33,12 +33,14 @@ final class WeekdaySelectionView: UIView {
     // MARK: - UI Components
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.workDays
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.workDays,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     

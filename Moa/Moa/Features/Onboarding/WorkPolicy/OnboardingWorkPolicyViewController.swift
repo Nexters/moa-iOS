@@ -27,24 +27,28 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - UI Components
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.title
-        label.applyTextStyle(.init(
-            typography: AppTypography.t1_700,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.title,
+            style: .init(
+                typography: AppTypography.t1_700,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         return label
     }()
     
     private let weekdaySelectionView = WeekdaySelectionView()
     
     private let workingHoursLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.workingHours
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.workingHours,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     
@@ -58,12 +62,14 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }()
     
     private let lunchBreakTimeLabel: UILabel = {
-        let label = UILabel()
-        label.text = Constant.lunchBreakTime
-        label.applyTextStyle(.init(
-            typography: AppTypography.b2_500,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            Constant.lunchBreakTime,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
     
@@ -121,6 +127,7 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupButton()
         setupLayout()
+        workingTimeRangeRowView.configure(start: "09:00", end: "18:00")
         lunchBreakTimeRangeRowView.configure(start: "12:00", end: "13:00")
     }
     

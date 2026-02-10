@@ -14,33 +14,39 @@ final class MonthlySalaryView: UIView {
     // MARK: - UI Components
     
     private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "\(month)월 누적 월급"
-        label.applyTextStyle(.init(
-            typography: AppTypography.t3_500,
-            color: AppColor.IconAndText.highEmphasis
-        ))
+        let label = StyledLabel()
+        label.setText(
+            "\(month)월 누적 월급",
+            style: .init(
+                typography: AppTypography.t3_500,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
         label.textAlignment = .center
         return label
     }()
 
-    private lazy var amountLabel: UILabel = {
-        let label = UILabel()
-        label.text = targetAmount.description
-        label.applyTextStyle(.init(
-            typography: AppTypography.h1_700,
-            color: AppColor.IconAndText.green
-        ))
+    private lazy var amountLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setText(
+            targetAmount.description,
+            style: .init(
+                typography: AppTypography.h1_700,
+                color: AppColor.IconAndText.green
+            )
+        )
         return label
     }()
 
-    private lazy var unitLabel: UILabel = {
-        let label = UILabel()
-        label.text = "원"
-        label.applyTextStyle(.init(
-            typography: AppTypography.h3_500,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+    private lazy var unitLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setText(
+            "원",
+            style: .init(
+                typography: AppTypography.h3_500,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         return label
     }()
 
@@ -52,13 +58,15 @@ final class MonthlySalaryView: UIView {
         return stack
     }()
 
-    private lazy var subtitleLabel: UILabel = {
-        let label = UILabel()
+    private lazy var subtitleLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b1_400,
+                color: AppColor.IconAndText.mediumEmphasis
+            )
+        )
         label.textAlignment = .center
-        label.applyTextStyle(.init(
-            typography: AppTypography.b1_400,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
         return label
     }()
 
@@ -127,7 +135,7 @@ final class MonthlySalaryView: UIView {
         if shouldAnimate {
             startCounterAnimation()
         } else {
-            amountLabel.text = AppNumberFormatter.decimalString(from: targetAmount)
+            amountLabel.setText(AppNumberFormatter.decimalString(from: targetAmount))
             subtitleLabel.alpha = 1
         }
     }
@@ -164,7 +172,7 @@ final class MonthlySalaryView: UIView {
 private extension MonthlySalaryView {
 
     func startCounterAnimation() {
-        amountLabel.text = "0"
+        amountLabel.setText("0")
         subtitleLabel.alpha = 0
 
         animationStartTime = CACurrentMediaTime()
@@ -183,12 +191,12 @@ private extension MonthlySalaryView {
         let easedProgress = progress * (2 - progress)
         let currentValue = Int(CGFloat(targetAmount) * easedProgress)
 
-        amountLabel.text = AppNumberFormatter.decimalString(from: currentValue)
+        amountLabel.setText(AppNumberFormatter.decimalString(from: currentValue))
 
         if progress >= 1.0 {
             displayLink?.invalidate()
             displayLink = nil
-            amountLabel.text = AppNumberFormatter.decimalString(from: targetAmount)
+            amountLabel.setText(AppNumberFormatter.decimalString(from: targetAmount))
 
             UIView.animate(withDuration: 0.4, delay: 0.2) {
                 self.subtitleLabel.alpha = 1
