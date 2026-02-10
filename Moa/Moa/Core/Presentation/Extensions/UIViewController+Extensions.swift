@@ -9,16 +9,10 @@ import UIKit
 
 // MARK: - Presentation Helper
 extension UIViewController {
-    func presentBottomSheet(
-        _ contentViewController: BottomSheetPresentable,
-        configuration: BottomSheetConfiguration = .default,
-        delegate: BottomSheetViewControllerDelegate? = nil
-    ) {
-        let bottomSheet = BottomSheetViewController(
-            contentViewController: contentViewController,
-            configuration: configuration
+    func presentBottomSheet(_ contentVC: BottomSheetPresentable) {
+        let bottomSheetVC = BottomSheetViewController(
+            contentViewController: contentVC
         )
-        bottomSheet.delegate = delegate
-        present(bottomSheet, animated: false)
+        present(bottomSheetVC, animated: false)
     }
 }

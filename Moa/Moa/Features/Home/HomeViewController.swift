@@ -9,6 +9,9 @@ import UIKit
 import SnapKit
 
 final class HomeViewController: BaseViewController {
+    
+    private var hasShownBottomSheet = false
+    
     override var prefersNavigationBarHidden: Bool {
         true
     }
@@ -83,6 +86,18 @@ final class HomeViewController: BaseViewController {
         setupHierarchy()
         setupConstraints()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        guard !hasShownBottomSheet else { return }
+        hasShownBottomSheet = true
+
+        DispatchQueue.main.async {
+            self.showWorkAlarmBottomSheet()
+        }
+    }
+
 }
 
 
@@ -180,5 +195,23 @@ private extension HomeViewController {
             $0.centerX.equalToSuperview()
             $0.bottom.equalToSuperview().inset(Constant.bottomInset)
         }
+    }
+    
+    func showWorkAlarmBottomSheet() {
+        let vc = WorkAlarmBottomSheetViewController()
+        
+        vc.delegate = self
+        presentBottomSheet(vc)
+    }
+}
+
+extension HomeViewController: WorkAlarmBottomSheetViewDelegate {
+    func didTapAlarm() {
+        // 알림 권한 요청
+        print("알림 동의")
+    }
+    
+    func didTapLater() {
+        print("다음에")
     }
 }
