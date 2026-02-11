@@ -23,4 +23,14 @@ final class AuthUsecase {
             fcmDeviceToken: fcmDeviceToken
         )
     }
+    
+    func loginWithApple(
+        idToken: String,
+        fcmDeviceToken: String
+    ) async throws -> SocialLoginEntity {
+        try await repository.loginWithApple(
+            idToken: idToken,
+            fcmDeviceToken: fcmDeviceToken
+        )
+    }
 }
