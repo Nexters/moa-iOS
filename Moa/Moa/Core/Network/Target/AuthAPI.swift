@@ -10,46 +10,53 @@ import Moya
 import Alamofire
 
 enum AuthAPI {
-    case checkLogin
+    case kakaoAuth(SocialLoginRequest)
+    case appleAuth(SocialLoginRequest)
 }
 
 extension AuthAPI: TargetType {
 
-    // MARK: - Base URL
     var baseURL: URL {
-        URL(string: "https://test.com")!        // TODO: URL 교체 필요
+        URL(string: "http://139.150.10.57:8080")!
     }
 
-    // MARK: - Path
     var path: String {
         switch self {
-        case .checkLogin:
-            return "/auth/status"               // TODO: URL 교체 필요
+        case .kakaoAuth:
+            return "/api/v1/auth/kakao"
+            
+        case .appleAuth:
+            return "/api/v1/auth/apple"
         }
     }
 
-    // MARK: - Method
     var method: Moya.Method {
         switch self {
-        case .checkLogin:
-            return .get
+        case .kakaoAuth:
+            return .post
+            
+        case .appleAuth:
+            return .post
         }
     }
 
-    // MARK: - Task
     var task: Moya.Task {
-        .requestPlain
+        switch self {
+        case let .kakaoAuth(body):
+            return .requestJSONEncodable(body)
+            
+        case let .appleAuth(body):
+            return .requestJSONEncodable(body)
+        }
     }
 
-    // MARK: - Headers
     var headers: [String: String]? {
         nil
     }
 
-    // MARK: - Sample Data (Stub / Test)
     var sampleData: Data {
         switch self {
-        case .checkLogin:
+        default:
             return """
             {
               "isLoggedIn": true

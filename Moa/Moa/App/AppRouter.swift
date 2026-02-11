@@ -59,7 +59,7 @@ private extension AppRouter {
     }
     
     func makeLogin() -> UIViewController {
-        let vm = LoginViewModel()
+        let vm = LoginViewModel(authUsecase: container.authUseCase)
         return LoginViewController(viewModel: vm, router: self)
     }
     
