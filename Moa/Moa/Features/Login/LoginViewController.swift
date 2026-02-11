@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import AuthenticationServices
 
 final class LoginViewController: BaseViewController {
     private let viewModel: LoginViewModel
@@ -29,14 +30,8 @@ final class LoginViewController: BaseViewController {
         btn.layer.cornerRadius = 32
         return btn
     }()
-    private let appleLoginButton: UIButton = {
-       let btn = UIButton()
-        btn.setTitle("Apple로 계속하기", for: .normal)
-        btn.setTitleColor(AppColor.IconAndText.highEmphasisReverse, for: .normal)
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = 32
-        return btn
-    }()
+    
+    private let appleLoginButton = ASAuthorizationAppleIDButton(type: .continue, style: .white)
     
     init(viewModel: LoginViewModel, router: AppRouting) {
         self.viewModel = viewModel
@@ -55,7 +50,6 @@ final class LoginViewController: BaseViewController {
         view.addSubview(logoImageView)
         view.addSubview(loginButtonStackView)
         
-        // FIXME: 실제 SDK 로그인 버튼으로 수정
         loginButtonStackView.addArrangedSubview(kakaoLoginButton)
         loginButtonStackView.addArrangedSubview(appleLoginButton)
         
@@ -73,6 +67,8 @@ final class LoginViewController: BaseViewController {
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
         }
+        
+        appleLoginButton.cornerRadius = 32
     }
     
     override func bind() {
@@ -96,6 +92,45 @@ final class LoginViewController: BaseViewController {
     }
     
     @objc private func didTapApple() {
-        viewModel.didTapLoginWithApple()
+        let provider = ASAuthorizationAppleIDProvider()
+        let request = provider.createRequest()
+        
+        request.requestedScopes = [.fullName, .email]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+}
+
+// MARK: SignIn with Apple Delegate
+
+extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        self.view.window ?? UIWindow()
+    }
+}
+
+extension LoginViewController: ASAuthorizationControllerDelegate {
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
+        print("애플로 로그인 실패")
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        switch authorization.credential {
+        case let appleIdCredential as ASAuthorizationAppleIDCredential:
+            let idToken = appleIdCredential.identityToken
+            
+            if let idToken,
+               let idTokenString = String(data: idToken, encoding: .utf8) {
+                viewModel.didReceiveInfoFromApple(idToken: idTokenString)
+            } else {
+                print("토큰 변환 실패")
+            }
+            
+        default:
+            break
+        }
     }
 }

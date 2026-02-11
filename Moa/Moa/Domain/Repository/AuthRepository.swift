@@ -9,6 +9,6 @@ import Foundation
 
 protocol AuthRepository {
     func loginWithKakaoTalk(idToken: String, fcmDeviceToken: String) async throws -> SocialLoginEntity
-    // TODO: loginWithApple
+    func loginWithApple(idToken: String, fcmDeviceToken: String) async throws -> SocialLoginEntity
 }
 
