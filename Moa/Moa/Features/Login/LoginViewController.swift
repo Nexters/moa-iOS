@@ -10,8 +10,20 @@ import SnapKit
 import AuthenticationServices
 
 final class LoginViewController: BaseViewController {
+    
+    // MARK: - Constants
+    
+    private enum Constant {
+        static let loginWithKakaoTalk = "카카오로 계속하기"
+        static let loginWithApple = "Apple로 계속하기"
+    }
+    
+    // MARK: - Dependencies
+    
     private let viewModel: LoginViewModel
     private weak var router: AppRouting?
+    
+    // MARK: - UI Components
     
     private let logoImageView = UIImageView()
     private let loginButtonStackView: UIStackView = {
@@ -22,16 +34,11 @@ final class LoginViewController: BaseViewController {
         v.distribution = .fill
         return v
     }()
-    private let kakaoLoginButton: UIButton = {
-        let btn = UIButton()
-        btn.setTitle("카카오로 계속하기", for: .normal)
-        btn.setTitleColor(AppColor.IconAndText.highEmphasisReverse, for: .normal)
-        btn.backgroundColor = .yellow
-        btn.layer.cornerRadius = 32
-        return btn
-    }()
     
-    private let appleLoginButton = ASAuthorizationAppleIDButton(type: .continue, style: .white)
+    private let kakaoLoginButton = AppButton()
+    private let appleLoginButton = AppButton()
+    
+    // MARK: - Init
     
     init(viewModel: LoginViewModel, router: AppRouting) {
         self.viewModel = viewModel
@@ -42,6 +49,8 @@ final class LoginViewController: BaseViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Setup
     
     override func setupUI() {
         logoImageView.image = UIImage(resource: .Logo.login)
@@ -68,7 +77,24 @@ final class LoginViewController: BaseViewController {
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
         }
         
-        appleLoginButton.cornerRadius = 32
+        kakaoLoginButton.setTitle("카카오로 계속하기", for: .normal)
+        kakaoLoginButton.applyStyle(.init(
+            enabled: .init(
+                backgroundColor: .yellow,
+                text: .init(font: AppTypography.t3_700.font(), color: AppColor.IconAndText.highEmphasisReverse)),
+            pressed: .init(
+                backgroundColor: .yellow,
+                text: .init(font: AppTypography.t3_700.font(), color: AppColor.IconAndText.highEmphasisReverse)),
+            disabled: .init(
+                backgroundColor: .yellow,
+                text: .init(font: AppTypography.t3_700.font(), color: AppColor.IconAndText.highEmphasisReverse)),
+            cornerRadius: 32,
+            verticalPadding: 19,
+            image: UIImage(resource: .Icon.iconKakaotalk)
+        ))
+        
+        appleLoginButton.setTitle("Apple로 계속하기", for: .normal)
+        appleLoginButton.applyStyle(.tertiary(image: UIImage(resource: .Icon.iconApple)))
     }
     
     override func bind() {
@@ -104,7 +130,7 @@ final class LoginViewController: BaseViewController {
     }
 }
 
-// MARK: SignIn with Apple Delegate
+// MARK: - SignIn with Apple Delegate
 
 extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
