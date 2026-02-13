@@ -15,7 +15,6 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     private enum Constant {
         static let title = "언제 근무하나요?"
         static let workingHours = "근무 시간"
-        static let lunchBreakTime = "점심 · 휴게 시간"
         static let next = "다음"
     }
     
@@ -60,34 +59,12 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         v.spacing = 8
         return v
     }()
-    
-    private let lunchBreakTimeLabel: UILabel = {
-        let label = StyledLabel()
-        label.setText(
-            Constant.lunchBreakTime,
-            style: .init(
-                typography: AppTypography.b2_500,
-                color: AppColor.IconAndText.mediumEmphasis
-            )
-        )
-        return label
-    }()
-    
-    private let lunchBreakTimeRangeRowView = TimeRangeRowView()
-    
-    private lazy var lunchBreakTimeSection: UIStackView = {
-        let v = UIStackView(arrangedSubviews: [lunchBreakTimeLabel, lunchBreakTimeRangeRowView])
-        v.axis = .vertical
-        v.spacing = 8
-        return v
-    }()
 
     private lazy var contentStack: UIStackView = {
         let v = UIStackView(arrangedSubviews: [
             titleLabel,
             weekdaySelectionView,
-            workingHourSection,
-            lunchBreakTimeSection
+            workingHourSection
         ])
         v.axis = .vertical
         v.alignment = .fill
@@ -128,14 +105,16 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         setupButton()
         setupLayout()
         workingTimeRangeRowView.configure(start: "09:00", end: "18:00")
-        lunchBreakTimeRangeRowView.configure(start: "12:00", end: "13:00")
+        weekdaySelectionView.setSelectedWeekdays(viewModel.selectedWeekdays, notify: false)
     }
     
     override func setupActions() {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
-        weekdaySelectionView.onSelectionChanged = { [weak self] _ in
-            self?.updateNextButtonState()
+        weekdaySelectionView.onSelectionChanged = { [weak self] newSelection in
+            guard let self else { return }
+            self.viewModel.updateSelectedWeekdays(newSelection)
+            self.updateNextButtonState()
         }
         
         updateNextButtonState()
@@ -163,7 +142,6 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         }
         
         workingTimeRangeRowView.setContentHuggingPriority(.required, for: .vertical)
-        lunchBreakTimeRangeRowView.setContentHuggingPriority(.required, for: .vertical)
     }
     
     // MARK: - Actions
@@ -175,6 +153,6 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - Private Methods
     
     private func updateNextButtonState() {
-        nextButton.isEnabled = !weekdaySelectionView.selectedWeekdays.isEmpty
+        nextButton.isEnabled = !viewModel.selectedWeekdays.isEmpty
     }
 }
