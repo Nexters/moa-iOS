@@ -22,7 +22,7 @@ final class SalaryTypeOptionView: UIView {
     
     var onChange: ((SalaryType) -> Void)?
     
-    private var selected: SalaryType = .monthly {
+    private var selected: SalaryType = .yearly {
         didSet { applySelection() }
     }
     
@@ -87,7 +87,7 @@ final class SalaryTypeOptionView: UIView {
     
     private func setupUI() {
         addSubViews([titleLabel, stackView])
-        stackView.addArrangedSubViews([monthlyButton, yearlyButton])
+        stackView.addArrangedSubViews([yearlyButton, monthlyButton])
         
         titleLabel.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -100,15 +100,15 @@ final class SalaryTypeOptionView: UIView {
     }
     
     private func setupActions() {
-        monthlyButton.addTarget(self, action: #selector(monthlyTapped), for: .touchUpInside)
         yearlyButton.addTarget(self, action: #selector(yearlyTapped), for: .touchUpInside)
+        monthlyButton.addTarget(self, action: #selector(monthlyTapped), for: .touchUpInside)
     }
     
     private func applySelection() {
-        monthlyButton.isSelected = (selected == .monthly)
         yearlyButton.isSelected = (selected == .yearly)
+        monthlyButton.isSelected = (selected == .monthly)
         
-        monthlyButton.setNeedsUpdateConfiguration()
         yearlyButton.setNeedsUpdateConfiguration()
+        monthlyButton.setNeedsUpdateConfiguration()
     }
 }
