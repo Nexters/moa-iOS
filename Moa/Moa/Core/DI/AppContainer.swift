@@ -36,6 +36,12 @@ final class AppContainer {
     }()
 
     // MARK: - Repository
+    lazy var authRepository: AuthRepository = {
+        AuthRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
+    lazy var authUseCase: AuthUsecase = {
+        AuthUsecase(repository: authRepository)
+    }()
 }

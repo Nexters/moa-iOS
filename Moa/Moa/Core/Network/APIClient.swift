@@ -10,5 +10,5 @@ import Moya
 
 /// 네트워크 요청에 대한 추상화 인터페이스
 protocol APIClient {
-    func request<T: Decodable>(_ target: TargetType) -> AnyPublisher<T, APIError>
+    func request<T: Decodable>(_ target: TargetType) async throws -> T
 }

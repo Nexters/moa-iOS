@@ -18,19 +18,58 @@ final class MoyaAPIClient: APIClient {
         self.provider = provider
     }
 
-    func request<T: Decodable>(_ target: TargetType) -> AnyPublisher<T, APIError> {
-        provider.requestPublisher(MultiTarget(target))
-            .mapError { APIError.network($0) }
-            .tryMap { response in
-                guard (200..<300).contains(response.statusCode) else {
-                    throw APIError.server(response.statusCode)
+    func request<T: Decodable>(_ target: TargetType) async throws -> T {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.request(MultiTarget(target)) { result in
+                switch result {
+                case let .success(response):
+                    do {
+                        // HTTP 상태 코드 체크
+                        guard (200..<300).contains(response.statusCode) else {
+                            // 4xx, 5xx 에러 응답 파싱 시도
+                            if let errorResponse = try? JSONDecoder().decode(
+                                ErrorResponse.self,
+                                from: response.data
+                            ) {
+                                throw APIError.server(
+                                    code: errorResponse.code,
+                                    message: errorResponse.message,
+                                    fieldErrors: errorResponse.fieldErrors
+                                )
+                            }
+                            throw APIError.httpStatus(response.statusCode)
+                        }
+                        
+                        // 정상 응답 파싱
+                        let decoded = try JSONDecoder().decode(
+                            BaseResponse<T>.self,
+                            from: response.data
+                        )
+                        
+                        continuation.resume(returning: decoded.content)
+                    } catch {
+                        if let apiError = error as? APIError {
+                            continuation.resume(throwing: apiError)
+                        } else {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                    
+                case let .failure(error):
+                    if let errorData = error.response?.data,
+                       let serverError = try? JSONDecoder().decode(ErrorResponse.self, from: errorData) {
+                        continuation.resume(
+                            throwing: APIError.server(
+                                code: serverError.code,
+                                message: serverError.message,
+                                fieldErrors: serverError.fieldErrors
+                            )
+                        )
+                    } else {
+                        continuation.resume(throwing: APIError.network(error))
+                    }
                 }
-                return response.data
             }
-            .decode(type: T.self, decoder: JSONDecoder())
-            .mapError {
-                ($0 as? APIError) ?? APIError.decoding($0)
-            }
-            .eraseToAnyPublisher()
+        }
     }
 }

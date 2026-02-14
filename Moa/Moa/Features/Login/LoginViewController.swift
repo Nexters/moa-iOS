@@ -80,6 +80,8 @@ final class LoginViewController: BaseViewController {
             switch output {
             case .loginSucceed:
                 router?.navigate(to: .onboarding, animated: true)
+            case .loginFailed:
+                break // TODO: 로그인 실패 처리
             }
         }
     }
@@ -90,10 +92,10 @@ final class LoginViewController: BaseViewController {
     }
     
     @objc private func didTapKakao() {
-        viewModel.didTapLogin()
+        viewModel.didTapLoginWithKakaoTalk()
     }
     
     @objc private func didTapApple() {
-        viewModel.didTapLogin()
+        viewModel.didTapLoginWithApple()
     }
 }
