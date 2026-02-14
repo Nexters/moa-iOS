@@ -18,13 +18,13 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
     
     // MARK: - Properties
     weak var delegate: WorkAlarmBottomSheetViewDelegate?
-
+    
     // MARK: - UI
-
+    
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = "근무 알림을 받아보세요!"
-        label.applyTextStyle(
+        label.setStyle(
             .init(
                 typography: AppTypography.t1_700,
                 color: AppColor.IconAndText.highEmphasis
@@ -33,14 +33,14 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
         label.numberOfLines = 1
         return label
     }()
-
+    
     private let descriptionLabel: UILabel = {
-        let label = UILabel()
+        let label = StyledLabel()
         label.text = """
         알림 수신에 동의하면, 출퇴근 시간과 월급일에
         알림을 보내드릴게요!
         """
-        label.applyTextStyle(
+        label.setStyle(
             .init(
                 typography: AppTypography.b1_400,
                 color: AppColor.IconAndText.highEmphasis
@@ -59,10 +59,10 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
             action: #selector(didTapAlarmButton),
             for: .touchUpInside
         )
-
+        
         return button
     }()
-
+    
     private let dismissBtn: UnderlineTextButton = {
         let button = UnderlineTextButton(title: "다음에 할게요")
         button.addTarget(
@@ -70,10 +70,10 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
             action: #selector(didTapLaterButton),
             for: .touchUpInside
         )
-
+        
         return button
     }()
-
+    
     private let contentStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -91,23 +91,23 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
         stack.spacing = 16
         return stack
     }()
-
-
+    
+    
     // MARK: - Lifecycle
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
     }
-
+    
     // MARK: - Setup
-
+    
     private func setupViews() {
         view.backgroundColor = AppColor.Container.primary
-
+        
         view.addSubview(contentStackView)
         view.addSubview(btnStackView)
-
+        
         contentStackView.addArrangedSubViews([titleLabel, descriptionLabel])
         btnStackView.addArrangedSubViews([notificationControlBtn, dismissBtn])
         
@@ -128,7 +128,7 @@ final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPre
         delegate?.didTapAlarm()
         dismissBottomSheet()
     }
-
+    
     @objc private func didTapLaterButton() {
         delegate?.didTapLater()
         dismissBottomSheet()
