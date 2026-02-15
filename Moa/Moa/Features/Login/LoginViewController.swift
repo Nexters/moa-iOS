@@ -25,7 +25,7 @@ final class LoginViewController: BaseViewController {
     
     // MARK: - UI Components
     
-    private let logoImageView = LogoImageView()
+    private let logoImageView = LogoImageGuideView()
     private let loginButtonStackView: UIStackView = {
         let v = UIStackView()
         v.axis = .vertical
@@ -73,15 +73,10 @@ final class LoginViewController: BaseViewController {
     // MARK: - Setup
     
     override func setupUI() {
-        view.addSubview(logoImageView)
         view.addSubview(loginButtonStackView)
         
         loginButtonStackView.addArrangedSubview(kakaoLoginButton)
         loginButtonStackView.addArrangedSubview(appleLoginButton)
-        
-        logoImageView.snp.makeConstraints { make in
-            make.height.lessThanOrEqualTo(logoImageView.snp.width).multipliedBy(0.8)
-        }
         
         [kakaoLoginButton, appleLoginButton].forEach { $0.snp.makeConstraints { $0.height.equalTo(64) } }
         
@@ -105,8 +100,7 @@ final class LoginViewController: BaseViewController {
         pagerScrollView.addSubview(pagerContentView)
 
         pagerScrollView.snp.makeConstraints { make in
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
-            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
             make.height.equalTo(view.snp.height).multipliedBy(0.6)
         }
 
@@ -115,40 +109,23 @@ final class LoginViewController: BaseViewController {
             make.height.equalToSuperview()
         }
 
-        let firstGuidePage = UIView()
-        firstGuidePage.backgroundColor = .clear
-        let secondGuidePage = UIView()
-        secondGuidePage.backgroundColor = .systemGray3
-        let thirdGuidePage = UIView()
-        thirdGuidePage.backgroundColor = .systemGray5
-        
-        firstGuidePage.addSubview(logoImageView)
-        logoImageView.contentMode = .scaleAspectFit
-        logoImageView.snp.remakeConstraints { make in
-            make.top.equalToSuperview().offset(16)
-            make.leading.trailing.equalToSuperview()
-            make.height.lessThanOrEqualTo(firstGuidePage.snp.height).multipliedBy(0.8)
+        let firstGuidePage = LogoImageGuideView()
+        let secondPageContainer = UIView()
+        let secondGuidePage = DailySalaryGuideView()
+        secondPageContainer.addSubview(secondGuidePage)
+        secondGuidePage.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
+        }
+        let thirdGuidePageContainer = UIView()
+        let thirdGuidePage = PaydayGuideView()
+        thirdGuidePageContainer.addSubview(thirdGuidePage)
+        thirdGuidePage.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
         }
         
-        let secondLabel = UILabel()
-        secondLabel.text = "페이지 2"
-        secondLabel.textAlignment = .center
-        secondGuidePage.addSubview(secondLabel)
-        secondLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-        
-        let thirdLabel = UILabel()
-        thirdLabel.text = "페이지 3"
-        thirdLabel.textAlignment = .center
-        thirdGuidePage.addSubview(thirdLabel)
-        thirdLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-        
-        pagerContentView.addArrangedSubview(firstGuidePage)
-        pagerContentView.addArrangedSubview(secondGuidePage)
-        pagerContentView.addArrangedSubview(thirdGuidePage)
+        pagerContentView.addArrangedSubViews([firstGuidePage, secondPageContainer, thirdGuidePageContainer])
 
         pagerContentView.snp.makeConstraints { make in
             make.width.equalTo(pagerScrollView.snp.width).multipliedBy(numberOfPages)

@@ -1,7 +1,14 @@
+//
+//  LogoImageGuideView.swift
+//  Moa
+//
+//  Created by mirim on 2/15/26.
+//
+
 import UIKit
 import SnapKit
 
-final class LogoImageView: UIView {
+final class LogoImageGuideView: UIView {
 
     private let imageView = UIImageView()
 
