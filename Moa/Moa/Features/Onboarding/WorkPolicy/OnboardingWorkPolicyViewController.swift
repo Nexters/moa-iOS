@@ -147,12 +147,27 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func nextButtonTapped() {
-        onNext()
+        showTermsAgreementBottomSheet()
+    }
+    
+    private func showTermsAgreementBottomSheet() {
+        let vc = ConsentBottomSheetViewController()
+        
+        vc.delegate = self
+        presentBottomSheet(vc)
     }
     
     // MARK: - Private Methods
     
     private func updateNextButtonState() {
         nextButton.isEnabled = !viewModel.selectedWeekdays.isEmpty
+    }
+}
+
+// MARK: BottomSheetDelegate
+
+extension OnboardingWorkPolicyViewController: ConsentBottomSheetViewDelegate {
+    func didTapConfirm() {
+        onNext()
     }
 }
