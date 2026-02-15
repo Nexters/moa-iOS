@@ -29,10 +29,4 @@ enum Consent: CustomStringConvertible {
         case .marketing: false
         }
     }
-    
-    /// 노션 url
-    var url: String {
-        // FIXME: 실제 url로 교체 필요
-        return ""
-    }
 }

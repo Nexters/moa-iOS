@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import SafariServices
 
 protocol ConsentBottomSheetViewDelegate: AnyObject {
     func didTapConfirm()
@@ -146,15 +147,18 @@ final class ConsentBottomSheetViewController: UIViewController, BottomSheetPrese
     // MARK: - Actions
     
     @objc private func didTapUsageTermDetail() {
-        // TODO: 웹뷰 띄우기
+        // FIXME: 리스폰스로 받은 url 세팅
+        presentWeb(urlString: "")
     }
 
     @objc private func didTapPersonalInfoDetail() {
-        // TODO: 웹뷰 띄우기
+        // FIXME: 리스폰스로 받은 url 세팅
+        presentWeb(urlString: "")
     }
 
     @objc private func didTapMarketingDetail() {
-        // TODO: 웹뷰 띄우기
+        // FIXME: 리스폰스로 받은 url 세팅
+        presentWeb(urlString: "")
     }
     
     @objc private func didTapAgreeAllButton() {
@@ -200,6 +204,13 @@ final class ConsentBottomSheetViewController: UIViewController, BottomSheetPrese
         marketingConsentButton.configuration?.image = marketingImage
 
         confirmButton.isEnabled = viewModel.allRequiredAgreed
+    }
+    
+    private func presentWeb(urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        let safari = SFSafariViewController(url: url)
+        safari.modalPresentationStyle = .fullScreen
+        present(safari, animated: true)
     }
 }
 
