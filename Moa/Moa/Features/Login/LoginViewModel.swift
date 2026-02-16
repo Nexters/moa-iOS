@@ -31,9 +31,8 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 
                 guard let self,
                       let idToken = oauthToken?.idToken,
-                      !idToken.isEmpty,
-                      // TODO: 유저디폴트 추상화, fcmDeviceToken 옵셔널 처리
-                      let fcmDeviceToken = UserDefaults.standard.string(forKey: "apnsDeviceToken")
+                      !idToken.isEmpty
+                      // TODO: 유저디폴트 추상화
                 else {
                     return
                 }
@@ -43,7 +42,7 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                     do {
                         let accessToken = try await self.authUsecase.loginWithKakaoTalk(
                             idToken: idToken,
-                            fcmDeviceToken: fcmDeviceToken
+                            fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
                         ).accessToken
                         
                         UserDefaults.standard.set(accessToken, forKey: "accessToken")
@@ -62,17 +61,12 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
     }
     
     func didReceiveInfoFromApple(idToken: String) {
-        // TODO: fcmDeviceToken 옵셔널 처리
-        guard let fcmDeviceToken = UserDefaults.standard.string(forKey: "apnsDeviceToken") else {
-            return
-        }
-        
         Task { [weak self] in
             guard let self else { return }
             do {
                 let accessToken = try await self.authUsecase.loginWithApple(
                     idToken: idToken,
-                    fcmDeviceToken: fcmDeviceToken
+                    fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
                 ).accessToken
                 
                 UserDefaults.standard.set(accessToken, forKey: "accessToken")
