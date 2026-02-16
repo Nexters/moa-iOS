@@ -198,14 +198,14 @@ private extension HomeViewController {
     }
     
     func showWorkAlarmBottomSheet() {
-        let vc = WorkAlarmBottomSheetViewController()
+        let vc = WorkAlarmBottomSheet()
         
         vc.delegate = self
         presentBottomSheet(vc)
     }
 }
 
-extension HomeViewController: WorkAlarmBottomSheetViewDelegate {
+extension HomeViewController: WorkAlarmBottomSheetDelegate {
     func didTapAlarm() {
         // 알림 권한 요청
         print("알림 동의")
@@ -215,3 +215,5 @@ extension HomeViewController: WorkAlarmBottomSheetViewDelegate {
         print("다음에")
     }
 }
+
+

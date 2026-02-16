@@ -1,5 +1,5 @@
 //
-//  WorkAlarmBottomSheetViewController.swift
+//  WorkAlarmBottomSheet.swift
 //  Moa
 //
 //  Created by 정도현 on 2/10/26.
@@ -9,15 +9,15 @@ import UIKit
 import SnapKit
 
 // MARK: - Simple Test Bottom Sheet Delegate
-protocol WorkAlarmBottomSheetViewDelegate: AnyObject {
+protocol WorkAlarmBottomSheetDelegate: AnyObject {
     func didTapAlarm()
     func didTapLater()
 }
 
-final class WorkAlarmBottomSheetViewController: UIViewController, BottomSheetPresentable {
+final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
     
     // MARK: - Properties
-    weak var delegate: WorkAlarmBottomSheetViewDelegate?
+    weak var delegate: WorkAlarmBottomSheetDelegate?
     
     // MARK: - UI
     
