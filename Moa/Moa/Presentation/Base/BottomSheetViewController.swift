@@ -5,7 +5,6 @@
 //  Created by 정도현 on 2/10/26.
 //
 
-
 import UIKit
 import SnapKit
 
@@ -37,24 +36,24 @@ protocol BottomSheetPresentable: UIViewController {
 }
 
 extension BottomSheetPresentable {
-
+    
     var allowsDismissalByDrag: Bool { true }
-
+    
     var preferredHeight: CGFloat {
         view.layoutIfNeeded()
-
+        
         let targetWidth = UIScreen.main.bounds.width
         let targetSize = CGSize(
             width: targetWidth,
             height: UIView.layoutFittingCompressedSize.height
         )
-
+        
         let size = view.systemLayoutSizeFitting(
             targetSize,
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         )
-
+        
         return size.height
     }
 }
@@ -92,8 +91,6 @@ final class BottomSheetViewController: UIViewController {
     }
     
     // MARK: - UI Components
-    
-    // Background Dimmed View
     private lazy var dimmedView: UIView = {
         let view = UIView()
         view.backgroundColor = AppColor.Dim.primary
@@ -105,7 +102,6 @@ final class BottomSheetViewController: UIViewController {
         return view
     }()
     
-    // BottomSheet Container
     private lazy var containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
@@ -113,7 +109,6 @@ final class BottomSheetViewController: UIViewController {
         return view
     }()
     
-    // BottomSheet Background
     private lazy var backgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = AppColor.Container.primary
@@ -132,9 +127,6 @@ final class BottomSheetViewController: UIViewController {
     private var containerViewBottomConstraint: Constraint?
     private var containerViewHeightConstraint: Constraint?
     
-    private var interactionController: UIPercentDrivenInteractiveTransition?
-    private var isInteracting = false
-    
     // MARK: - Initialization
     init(
         contentViewController: BottomSheetPresentable,
@@ -142,7 +134,7 @@ final class BottomSheetViewController: UIViewController {
     ) {
         self.contentViewController = contentViewController
         self.configuration = configuration
-
+        
         super.init(nibName: nil, bundle: nil)
         
         modalPresentationStyle = .overFullScreen
@@ -168,90 +160,70 @@ final class BottomSheetViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-
-        // intrinsic size 기반 높이 계산
+        
         let targetSize = CGSize(
             width: view.bounds.width,
             height: UIView.layoutFittingCompressedSize.height
         )
-
-        let contentHeight =
-            contentViewController.view.systemLayoutSizeFitting(
-                targetSize,
-                withHorizontalFittingPriority: .required,
-                verticalFittingPriority: .fittingSizeLevel
-            ).height
-
-        // handle + padding 포함 최종 높이
-        let totalHeight =
-            contentHeight
+        
+        let contentHeight = contentViewController.view.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        
+        let totalHeight = contentHeight
             + configuration.handleTopPadding
             + configuration.handleHeight
             + configuration.handleTopPadding
-
-        // 최초 1회만 업데이트 (무한 layout 방지)
+        
         guard containerViewHeightConstraint?.layoutConstraints.first?.constant != totalHeight else {
             return
         }
-
+        
         containerViewHeightConstraint?.update(offset: totalHeight)
-
         containerViewBottomConstraint?.update(offset: totalHeight)
         view.layoutIfNeeded()
     }
-
     
     // MARK: - Setup
     private func setupViews() {
         view.backgroundColor = .clear
-
-        // Dimmed View
+        
         view.addSubview(dimmedView)
         dimmedView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        // Container View
+        
         view.addSubview(containerView)
         containerView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            containerViewHeightConstraint =
-                make.height.equalTo(0).constraint
-            containerViewBottomConstraint =
-                make.bottom.equalToSuperview()
-                    .offset(0)
-                    .constraint
+            containerViewHeightConstraint = make.height.equalTo(0).constraint
+            containerViewBottomConstraint = make.bottom.equalToSuperview().offset(0).constraint
         }
-
-        // Background View
+        
         containerView.addSubview(backgroundView)
         backgroundView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        // Handle View
+        
         backgroundView.addSubview(handleView)
         handleView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview()
-                .offset(configuration.handleTopPadding)
+            make.top.equalToSuperview().offset(configuration.handleTopPadding)
             make.width.equalTo(configuration.handleWidth)
             make.height.equalTo(configuration.handleHeight)
         }
-
-        // Content ViewController
+        
         addChild(contentViewController)
         backgroundView.addSubview(contentViewController.view)
         contentViewController.view.snp.makeConstraints { make in
-            make.top.equalTo(handleView.snp.bottom)
-                .offset(configuration.handleTopPadding)
+            make.top.equalTo(handleView.snp.bottom).offset(configuration.handleTopPadding)
             make.leading.trailing.equalToSuperview()
-
             make.bottom.equalToSuperview().priority(.low)
         }
         contentViewController.didMove(toParent: self)
     }
-
     
     private func setupGestures() {
         guard contentViewController.allowsDismissalByDrag else { return }
@@ -304,28 +276,20 @@ final class BottomSheetViewController: UIViewController {
     @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
         let translation = gesture.translation(in: view)
         let velocity = gesture.velocity(in: view)
-
         let offset = max(translation.y, 0)
-
+        
         switch gesture.state {
-        case .began:
-            break
-
         case .changed:
             containerViewBottomConstraint?.update(offset: offset)
             view.layoutIfNeeded()
-
+            
         case .ended, .cancelled:
-            let shouldDismiss =
-                offset > defaultHeight * 0.3 ||
-                velocity.y > 1200
-
+            let shouldDismiss = offset > defaultHeight * 0.3 || velocity.y > 1200
+            
             if shouldDismiss {
                 animateDismiss()
             } else {
-                // 원래 위치로 복귀
                 containerViewBottomConstraint?.update(offset: 0)
-
                 UIView.animate(
                     withDuration: 0.25,
                     delay: 0,
@@ -336,12 +300,11 @@ final class BottomSheetViewController: UIViewController {
                     self.view.layoutIfNeeded()
                 }
             }
-
+            
         default:
             break
         }
     }
-
     
     @objc private func dimmedViewTapped() {
         animateDismiss()
