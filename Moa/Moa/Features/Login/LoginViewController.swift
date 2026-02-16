@@ -45,7 +45,7 @@ final class LoginViewController: BaseViewController {
         pc.hidesForSinglePage = true
         pc.pageIndicatorTintColor = .lightGray
         pc.currentPageIndicatorTintColor = .darkGray
-        // pageControl.isUserInteractionEnabled = false
+        pc.isUserInteractionEnabled = false
         return pc
     }()
     
@@ -57,6 +57,7 @@ final class LoginViewController: BaseViewController {
     private var resumeTimer: Timer?
     private var currentPage: Int = 0
     private let numberOfPages = 3
+    private var isInitialOffsetSet = false
     
     // MARK: - Init
     
@@ -125,10 +126,31 @@ final class LoginViewController: BaseViewController {
             make.centerY.equalToSuperview()
         }
         
-        pagerContentView.addArrangedSubViews([firstGuidePage, secondPageContainer, thirdGuidePageContainer])
+        let firstCloneContainer = UIView()
+        let firstClone = LogoImageGuideView()
+        firstCloneContainer.addSubview(firstClone)
+        firstClone.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        let lastCloneContainer = UIView()
+        let lastClone = PaydayGuideView()
+        lastCloneContainer.addSubview(lastClone)
+        lastClone.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
+        }
+
+        pagerContentView.addArrangedSubViews([
+            lastCloneContainer,
+            firstGuidePage,
+            secondPageContainer,
+            thirdGuidePageContainer,
+            firstCloneContainer
+        ])
 
         pagerContentView.snp.makeConstraints { make in
-            make.width.equalTo(pagerScrollView.snp.width).multipliedBy(numberOfPages)
+            make.width.equalTo(pagerScrollView.snp.width).multipliedBy(numberOfPages + 2)
         }
         
         view.addSubview(pageControl)
@@ -139,6 +161,16 @@ final class LoginViewController: BaseViewController {
         
         applyPageControlAppearance()
         
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.isInitialOffsetSet else { return }
+            let pageWidth = self.pagerScrollView.bounds.width
+            self.pagerScrollView.setContentOffset(CGPoint(x: pageWidth, y: 0), animated: false)
+            self.currentPage = 0
+            self.pageControl.currentPage = 0
+            self.updatePageControlIndicatorImages()
+            self.isInitialOffsetSet = true
+        }
+
         loginButtonStackView.snp.remakeConstraints { make in
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
@@ -210,6 +242,7 @@ final class LoginViewController: BaseViewController {
     }
     
     // MARK: - Auto Paging Control
+    
     private func startAutoPaging() {
         stopAutoPaging()
         autoPagingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
@@ -240,10 +273,17 @@ final class LoginViewController: BaseViewController {
 
     private func goToNextPage(animated: Bool) {
         guard numberOfPages > 0 else { return }
-        currentPage = (currentPage + 1) % numberOfPages
-        scrollToPage(index: currentPage, animated: animated)
-        pageControl.currentPage = currentPage
-        updatePageControlIndicatorImages()
+        if currentPage == numberOfPages - 1 {
+            let cloneIndex = numberOfPages + 1
+            scrollToPage(index: cloneIndex, animated: true)
+        } else {
+            let nextRealPage = currentPage + 1
+            let targetIndexInScroll = nextRealPage + 1
+            scrollToPage(index: targetIndexInScroll, animated: animated)
+            currentPage = nextRealPage
+            pageControl.currentPage = currentPage
+            updatePageControlIndicatorImages()
+        }
     }
 
     private func scrollToPage(index: Int, animated: Bool) {
@@ -326,23 +366,50 @@ extension LoginViewController: UIScrollViewDelegate {
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         updateCurrentPageFromOffset()
+        correctOffsetIfNeeded()
         scheduleResumeAutoPaging()
     }
 
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         if !decelerate {
             updateCurrentPageFromOffset()
+            correctOffsetIfNeeded()
             scheduleResumeAutoPaging()
         }
     }
     
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        correctOffsetIfNeeded()
+        updateCurrentPageFromOffset()
+    }
+    
     private func updateCurrentPageFromOffset() {
         let pageWidth = pagerScrollView.bounds.width
-        if pageWidth > 0 {
-            let page = Int(round(pagerScrollView.contentOffset.x / pageWidth))
-            currentPage = max(0, min(numberOfPages - 1, page))
-            pageControl.currentPage = currentPage
-            updatePageControlIndicatorImages()
+        guard pageWidth > 0 else { return }
+        let rawIndex = Int(round(pagerScrollView.contentOffset.x / pageWidth))
+        var realPage: Int
+        if rawIndex <= 0 {
+            realPage = numberOfPages - 1
+        } else if rawIndex >= numberOfPages + 1 {
+            realPage = 0
+        } else {
+            realPage = rawIndex - 1
+        }
+        currentPage = max(0, min(numberOfPages - 1, realPage))
+        pageControl.currentPage = currentPage
+        updatePageControlIndicatorImages()
+    }
+    
+    private func correctOffsetIfNeeded() {
+        let pageWidth = pagerScrollView.bounds.width
+        guard pageWidth > 0 else { return }
+        let rawIndex = Int(round(pagerScrollView.contentOffset.x / pageWidth))
+        if rawIndex == 0 {
+            let targetOffset = CGFloat(numberOfPages) * pageWidth
+            pagerScrollView.setContentOffset(CGPoint(x: targetOffset, y: 0), animated: false)
+        } else if rawIndex == numberOfPages + 1 {
+            let targetOffset = 1 * pageWidth
+            pagerScrollView.setContentOffset(CGPoint(x: targetOffset, y: 0), animated: false)
         }
     }
 }
