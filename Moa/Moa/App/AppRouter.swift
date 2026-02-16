@@ -9,6 +9,7 @@ import UIKit
 
 protocol AppRouting: AnyObject {
     func start()
+    func routeAfterLogin()
     func navigate(to route: AppRoute, animated: Bool)
 }
 
@@ -27,6 +28,11 @@ final class AppRouter: AppRouting {
     
     func start() {
         navigate(to: .splash, animated: false)
+        routeToAppropriateDestination()
+    }
+
+    func routeAfterLogin() {
+        routeToAppropriateDestination()
     }
     
     func navigate(to route: AppRoute, animated: Bool = true) {
@@ -36,10 +42,6 @@ final class AppRouter: AppRouting {
             
         case .login:
             navigationController.setViewControllers([makeLogin()], animated: false) // 스플래시 -> 로그인 넘어갈때는 애니메이션 false 처리
-            
-        case .onboarding:
-            guard onboardingCoordinator == nil else { return }
-            startOnboarding(animated: animated)
             
         case .home:
             navigationController.setViewControllers([makeHome()], animated: animated)
@@ -53,6 +55,32 @@ final class AppRouter: AppRouting {
 }
 
 private extension AppRouter {
+    func routeToAppropriateDestination() {
+        Task { @MainActor in
+            let token = AuthSessionManager.shared.currentAccessToken()
+            guard let token, !token.isEmpty else {
+                navigate(to: .login, animated: false)
+                return
+            }
+
+            do {
+                let status = try await container.onboardingUseCase.getOnboardingStatus()
+
+                if status.profile == nil {
+                    startOnboarding(animated: true, startStep: .nickname, status: status)
+                } else if status.payroll == nil {
+                    startOnboarding(animated: true, startStep: .salary, status: status)
+                } else if status.workPolicy == nil || status.hasRequiredTermsAgreed == false {
+                    startOnboarding(animated: true, startStep: .workPolicy, status: status)
+                } else {
+                    navigate(to: .home, animated: true)
+                }
+            } catch {
+                navigate(to: .login, animated: true)
+            }
+        }
+    }
+
     func makeSplash() -> UIViewController {
         let vm = SplashViewModel()
         return SplashViewController(viewModel: vm, router: self)
@@ -63,8 +91,10 @@ private extension AppRouter {
         return LoginViewController(viewModel: vm, router: self)
     }
     
-    func startOnboarding(animated: Bool) {
+    func startOnboarding(animated: Bool, startStep: OnboardingStep, status: OnboardingStatusEntity) {
         let coordinator = OnboardingCoordinator(
+            startStep: startStep,
+            status: status,
             finish: { [weak self] in
                 self?.onboardingCoordinator = nil
                 self?.navigate(to: .home)

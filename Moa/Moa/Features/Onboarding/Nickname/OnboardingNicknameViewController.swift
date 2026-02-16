@@ -176,6 +176,11 @@ final class OnboardingNicknameViewController: BaseViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         updateNextButtonState()
+        
+        if let initialNickname = viewModel.nickname {
+            nicknameTextField.text = initialNickname
+            updateNextButtonState()
+        }
     }
     
     // MARK: - Actions

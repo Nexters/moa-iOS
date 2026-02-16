@@ -104,7 +104,9 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupButton()
         setupLayout()
-        workingTimeRangeRowView.configure(start: "09:00", end: "18:00")
+        let startTime = viewModel.clockInTime ?? "09:00"
+        let endTime = viewModel.clockOutTime ?? "18:00"
+        workingTimeRangeRowView.configure(start: startTime, end: endTime)
         weekdaySelectionView.setSelectedWeekdays(viewModel.selectedWeekdays, notify: false)
     }
     
@@ -118,6 +120,17 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         }
         
         updateNextButtonState()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if viewModel.shouldPresentTermsSheet, !viewModel.hasPresentedTermsSheet {
+            viewModel.markTermsSheetPresented()
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.showTermsAgreementBottomSheet()
+            }
+        }
     }
     
     // MARK: - UI Configuration

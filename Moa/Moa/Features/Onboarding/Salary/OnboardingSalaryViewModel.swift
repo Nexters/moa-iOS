@@ -8,17 +8,21 @@
 import Foundation
 
 final class OnboardingSalaryViewModel {
-    
     // MARK: - State
-    
-    private(set) var selectedSalaryType: SalaryType = .yearly
-    
+    private(set) var selectedSalaryType: SalaryType = .annual
+    private(set) var amount: Int?
+
+    // MARK: - Init
+    init(selectedSalaryType: SalaryType = .annual, amount: Int? = nil) {
+        self.selectedSalaryType = selectedSalaryType
+        self.amount = amount
+    }
+
     // MARK: - Actions
-    
     func selectSalaryType(_ type: SalaryType) {
         selectedSalaryType = type
     }
-    
+
     // MARK: - Formatting
     func koreanCurrencyText(for value: Int) -> String {
         if value < 10_000 { return "" }

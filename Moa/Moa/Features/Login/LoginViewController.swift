@@ -201,7 +201,7 @@ final class LoginViewController: BaseViewController {
         bindOutput(viewModel.outputs) { [weak router] output in
             switch output {
             case .loginSucceed:
-                router?.navigate(to: .onboarding, animated: true)
+                router?.routeAfterLogin()
             case .loginFailed:
                 break // TODO: 로그인 실패 처리
             }

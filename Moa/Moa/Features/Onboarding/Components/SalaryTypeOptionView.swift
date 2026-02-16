@@ -22,7 +22,7 @@ final class SalaryTypeOptionView: UIView {
     
     var onChange: ((SalaryType) -> Void)?
     
-    private var selected: SalaryType = .yearly {
+    private var selected: SalaryType = .annual {
         didSet { applySelection() }
     }
     
@@ -79,8 +79,8 @@ final class SalaryTypeOptionView: UIView {
     }
     
     @objc private func yearlyTapped() {
-        guard selected != .yearly else { return }
-        setSelected(.yearly, notify: true)
+        guard selected != .annual else { return }
+        setSelected(.annual, notify: true)
     }
     
     // MARK: - Setup
@@ -105,7 +105,7 @@ final class SalaryTypeOptionView: UIView {
     }
     
     private func applySelection() {
-        yearlyButton.isSelected = (selected == .yearly)
+        yearlyButton.isSelected = (selected == .annual)
         monthlyButton.isSelected = (selected == .monthly)
         
         yearlyButton.setNeedsUpdateConfiguration()

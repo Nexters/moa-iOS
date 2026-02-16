@@ -205,6 +205,13 @@ final class OnboardingSalaryViewController: BaseViewController {
         let initialDigits = (amountTextField.text ?? "").filter(\.isNumber)
         let initialValue = Int(initialDigits) ?? 0
         koreanAmountLabel.text = viewModel.koreanCurrencyText(for: initialValue)
+        
+        if let amount = viewModel.amount {
+            let formatted = NumberFormatter.localizedString(from: NSNumber(value: amount), number: .decimal)
+            amountTextField.text = formatted
+            koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: amount))
+            updateNextButtonState()
+        }
     }
     
     // MARK: - Actions
