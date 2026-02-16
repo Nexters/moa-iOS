@@ -31,7 +31,12 @@ final class PaydayGuideView: UIView {
         stackView.alignment = .center
         stackView.distribution = .fill
         stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.spacing = 0
         stackView.layoutMargins = UIEdgeInsets(top: 40, left: 20, bottom: 32, right: 20)
+        stackView.setCustomSpacing(0, after: todayIsPaydayLabel)
+        stackView.setCustomSpacing(14, after: exampleAmountLabel)
+        stackView.setCustomSpacing(22, after: coinsImageView)
+        stackView.setCustomSpacing(6, after: largeTitleLabel)
         return stackView
     }()
     

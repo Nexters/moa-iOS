@@ -30,8 +30,13 @@ final class DailySalaryGuideView: UIView {
         stackView.axis = .vertical
         stackView.alignment = .center
         stackView.distribution = .fill
+        stackView.spacing = 0
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.layoutMargins = UIEdgeInsets(top: 40, left: 20, bottom: 32, right: 20)
+        stackView.setCustomSpacing(0, after: todaysEarnedSalaryLabel)
+        stackView.setCustomSpacing(14, after: exampleAmountLabel)
+        stackView.setCustomSpacing(22, after: moneyStackImageView)
+        stackView.setCustomSpacing(6, after: largeTitleLabel)
         return stackView
     }()
     
