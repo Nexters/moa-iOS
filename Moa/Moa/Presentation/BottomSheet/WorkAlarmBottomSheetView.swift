@@ -50,7 +50,7 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
         return label
     }()
     
-    private let notificationControlBtn: AppButton = {
+    private lazy var notificationControlBtn: AppButton = {
         let button = AppButton()
         button.setTitle("알림 받을게요", for: .normal)
         button.applyStyle(.primary())
@@ -63,7 +63,7 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
         return button
     }()
     
-    private let dismissBtn: UnderlineTextButton = {
+    private lazy var dismissBtn: UnderlineTextButton = {
         let button = UnderlineTextButton(title: "다음에 할게요")
         button.addTarget(
             self,
