@@ -306,10 +306,8 @@ final class LoginViewController: BaseViewController {
         let deselectedImage = makeIndicatorImage(size: CGSize(width: 8, height: 8), color: deselectedColor, cornerRadius: 4)
 
         for index in 0..<pageControl.numberOfPages {
-            if #available(iOS 16.0, *) {
-                let image = (index == pageControl.currentPage) ? selectedImage : deselectedImage
-                pageControl.setIndicatorImage(image, forPage: index)
-            }
+            let image = (index == pageControl.currentPage) ? selectedImage : deselectedImage
+            pageControl.setIndicatorImage(image, forPage: index)
         }
     }
 
