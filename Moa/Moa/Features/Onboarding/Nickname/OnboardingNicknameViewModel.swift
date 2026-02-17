@@ -9,16 +9,28 @@ import Foundation
 import Combine
 
 final class OnboardingNicknameViewModel {
+    
+    // MARK: - Dependencies
+    
+    private let repository: OnboardingRepository
+    
     // MARK: - State
+    
     private(set) var nickname: String?
 
     // MARK: - Init
-    init(nickname: String? = nil) {
+    
+    init(
+        repository: OnboardingRepository,
+        nickname: String? = nil
+    ) {
+        self.repository = repository
         self.nickname = nickname
     }
 
     // MARK: - Actions
-    func makeRandomNickname() {
-        // TODO: 닉네임 랜덤 변경 로직
+    
+    func makeRandomNickname() -> String {
+        repository.generateRandomNickname()
     }
 }

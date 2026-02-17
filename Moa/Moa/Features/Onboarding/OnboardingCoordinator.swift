@@ -8,16 +8,19 @@
 import UIKit
 
 final class OnboardingCoordinator {
+    private let repository: OnboardingRepository
     private let startStep: OnboardingStep
     private let status: OnboardingStatusEntity
     private let finish: () -> Void
     private weak var nav: UINavigationController?
     
     init(
+        repository: OnboardingRepository,
         startStep: OnboardingStep,
         status: OnboardingStatusEntity,
         finish: @escaping () -> Void
     ) {
+        self.repository = repository
         self.startStep = startStep
         self.status = status
         self.finish = finish
@@ -77,6 +80,7 @@ private extension OnboardingCoordinator {
         switch step {
         case .nickname:
             let vm = OnboardingNicknameViewModel(
+                repository: repository,
                 nickname: status?.profile?.nickname
             )
             let vc = OnboardingNicknameViewController(

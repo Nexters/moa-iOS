@@ -19,7 +19,6 @@ final class OnboardingNicknameViewController: BaseViewController {
         static let randomChange = "랜덤변경"
         static let next = "다음"
         static let nicknameMaxLength: Int = 10
-        static let defaultNickname = "1억꿈꾸는악어"
     }
     
     // MARK: - Dependencies
@@ -54,7 +53,6 @@ final class OnboardingNicknameViewController: BaseViewController {
     private let nicknameTextField: UITextField = {
         let tf = PaddingTextField()
         tf.textInsets = .init(top: 16, left: 20, bottom: 16, right: 20)
-        tf.text = Constant.defaultNickname
         tf.attributedPlaceholder = NSAttributedString(
             string: Constant.nicknamePlaceholder,
             attributes: [
@@ -175,12 +173,13 @@ final class OnboardingNicknameViewController: BaseViewController {
         randomChangeButton.addTarget(self, action: #selector(randomChangeButtonTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
-        updateNextButtonState()
-        
         if let initialNickname = viewModel.nickname {
             nicknameTextField.text = initialNickname
-            updateNextButtonState()
+        } else {
+            nicknameTextField.text = viewModel.makeRandomNickname()
         }
+        
+        updateNextButtonState()
     }
     
     // MARK: - Actions
@@ -190,7 +189,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     }
     
     @objc private func randomChangeButtonTapped() {
-        viewModel.makeRandomNickname()
+        nicknameTextField.text = viewModel.makeRandomNickname()
         updateNextButtonState()
     }
     
@@ -271,9 +270,8 @@ extension OnboardingNicknameViewController: UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String
     ) -> Bool {
-        
         if let marked = textField.markedTextRange,
-            textField.position(from: marked.start, offset: 0) != nil {
+           textField.position(from: marked.start, offset: 0) != nil {
             return true
         }
         
@@ -281,7 +279,14 @@ extension OnboardingNicknameViewController: UITextFieldDelegate {
         guard let textRange = Range(range, in: current) else { return false }
         let next = current.replacingCharacters(in: textRange, with: string)
         
-        return next.count <= Constant.nicknameMaxLength
+        let sanitized = TextSanitizer.sanitizeKoreanEnglishNoSpaces(next)
+        
+        if sanitized != next {
+            textField.text = String(sanitized.prefix(Constant.nicknameMaxLength))
+            return false
+        }
+        
+        return sanitized.count <= Constant.nicknameMaxLength
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {

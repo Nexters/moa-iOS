@@ -9,4 +9,5 @@ import Foundation
 
 protocol OnboardingRepository {
     func fetchOnboardingStatus() async throws -> OnboardingStatusEntity
+    func generateRandomNickname() -> String
 }

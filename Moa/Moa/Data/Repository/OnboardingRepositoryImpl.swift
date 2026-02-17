@@ -21,4 +21,36 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
         
         return response.toDomain()
     }
+    
+    func generateRandomNickname() -> String {
+        let defaultAdj = "100억부자"
+        let defaultNoun = "CEO"
+        
+        do {
+            let adjectives: [String] = try loadWordList(resource: "nickname_adjectives")
+            let nouns: [String] = try loadWordList(resource: "nickname_nouns")
+
+            let adj = adjectives.randomElement() ?? defaultAdj
+            let noun = nouns.randomElement() ?? defaultNoun
+            
+            let raw = "\(adj)\(noun)"
+            let noSpaces = raw.replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+            let normalized = noSpaces.replacingOccurrences(of: "[^a-zA-Z가-힣]", with: "", options: .regularExpression)
+            return normalized.isEmpty ? defaultAdj + defaultNoun : normalized
+        } catch {
+            return defaultAdj + defaultNoun
+        }
+    }
+    
+    private func loadWordList(resource: String, bundle: Bundle = .main) throws -> [String] {
+        guard let url = bundle.url(forResource: resource, withExtension: "json") else {
+            throw NSError(domain: "OnboardingRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "리소스를 찾을 수 없습니다: \(resource).json"]) }
+        
+        let data = try Data(contentsOf: url)
+        
+        if let array = try? JSONDecoder().decode([String].self, from: data) {
+            return array
+        } else {
+            throw NSError(domain: "OnboardingRepository", code: 2, userInfo: [NSLocalizedDescriptionKey: "JSON 형식이 올바르지 않습니다: \(resource).json"]) }
+    }
 }
