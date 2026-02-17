@@ -26,6 +26,10 @@ final class TimeWheelPickerView: UIView {
     private var pickerHeight: CGFloat {
         cellHeight * visibleRowCount
     }
+    // MARK: - Properties
+    private let initialHour: Int
+    private let initialMinute: Int
+    private var hasAppliedInitialScroll = false
     
     // MARK: - Background Container
     private let backgroundContainerView: UIView = {
@@ -36,8 +40,30 @@ final class TimeWheelPickerView: UIView {
     }()
     
     // MARK: - Columns
-    private var hourColumn: TimeWheelColumnView!
-    private var minuteColumn: TimeWheelColumnView!
+    
+    private lazy var hourColumn: TimeWheelColumnView = {
+        let column = TimeWheelColumnView(
+            values: (0...23).map { String(format: "%d시", $0) },
+            initialIndex: initialHour,
+            alignment: .right
+        )
+        column.onValueChanged = { [weak self] in
+            self?.notifyDelegate()
+        }
+        return column
+    }()
+    
+    private lazy var minuteColumn: TimeWheelColumnView = {
+        let column = TimeWheelColumnView(
+            values: (0...59).map { String(format: "%d분", $0) },
+            initialIndex: initialMinute,
+            alignment: .left
+        )
+        column.onValueChanged = { [weak self] in
+            self?.notifyDelegate()
+        }
+        return column
+    }()
     
     // MARK: - Selection Highlight
     private let selectionView: UIView = {
@@ -46,9 +72,6 @@ final class TimeWheelPickerView: UIView {
         view.backgroundColor = AppColor.Container.primary
         return view
     }()
-    
-    private let initialHour: Int
-    private let initialMinute: Int
     
     init(initialHour: Int, initialMinute: Int) {
         self.initialHour = initialHour
@@ -78,11 +101,12 @@ final class TimeWheelPickerView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard bounds.width > 0 else { return }
+        
+        guard !hasAppliedInitialScroll, bounds.width > 0 else { return }
+        hasAppliedInitialScroll = true
         
         hourColumn.layoutIfNeeded()
         minuteColumn.layoutIfNeeded()
-        
         setTime(hour: initialHour, minute: initialMinute, animated: false)
     }
     
