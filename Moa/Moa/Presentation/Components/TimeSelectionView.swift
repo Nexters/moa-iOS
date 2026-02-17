@@ -56,8 +56,9 @@ final class TimeSelectionView: UIView {
     private lazy var timeDisplayStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [startTimeButton, arrowImageView, endTimeButton])
         stack.axis = .horizontal
-        stack.spacing = 20
-        stack.alignment = .fill
+        stack.alignment = .center
+        stack.distribution = .fill
+        
         return stack
     }()
     
@@ -109,8 +110,11 @@ final class TimeSelectionView: UIView {
         }
         
         arrowImageView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
             make.width.height.equalTo(24)
+        }
+        
+        startTimeButton.snp.makeConstraints {
+            $0.width.equalTo(endTimeButton)
         }
         
         // Wheel Picker
