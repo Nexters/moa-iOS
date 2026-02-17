@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-enum TimeDisplayCase: String {
+enum TimeDisplayCase: String, CustomStringConvertible {
     case start
     case end
     
