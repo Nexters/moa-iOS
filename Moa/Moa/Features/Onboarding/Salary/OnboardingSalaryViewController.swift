@@ -14,7 +14,7 @@ final class OnboardingSalaryViewController: BaseViewController {
     
     private enum Constant {
         static let title = "얼마씩 받고 있나요?"
-        static let subtitle = "세전, 세후 상관없이 보고 싶은 금액을 입력해주세요."
+        static let subtitle = "입력한 정보를 바탕으로 실시간 급여가 계산되며,\n급여 정보는 누구에게도 공개되지 않아요."
         static let amount = "금액"
         static let won = "원"
         static let next = "다음"
@@ -50,6 +50,8 @@ final class OnboardingSalaryViewController: BaseViewController {
                 color: AppColor.IconAndText.mediumEmphasis
             )
         )
+        label.numberOfLines = 0
+        label.textAlignment = .left
         return label
     }()
     
@@ -101,6 +103,29 @@ final class OnboardingSalaryViewController: BaseViewController {
                 color: AppColor.IconAndText.mediumEmphasis
             )
         )
+        return label
+    }()
+    
+    private let formattedAmountLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.green
+            )
+        )
+        return label
+    }()
+    
+    private let koreanAmountLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.green
+            )
+        )
+        label.numberOfLines = 1
         return label
     }()
     
@@ -165,6 +190,9 @@ final class OnboardingSalaryViewController: BaseViewController {
         
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
+        salaryTypeView.setSelected(viewModel.selectedSalaryType, notify: false)
+        commaFormatter.updateMaxDigits(viewModel.selectedSalaryType.maxDigits)
+        
         salaryTypeView.onChange = { [weak self] type in
             guard let self else { return }
             self.viewModel.selectSalaryType(type)
@@ -173,6 +201,10 @@ final class OnboardingSalaryViewController: BaseViewController {
         }
         
         updateNextButtonState()
+        
+        let initialDigits = (amountTextField.text ?? "").filter(\.isNumber)
+        let initialValue = Int(initialDigits) ?? 0
+        koreanAmountLabel.text = viewModel.koreanCurrencyText(for: initialValue)
     }
     
     // MARK: - Actions
@@ -180,6 +212,9 @@ final class OnboardingSalaryViewController: BaseViewController {
     @objc private func textDidChange() {
         commaFormatter.reformatNow()
         updateNextButtonState()
+        let digits = (amountTextField.text ?? "").filter(\.isNumber)
+        let value = Int(digits) ?? 0
+        koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: value))
     }
     
     @objc private func nextButtonTapped() {
@@ -203,7 +238,7 @@ private extension OnboardingSalaryViewController {
         amountTextFieldStack.addArrangedSubViews([amountTextField, currencyLabel, trailingSpacer])
         ctaContainer.addSubview(nextButton)
         
-        view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, ctaContainer])
+        view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, koreanAmountLabel, ctaContainer])
     }
     
     func setupLayout() {
@@ -230,6 +265,11 @@ private extension OnboardingSalaryViewController {
         amountTextFieldStack.snp.makeConstraints { make in
             make.top.equalTo(amountLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+        }
+        
+        koreanAmountLabel.snp.makeConstraints { make in
+            make.top.equalTo(amountTextFieldStack.snp.bottom).offset(8)
+            make.trailing.equalTo(amountTextFieldStack)
         }
         
         trailingSpacer.snp.makeConstraints { make in

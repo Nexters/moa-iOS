@@ -10,7 +10,6 @@ import UIKit
 final class OnboardingCoordinator {
     enum Step {
         case nickname
-        case workPlace
         case salary
         case workPolicy
     }
@@ -32,16 +31,6 @@ final class OnboardingCoordinator {
         case .nickname:
             let vm = OnboardingNicknameViewModel()
             let vc = OnboardingNicknameViewController(
-                viewModel: vm,
-                onNext: { [weak self] in
-                    self?.go(.workPlace)
-                }
-            )
-            return vc
-            
-        case .workPlace:
-            let vm = OnboardingWorkplaceViewModel()
-            let vc = OnboardingWorkplaceViewController(
                 viewModel: vm,
                 onNext: { [weak self] in
                     self?.go(.salary)

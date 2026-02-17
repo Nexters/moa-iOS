@@ -9,5 +9,5 @@ import Foundation
 
 struct SocialLoginRequest: Encodable {
     let idToken: String
-    let fcmDeviceToken: String
+    let fcmDeviceToken: String?
 }

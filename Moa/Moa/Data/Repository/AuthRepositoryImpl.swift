@@ -16,10 +16,21 @@ final class AuthRepositoryImpl: AuthRepository {
     
     func loginWithKakaoTalk(
         idToken: String,
-        fcmDeviceToken: String
+        fcmDeviceToken: String?
     ) async throws -> SocialLoginEntity {
         let response: SocialLoginResponse = try await apiClient.request(
             AuthAPI.kakaoAuth(.init(idToken: idToken, fcmDeviceToken: fcmDeviceToken))
+        )
+        
+        return response.toDomain()
+    }
+    
+    func loginWithApple(
+        idToken: String,
+        fcmDeviceToken: String?
+    ) async throws -> SocialLoginEntity {
+        let response: SocialLoginResponse = try await apiClient.request(
+            AuthAPI.appleAuth(.init(idToken: idToken, fcmDeviceToken: fcmDeviceToken))
         )
         
         return response.toDomain()

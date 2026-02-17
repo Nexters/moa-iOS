@@ -31,9 +31,8 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 
                 guard let self,
                       let idToken = oauthToken?.idToken,
-                      !idToken.isEmpty,
+                      !idToken.isEmpty
                       // TODO: 유저디폴트 추상화
-                      let fcmDeviceToken = UserDefaults.standard.string(forKey: "apnsDeviceToken")
                 else {
                     return
                 }
@@ -43,7 +42,7 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                     do {
                         let accessToken = try await self.authUsecase.loginWithKakaoTalk(
                             idToken: idToken,
-                            fcmDeviceToken: fcmDeviceToken
+                            fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
                         ).accessToken
                         
                         UserDefaults.standard.set(accessToken, forKey: "accessToken")
@@ -61,7 +60,23 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
         }
     }
     
-    func didTapLoginWithApple() {
-        // TODO: Apple로 로그인
+    func didReceiveInfoFromApple(idToken: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let accessToken = try await self.authUsecase.loginWithApple(
+                    idToken: idToken,
+                    fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
+                ).accessToken
+                
+                UserDefaults.standard.set(accessToken, forKey: "accessToken")
+                
+                await MainActor.run {
+                    self.send(.loginSucceed)
+                }
+            } catch {
+                print("로그인 요청 실패: \(error.localizedDescription)")
+            }
+        }
     }
 }
