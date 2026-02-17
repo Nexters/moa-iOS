@@ -23,13 +23,14 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
     
     private let titleLabel: UILabel = {
         let label = StyledLabel()
-        label.text = "근무 알림을 받아보세요!"
-        label.setStyle(
-            .init(
+        label.setText(
+            "근무 알림을 받아보세요!",
+            style: .init(
                 typography: AppTypography.t1_700,
                 color: AppColor.IconAndText.highEmphasis
             )
         )
+        
         label.numberOfLines = 1
         return label
     }()
