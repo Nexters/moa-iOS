@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 enum SplashOutput {
-    case loginChecked(isLoggedIn: Bool)
+    case finished
 }
 
 final class SplashViewModel: BaseViewModel<SplashOutput> {
@@ -24,8 +24,7 @@ final class SplashViewModel: BaseViewModel<SplashOutput> {
         Just(())
             .delay(for: .seconds(minDisplayTime), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                // TODO: 로그인 여부 검증 및 분기 (로그인/홈)
-                self?.send(.loginChecked(isLoggedIn: false))
+                self?.send(.finished)
             }
             .store(in: &cancellables)
     }

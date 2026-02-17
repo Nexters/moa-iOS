@@ -9,6 +9,7 @@ import UIKit
 
 protocol AppRouting: AnyObject {
     func start()
+    func routeAfterSplash()
     func routeAfterLogin()
     func navigate(to route: AppRoute, animated: Bool)
 }
@@ -28,6 +29,9 @@ final class AppRouter: AppRouting {
     
     func start() {
         navigate(to: .splash, animated: false)
+    }
+    
+    func routeAfterSplash() {
         routeToAppropriateDestination()
     }
 
@@ -65,14 +69,18 @@ private extension AppRouter {
 
             do {
                 let status = try await container.onboardingUseCase.getOnboardingStatus()
-
-                if status.profile == nil {
-                    startOnboarding(animated: true, startStep: .nickname, status: status)
-                } else if status.payroll == nil {
-                    startOnboarding(animated: true, startStep: .salary, status: status)
-                } else if status.workPolicy == nil || status.hasRequiredTermsAgreed == false {
-                    startOnboarding(animated: true, startStep: .workPolicy, status: status)
-                } else {
+//                let status = OnboardingStatusEntity(
+//                    profile: .init(nickname: "nickname", workplace: nil),
+//                    payroll: .init(salaryInputType: .annual, salaryAmount: 123123, paydayDay: 25),
+//                    workPolicy: nil,
+//                    hasRequiredTermsAgreed: false
+//                )
+                
+                // 필수 데이터 nil인 경우 해당 데이터 입력 페이지로 이동
+                switch status.nextOnboardingStep {
+                case let .step(step):
+                    startOnboarding(animated: true, startStep: step, status: status)
+                case .completed:
                     navigate(to: .home, animated: true)
                 }
             } catch {

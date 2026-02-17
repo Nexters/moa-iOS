@@ -25,107 +25,101 @@ final class OnboardingCoordinator {
     
     func start(from parentNav: UINavigationController, animated: Bool) {
         self.nav = parentNav
-        if startStep == .completed {
-            complete()
-            return
-        }
-        let stack = initialStack(for: startStep, with: status)
+        let stack = buildInitialStack(startingAt: startStep, with: status)
         parentNav.setViewControllers(stack, animated: animated)
     }
-    
-    private func initialStack(for step: OnboardingStep, with status: OnboardingStatusEntity) -> [UIViewController] {
+}
+
+private extension OnboardingCoordinator {
+    // 초기 네비게이션 스택 구성
+    func buildInitialStack(
+        startingAt startStep: OnboardingStep,
+        with status: OnboardingStatusEntity
+    ) -> [UIViewController] {
         var stack: [UIViewController] = []
-
-        let nicknameVM = OnboardingNicknameViewModel(
-            nickname: status.profile?.nickname
-        )
-        let nicknameVC = OnboardingNicknameViewController(
-            viewModel: nicknameVM,
-            onNext: { [weak self] in self?.go(.salary) }
-        )
-        if step == .nickname || status.profile != nil {
-            stack.append(nicknameVC)
-        }
-
-        let salaryVM = OnboardingSalaryViewModel(
-            selectedSalaryType: status.payroll?.salaryInputType ?? .annual,
-            amount: status.payroll?.salaryAmount
-        )
-        let salaryVC = OnboardingSalaryViewController(
-            viewModel: salaryVM,
-            onNext: { [weak self] in self?.go(.workPolicy) }
-        )
-        if step == .salary || status.payroll != nil {
-            stack.append(salaryVC)
-        }
-
-        if step == .workPolicy {
-            let workVM = OnboardingWorkPolicyViewModel(
-                selectedWeekdays: Set(status.workPolicy?.workdays ?? []),
-                shouldPresentTermsSheet: (status.workPolicy != nil) && !(status.hasRequiredTermsAgreed),
-                clockInTime: status.workPolicy?.clockInTime,
-                clockOutTime: status.workPolicy?.clockOutTime
-            )
-            let workVC = OnboardingWorkPolicyViewController(
-                viewModel: workVM,
-                onNext: { [weak self] in self?.complete() }
-            )
-            stack.append(workVC)
+        
+        OnboardingStep.allCases.forEach { step in
+            if step.orderIndex <= startStep.orderIndex {
+                stack.append(buildViewController(for: step, status: status))
+            }
         }
 
         if stack.isEmpty {
-            stack.append(nicknameVC)
+            stack.append(buildViewController(for: .nickname, status: status))
         }
-        
+
         return stack
     }
     
-    private func go(_ next: OnboardingStep) {
-        nav?.pushViewController(make(step: next), animated: true)
+    // 다음 스텝 계산
+    func nextStep(after current: OnboardingStep) -> OnboardingStep? {
+        let ordered = OnboardingStep.allCases.sorted { $0.orderIndex < $1.orderIndex }
+        guard let idx = ordered.firstIndex(of: current), idx + 1 < ordered.count else { return nil }
+        return ordered[idx + 1]
     }
     
-    private func make(step: OnboardingStep) -> UIViewController {
+    // onNext 공통 생성
+    func makeOnNext(for current: OnboardingStep) -> (() -> Void) {
+        { [weak self] in
+            guard let self else { return }
+            if let next = self.nextStep(after: current) {
+                self.push(to: next)
+            } else {
+                self.complete()
+            }
+        }
+    }
+    
+    func buildViewController(
+        for step: OnboardingStep,
+        status: OnboardingStatusEntity? = nil
+    ) -> UIViewController {
         switch step {
         case .nickname:
-            let vm = OnboardingNicknameViewModel()
+            let vm = OnboardingNicknameViewModel(
+                nickname: status?.profile?.nickname
+            )
             let vc = OnboardingNicknameViewController(
                 viewModel: vm,
-                onNext: { [weak self] in
-                    self?.go(.salary)
-                }
+                onNext: makeOnNext(for: .nickname)
             )
             return vc
-            
-        case .salary:
-            let vm = OnboardingSalaryViewModel()
+
+        case .payroll:
+            let vm = OnboardingSalaryViewModel(
+                selectedSalaryType: status?.payroll?.salaryInputType ?? .annual,
+                amount: status?.payroll?.salaryAmount
+            )
             let vc = OnboardingSalaryViewController(
                 viewModel: vm,
-                onNext: { [weak self] in
-                    self?.go(.workPolicy)
-                }
+                onNext: makeOnNext(for: .payroll)
             )
             return vc
             
         case .workPolicy:
             let vm = OnboardingWorkPolicyViewModel(
-                selectedWeekdays: Set(status.workPolicy?.workdays ?? []),
-                shouldPresentTermsSheet: !(status.hasRequiredTermsAgreed)
+                selectedWeekdays: Set(status?.workPolicy?.workdays ?? []),
+                shouldPresentTermsSheet: {
+                    let hasPolicy = status?.workPolicy != nil
+                    let agreed = status?.hasRequiredTermsAgreed ?? false
+                    return hasPolicy && !agreed
+                }(),
+                clockInTime: status?.workPolicy?.clockInTime,
+                clockOutTime: status?.workPolicy?.clockOutTime
             )
             let vc = OnboardingWorkPolicyViewController(
                 viewModel: vm,
-                onNext: { [weak self] in
-                    self?.complete()
-                }
+                onNext: makeOnNext(for: .workPolicy)
             )
             return vc
-            
-        case .completed:
-            // 여기서는 .completed 처리안하고 router에서 처리함
-            return UIViewController()
         }
     }
     
-    private func complete() {
+    func push(to next: OnboardingStep) {
+        nav?.pushViewController(buildViewController(for: next), animated: true)
+    }
+    
+    func complete() {
         finish()
     }
 }

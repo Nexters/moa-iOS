@@ -18,11 +18,3 @@ final class OnboardingUsecase {
         try await repository.fetchOnboardingStatus()
     }
 }
-
-enum OnboardingStep {
-    case nickname
-    case salary
-    case workPolicy
-    case completed
-}
-

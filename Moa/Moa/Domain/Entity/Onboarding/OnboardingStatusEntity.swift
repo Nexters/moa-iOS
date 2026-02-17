@@ -30,3 +30,23 @@ struct WorkPolicyEntity {
     let clockInTime: String?
     let clockOutTime: String?
 }
+
+extension OnboardingStatusEntity {
+    enum NextStep {
+        case step(OnboardingStep)
+        case completed
+    }
+
+    var nextOnboardingStep: NextStep {
+        if profile == nil {
+            return .step(.nickname)
+        }
+        if payroll == nil {
+            return .step(.payroll)
+        }
+        if workPolicy == nil || !hasRequiredTermsAgreed {
+            return .step(.workPolicy)
+        }
+        return .completed
+    }
+}

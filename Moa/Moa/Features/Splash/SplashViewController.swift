@@ -41,9 +41,8 @@ final class SplashViewController: BaseViewController {
     override func bind() {
         bindOutput(viewModel.outputs) { [weak router] output in
             switch output {
-            case let .loginChecked(isLoggedIn):
-                let destination: AppRoute = isLoggedIn ? .home : .login
-                router?.navigate(to: destination, animated: false)
+            case .finished:
+                router?.routeAfterSplash()
             }
         }
     }
