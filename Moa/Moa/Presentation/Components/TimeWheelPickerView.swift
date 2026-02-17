@@ -47,8 +47,12 @@ final class TimeWheelPickerView: UIView {
         return view
     }()
     
-    // MARK: - Init
-    init(initialHour: Int = 9, initialMinute: Int = 0) {
+    private let initialHour: Int
+    private let initialMinute: Int
+    
+    init(initialHour: Int, initialMinute: Int) {
+        self.initialHour = initialHour
+        self.initialMinute = initialMinute
         super.init(frame: .zero)
         
         hourColumn = TimeWheelColumnView(
@@ -70,6 +74,16 @@ final class TimeWheelPickerView: UIView {
         }
         
         setupLayout()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard bounds.width > 0 else { return }
+        
+        hourColumn.layoutIfNeeded()
+        minuteColumn.layoutIfNeeded()
+        
+        setTime(hour: initialHour, minute: initialMinute, animated: false)
     }
     
     required init?(coder: NSCoder) {

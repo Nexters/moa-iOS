@@ -74,8 +74,10 @@ final class TimeSelectionView: UIView {
     }()
     
     // MARK: - Initialization
-    init(startTime: TimeIndicatorEntity = .from(hour: 9, minute: 20),
-         endTime: TimeIndicatorEntity = .from(hour: 18, minute: 0)) {
+    init(
+        startTime: TimeIndicatorEntity,
+        endTime: TimeIndicatorEntity
+    ) {
         self.selectedStartTime = startTime
         self.selectedEndTime = endTime
         
@@ -94,6 +96,16 @@ final class TimeSelectionView: UIView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        wheelPicker.setTime(
+            hour: selectedStartTime.hour,
+            minute: selectedStartTime.minute,
+            animated: true
+        )
     }
     
     // MARK: - Setup

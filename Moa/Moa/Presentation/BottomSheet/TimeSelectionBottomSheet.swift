@@ -69,8 +69,8 @@ final class TimeSelectionBottomSheet: UIViewController {
     // MARK: - Initialization
     init(
         type: TimeSelectionBottomSheetCase,
-        startTime: TimeIndicatorEntity = .from(hour: 9, minute: 20),
-        endTime: TimeIndicatorEntity = .from(hour: 18, minute: 0)
+        startTime: TimeIndicatorEntity,
+        endTime: TimeIndicatorEntity
     ) {
         self.titleLabel.setText(type.title)
         self.initialStartTime = startTime
