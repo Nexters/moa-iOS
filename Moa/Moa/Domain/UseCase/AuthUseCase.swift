@@ -16,9 +16,19 @@ final class AuthUsecase {
     
     func loginWithKakaoTalk(
         idToken: String,
-        fcmDeviceToken: String
+        fcmDeviceToken: String?
     ) async throws -> SocialLoginEntity {
         try await repository.loginWithKakaoTalk(
+            idToken: idToken,
+            fcmDeviceToken: fcmDeviceToken
+        )
+    }
+    
+    func loginWithApple(
+        idToken: String,
+        fcmDeviceToken: String?
+    ) async throws -> SocialLoginEntity {
+        try await repository.loginWithApple(
             idToken: idToken,
             fcmDeviceToken: fcmDeviceToken
         )

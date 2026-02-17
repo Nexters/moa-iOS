@@ -20,29 +20,27 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
     weak var delegate: WorkAlarmBottomSheetDelegate?
     
     // MARK: - UI
-    
-    private let titleLabel: UILabel = {
+
+    private let titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
             "근무 알림을 받아보세요!",
             style: .init(
                 typography: AppTypography.t1_700,
                 color: AppColor.IconAndText.highEmphasis
-            )
-        )
-        
+            ))
         label.numberOfLines = 1
         return label
     }()
-    
-    private let descriptionLabel: UILabel = {
+
+    private let descriptionLabel: StyledLabel = {
         let label = StyledLabel()
-        label.text = """
-        알림 수신에 동의하면, 출퇴근 시간과 월급일에
-        알림을 보내드릴게요!
-        """
-        label.setStyle(
-            .init(
+        label.setText(
+            """
+            알림 수신에 동의하면, 출퇴근 시간과 월급일에
+            알림을 보내드릴게요!
+            """,
+            style: .init(
                 typography: AppTypography.b1_400,
                 color: AppColor.IconAndText.highEmphasis
             )
@@ -55,23 +53,11 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
         let button = AppButton()
         button.setTitle("알림 받을게요", for: .normal)
         button.applyStyle(.primary())
-        button.addTarget(
-            self,
-            action: #selector(didTapAlarmButton),
-            for: .touchUpInside
-        )
-        
         return button
     }()
     
     private lazy var dismissBtn: UnderlineTextButton = {
         let button = UnderlineTextButton(title: "다음에 할게요")
-        button.addTarget(
-            self,
-            action: #selector(didTapLaterButton),
-            for: .touchUpInside
-        )
-        
         return button
     }()
     
@@ -122,6 +108,9 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             make.bottom.equalToSuperview().offset(-24)
         }
+
+        notificationControlBtn.addTarget(self, action: #selector(didTapAlarmButton), for: .touchUpInside)
+        dismissBtn.addTarget(self, action: #selector(didTapLaterButton), for: .touchUpInside)
     }
     
     

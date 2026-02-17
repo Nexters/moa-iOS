@@ -20,6 +20,10 @@ final class AppButton: UIButton {
         let text: TextStyle
     }
     
+    enum ImagePlacement {
+        case leading, trailing, top, bottom
+    }
+    
     struct Style {
         let enabled: StateStyle
         let pressed: StateStyle
@@ -28,6 +32,32 @@ final class AppButton: UIButton {
         let cornerRadius: CGFloat
         let verticalPadding: CGFloat
         let horizontalPadding: CGFloat?
+        
+        let image: UIImage?
+        let imagePlacement: ImagePlacement
+        let imagePadding: CGFloat
+        
+        init(
+            enabled: StateStyle,
+            pressed: StateStyle,
+            disabled: StateStyle,
+            cornerRadius: CGFloat,
+            verticalPadding: CGFloat,
+            horizontalPadding: CGFloat? = nil,
+            image: UIImage? = nil,
+            imagePlacement: ImagePlacement = .leading,
+            imagePadding: CGFloat = 12
+        ) {
+            self.enabled = enabled
+            self.pressed = pressed
+            self.disabled = disabled
+            self.cornerRadius = cornerRadius
+            self.verticalPadding = verticalPadding
+            self.horizontalPadding = horizontalPadding
+            self.image = image
+            self.imagePlacement = imagePlacement
+            self.imagePadding = imagePadding
+        }
     }
     
     // MARK: - Stored
@@ -73,6 +103,20 @@ final class AppButton: UIButton {
             trailing: horizontal
         )
         
+        config.image = style.image
+        config.imagePadding = style.imagePadding
+        
+        switch style.imagePlacement {
+        case .leading:
+            config.imagePlacement = .leading
+        case .trailing:
+            config.imagePlacement = .trailing
+        case .top:
+            config.imagePlacement = .top
+        case .bottom:
+            config.imagePlacement = .bottom
+        }
+        
         self.baseConfiguration = config
         self.configuration = config
         
@@ -111,7 +155,10 @@ extension AppButton.Style {
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
         verticalPadding: CGFloat = 19.0,
-        horizontalPadding: CGFloat? = nil
+        horizontalPadding: CGFloat? = nil,
+        image: UIImage? = nil,
+        imagePlacement: AppButton.ImagePlacement = .leading,
+        imagePadding: CGFloat = 12
     ) -> AppButton.Style {
         .init(
             enabled: .init(
@@ -128,7 +175,10 @@ extension AppButton.Style {
             ),
             cornerRadius: cornerRadius,
             verticalPadding: verticalPadding,
-            horizontalPadding: horizontalPadding
+            horizontalPadding: horizontalPadding,
+            image: image,
+            imagePlacement: imagePlacement,
+            imagePadding: imagePadding
         )
     }
     
@@ -136,7 +186,10 @@ extension AppButton.Style {
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
         verticalPadding: CGFloat = 19.0,
-        horizontalPadding: CGFloat? = nil
+        horizontalPadding: CGFloat? = nil,
+        image: UIImage? = nil,
+        imagePlacement: AppButton.ImagePlacement = .leading,
+        imagePadding: CGFloat = 12
     ) -> AppButton.Style {
         .init(
             enabled: .init(
@@ -153,7 +206,10 @@ extension AppButton.Style {
             ),
             cornerRadius: cornerRadius,
             verticalPadding: verticalPadding,
-            horizontalPadding: horizontalPadding
+            horizontalPadding: horizontalPadding,
+            image: image,
+            imagePlacement: imagePlacement,
+            imagePadding: imagePadding
         )
     }
     
@@ -161,7 +217,10 @@ extension AppButton.Style {
         font: UIFont = AppTypography.t3_700.font(),
         cornerRadius: CGFloat = 32.0,
         verticalPadding: CGFloat = 19.0,
-        horizontalPadding: CGFloat? = nil
+        horizontalPadding: CGFloat? = nil,
+        image: UIImage? = nil,
+        imagePlacement: AppButton.ImagePlacement = .leading,
+        imagePadding: CGFloat = 12
     ) -> AppButton.Style {
         .init(
             enabled: .init(
@@ -178,7 +237,10 @@ extension AppButton.Style {
             ),
             cornerRadius: cornerRadius,
             verticalPadding: verticalPadding,
-            horizontalPadding: horizontalPadding
+            horizontalPadding: horizontalPadding,
+            image: image,
+            imagePlacement: imagePlacement,
+            imagePadding: imagePadding
         )
     }
 }
