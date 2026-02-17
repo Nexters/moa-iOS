@@ -182,13 +182,7 @@ final class TimeSelectionView: UIView {
                 animated: true
             )
             
-        case .selectingEnd:
-            // TODO: 출근 시간이 퇴근 시간보다 늦게 입력 한 경우 처리 필요!
-            if selectedStartTime.hour > selectedEndTime.hour ||
-                (selectedStartTime.hour == selectedEndTime.hour && selectedStartTime.minute > selectedEndTime.minute) {
-                
-            }
-            
+        case .selectingEnd:            
             // 완료 상태
             selectionMode = .completed
             updateSelectionState()
@@ -231,10 +225,24 @@ extension TimeSelectionView: TimeWheelPickerViewDelegate {
                 startTimeButton.setTime(time)
             }
             
+            if selectedStartTime.hour > selectedEndTime.hour ||
+                (selectedStartTime.hour == selectedEndTime.hour && selectedStartTime.minute > selectedEndTime.minute) {
+                confirmButton.isEnabled = false
+            } else {
+                confirmButton.isEnabled = true
+            }
+            
         case .selectingEnd:
             if selectedEndTime != time {
                 selectedEndTime = time
                 endTimeButton.setTime(time)
+            }
+            
+            if selectedStartTime.hour > selectedEndTime.hour ||
+                (selectedStartTime.hour == selectedEndTime.hour && selectedStartTime.minute > selectedEndTime.minute) {
+                confirmButton.isEnabled = false
+            } else {
+                confirmButton.isEnabled = true
             }
             
         case .completed:
