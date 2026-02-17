@@ -8,11 +8,33 @@
 import UIKit
 import SnapKit
 
-/// title + value + chevron Icon (Optional)
-final class KeyValueRowView: UIView {
+enum KeyValueRowType {
+    case wageRow(wage: Int)
+    case timeRow(startTime: String, endTime: String)
+    
+    var title: String {
+        switch self {
+        case .wageRow:
+            return "오늘 일급"
+        case .timeRow:
+            return "근무 시간"
+        }
+    }
+    
+    var value: String {
+        switch self {
+        case let .wageRow(wage):
+            return "\(AppNumberFormatter.decimalString(from: wage))원"
+        case let .timeRow(startTime, endTime):
+            return "\(startTime) - \(endTime)"
+        }
+    }
+}
+
+/// title + value + optional chevron
+final class KeyValueRowView: UIControl {
     
     // MARK: - UI
-    
     private lazy var titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setStyle(
@@ -23,7 +45,7 @@ final class KeyValueRowView: UIView {
         )
         return label
     }()
-    
+
     private lazy var valueLabel: StyledLabel = {
         let label = StyledLabel()
         label.setStyle(
@@ -33,28 +55,40 @@ final class KeyValueRowView: UIView {
             )
         )
         label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return label
     }()
-    
-    private lazy var chevronImageBtn: AppIconButton = {
-        let iconBtn = AppIconButton(
-            image: .Icon.iconChevronRight,
-            iconSize: 18,
-            buttonSize: 24,
-            tintColor: AppColor.IconAndText.lowEmphasis
-        )
-        
-        iconBtn.isHidden = true
-        return iconBtn
+
+    private lazy var chevronImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = UIImage(resource: .Icon.iconChevronRight)
+            .withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = AppColor.IconAndText.lowEmphasis
+        imageView.isHidden = !showsChevron
+        return imageView
     }()
+
+    
+    // MARK: - Properties
+    
+    private let showsChevron: Bool
+    
+    /// 외부 액션
+    var onTap: (() -> Void)? {
+        didSet {
+            isUserInteractionEnabled = onTap != nil
+        }
+    }
     
     // MARK: - Init
     
-    init(title: String, value: String, showsChevron: Bool = false) {
+    init(type: KeyValueRowType, showsChevron: Bool = false) {
+        self.showsChevron = showsChevron
         super.init(frame: .zero)
         
         setupUI()
-        configure(title: title, value: value, showsChevron: showsChevron)
+        configure(with: type)
     }
     
     required init?(coder: NSCoder) {
@@ -64,41 +98,72 @@ final class KeyValueRowView: UIView {
     // MARK: - Setup
     
     private func setupUI() {
-        addSubview(titleLabel)
-        addSubview(valueLabel)
-        addSubview(chevronImageBtn)
+        
+        clipsToBounds = true
+        backgroundColor = .clear
+        
+        addTarget(self, action: #selector(didTapRow), for: .touchUpInside)
+                
+        addSubViews(
+            [
+                titleLabel,
+                valueLabel,
+                chevronImageView
+            ]
+        )
         
         titleLabel.snp.makeConstraints {
             $0.leading.equalToSuperview()
-            $0.top.equalToSuperview().inset(0)
-            $0.bottom.equalToSuperview().inset(0)
+            $0.centerY.equalToSuperview()
+        }
+        
+        chevronImageView.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(24)
         }
         
         valueLabel.snp.makeConstraints {
             $0.leading.equalTo(titleLabel.snp.trailing).offset(12)
-            $0.centerY.equalTo(titleLabel)
-            $0.trailing.lessThanOrEqualTo(chevronImageBtn.snp.leading)
-                .offset(-8)
-                .priority(.high)
+            $0.centerY.equalToSuperview()
+            $0.trailing.lessThanOrEqualTo(
+                showsChevron
+                ? chevronImageView.snp.leading
+                : snp.trailing
+            ).offset(showsChevron ? -8 : 0)
         }
         
-        chevronImageBtn.snp.makeConstraints {
-            $0.trailing.equalToSuperview()
-            $0.centerY.equalTo(titleLabel)
-        }
+        isAccessibilityElement = true
+        accessibilityTraits = .button
     }
     
     // MARK: - Configure
     
-    private func configure(title: String, value: String, showsChevron: Bool) {
-        titleLabel.setText(title)
-        valueLabel.setText(value)
-        chevronImageBtn.isHidden = !showsChevron
+    private func configure(with type: KeyValueRowType) {
+        titleLabel.setText(type.title)
+        valueLabel.setText(type.value)
+        updateAccessibility()
     }
-    
-    // MARK: - Public API
     
     func updateValue(_ value: String) {
         valueLabel.setText(value)
+        updateAccessibility()
+    }
+    
+    private func updateAccessibility() {
+        accessibilityLabel = "\(titleLabel.text ?? ""), \(valueLabel.text ?? "")"
+    }
+    
+    // MARK: - Action
+    
+    @objc
+    private func didTapRow() {
+        onTap?()
+    }
+    
+    // MARK: - Intrinsic Size
+    
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: 24)
     }
 }

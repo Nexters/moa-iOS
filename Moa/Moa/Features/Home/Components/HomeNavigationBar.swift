@@ -71,9 +71,13 @@ final class HomeNavigationBarView: UIView {
             $0.edges.equalToSuperview()
         }
         
-        titleImageView.snp.makeConstraints {
-            $0.top.bottom.equalTo(containerStackView)
-            $0.leading.equalToSuperview().inset(4)
-        }
+        containerStackView.isLayoutMarginsRelativeArrangement = true
+        containerStackView.layoutMargins = UIEdgeInsets(
+            top: 0,
+            left: 4,
+            bottom: 0,
+            right: 0
+        )
     }
+
 }
