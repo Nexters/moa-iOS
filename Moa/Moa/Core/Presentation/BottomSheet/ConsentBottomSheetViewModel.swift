@@ -8,10 +8,17 @@
 import Foundation
 
 final class ConsentBottomSheetViewModel {
-
-    private(set) var usageTermAgreed: Bool
-    private(set) var personalInfoAgreed: Bool
-    private(set) var marketingAgreed: Bool
+    var onStateChanged: (() -> Void)?
+    
+    private(set) var usageTermAgreed: Bool = false {
+        didSet { onStateChanged?() }
+    }
+    private(set) var personalInfoAgreed: Bool = false {
+        didSet { onStateChanged?() }
+    }
+    private(set) var marketingAgreed: Bool = false {
+        didSet { onStateChanged?() }
+    }
 
     init(
         usageTermAgreed: Bool = false,
@@ -49,4 +56,3 @@ final class ConsentBottomSheetViewModel {
         marketingAgreed.toggle()
     }
 }
-

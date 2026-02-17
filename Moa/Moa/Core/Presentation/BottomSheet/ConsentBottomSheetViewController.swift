@@ -99,6 +99,9 @@ final class ConsentBottomSheetViewController: UIViewController, BottomSheetPrese
         super.viewDidLoad()
         setupViews()
         setupActions()
+        viewModel.onStateChanged = { [weak self] in
+            self?.updateUIFromViewModel()
+        }
         updateUIFromViewModel()
     }
     
