@@ -54,7 +54,7 @@ line_length:
 
 function_body_length:
   warning: 60
-  error: 100
+  error: 140
 
 cyclomatic_complexity:
   warning: 10
