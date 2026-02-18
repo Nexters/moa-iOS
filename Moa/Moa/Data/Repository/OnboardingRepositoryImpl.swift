@@ -55,9 +55,18 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
     }
     
     func updateNickname(to nickname: String) async throws -> ProfileEntity {
-        let request = OnboardingProfileUpsertRequest(nickname: nickname)
+        let request = ProfileUpsertRequest(nickname: nickname)
         let response: ProfileResponse = try await apiClient.request(
             OnboardingAPI.updateOnboardingProfile(request)
+        )
+        
+        return response.toDomain()
+    }
+    
+    func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity {
+        let request = PayrollUpsertRequest(salaryInputType: type.apiValue, salaryAmount: amount)
+        let response: PayrollResponse = try await apiClient.request(
+            OnboardingAPI.updateOnboardingPayroll(request)
         )
         
         return response.toDomain()

@@ -199,7 +199,7 @@ final class OnboardingNicknameViewController: BaseViewController {
                 try await viewModel.updateNickname(to: nicknameTextField.text)
                 onNext()
             } catch {
-                // TODO: 실패처리
+                // TODO: 에러처리
             }
         }
     }

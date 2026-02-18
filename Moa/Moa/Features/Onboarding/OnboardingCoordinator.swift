@@ -90,11 +90,12 @@ private extension OnboardingCoordinator {
             return vc
 
         case .payroll:
-            let vm = OnboardingSalaryViewModel(
+            let vm = OnboardingPayrollViewModel(
+                usecase: usecase,
                 selectedSalaryType: status?.payroll?.salaryInputType ?? .annual,
                 amount: status?.payroll?.salaryAmount
             )
-            let vc = OnboardingSalaryViewController(
+            let vc = OnboardingPayrollViewController(
                 viewModel: vm,
                 onNext: makeOnNext(for: .payroll)
             )

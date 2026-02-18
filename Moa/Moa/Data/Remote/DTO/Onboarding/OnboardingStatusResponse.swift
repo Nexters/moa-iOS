@@ -23,29 +23,7 @@ struct OnboardingStatusResponse: Decodable {
     }
 }
 
-struct PayrollResponse: Decodable {
-    let effectiveFrom: String?
-    let salaryInputType: String?
-    let salaryAmount: Int?
-    
-    func toDomain() -> PayrollEntity {
-        .init(
-            salaryInputType: Self.mapSalaryType(salaryInputType),
-            salaryAmount: salaryAmount
-        )
-    }
-    
-    private static func mapSalaryType(_ raw: String?) -> SalaryType {
-        switch (raw ?? "").uppercased() {
-        case "MONTHLY": return .monthly
-        case "ANNUAL":  return .annual
-        default: return .annual
-        }
-    }
-}
-
 struct WorkPolicyResponse: Decodable {
-    let effectiveFrom: String?
     let workdays: [String]?
     let clockInTime: String?
     let clockOutTime: String?

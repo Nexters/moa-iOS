@@ -25,4 +25,8 @@ final class OnboardingUsecase {
     func updateNickname(to nickname: String) async throws -> ProfileEntity {
         try await repository.updateNickname(to: nickname)
     }
+    
+    func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity {
+        try await repository.updatePayroll(type: type, amount: amount)
+    }
 }
