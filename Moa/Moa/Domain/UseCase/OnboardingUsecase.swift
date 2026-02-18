@@ -17,4 +17,12 @@ final class OnboardingUsecase {
     func getOnboardingStatus() async throws -> OnboardingStatusEntity {
         try await repository.fetchOnboardingStatus()
     }
+    
+    func generateRandomNickname() -> String {
+        repository.generateRandomNickname()
+    }
+    
+    func updateNickname(to nickname: String) async throws -> ProfileEntity {
+        try await repository.updateNickname(to: nickname)
+    }
 }

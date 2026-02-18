@@ -23,29 +23,15 @@ struct OnboardingStatusResponse: Decodable {
     }
 }
 
-struct ProfileResponse: Decodable {
-    let nickname: String?
-    let workplace: String?
-    
-    func toDomain() -> ProfileEntity {
-        .init(
-            nickname: nickname,
-            workplace: workplace
-        )
-    }
-}
-
 struct PayrollResponse: Decodable {
     let effectiveFrom: String?
     let salaryInputType: String?
     let salaryAmount: Int?
-    let paydayDay: Int?
     
     func toDomain() -> PayrollEntity {
         .init(
             salaryInputType: Self.mapSalaryType(salaryInputType),
-            salaryAmount: salaryAmount,
-            paydayDay: paydayDay
+            salaryAmount: salaryAmount
         )
     }
     

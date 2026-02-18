@@ -53,4 +53,13 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
         } else {
             throw NSError(domain: "OnboardingRepository", code: 2, userInfo: [NSLocalizedDescriptionKey: "JSON 형식이 올바르지 않습니다: \(resource).json"]) }
     }
+    
+    func updateNickname(to nickname: String) async throws -> ProfileEntity {
+        let request = OnboardingProfileUpsertRequest(nickname: nickname)
+        let response: ProfileResponse = try await apiClient.request(
+            OnboardingAPI.updateOnboardingProfile(request)
+        )
+        
+        return response.toDomain()
+    }
 }

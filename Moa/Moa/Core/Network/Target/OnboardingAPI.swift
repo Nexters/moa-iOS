@@ -12,7 +12,7 @@ import Alamofire
 enum OnboardingAPI {
     case getOnboardingStatus // 상태 조회
     case getOnboardingTerms // 약관 항목 목록 조회
-    case updateOnboardingProfile // 프로필 정보 갱신
+    case updateOnboardingProfile(OnboardingProfileUpsertRequest) // 프로필 정보 갱신
     case updateOnboardingPayroll // 급여 정보 갱신
     case updateOnboardingWorkpolicy // 근무조건 정보 갱신
     case getTermsAgreementStatus // 약관 동의 현황 조회
@@ -69,8 +69,8 @@ extension OnboardingAPI: TargetType {
             return .requestPlain
         case .getOnboardingTerms:
             return .requestPlain
-        case .updateOnboardingProfile:
-            return .requestPlain
+        case let .updateOnboardingProfile(body):
+            return .requestJSONEncodable(body)
         case .updateOnboardingPayroll:
             return .requestPlain
         case .updateOnboardingWorkpolicy:

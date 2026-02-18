@@ -17,12 +17,12 @@ struct OnboardingStatusEntity {
 struct ProfileEntity {
     let nickname: String?
     let workplace: String?
+    let paydayDay: Int?
 }
 
 struct PayrollEntity {
     let salaryInputType: SalaryType
     let salaryAmount: Int?
-    let paydayDay: Int?
 }
 
 struct WorkPolicyEntity {

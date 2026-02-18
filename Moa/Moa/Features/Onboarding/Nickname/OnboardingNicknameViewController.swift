@@ -194,7 +194,14 @@ final class OnboardingNicknameViewController: BaseViewController {
     }
     
     @objc private func nextButtonTapped() {
-        onNext()
+        Task { @MainActor in
+            do {
+                try await viewModel.updateNickname(to: nicknameTextField.text)
+                onNext()
+            } catch {
+                // TODO: 실패처리
+            }
+        }
     }
     
     @objc private func backgroundTapped() {

@@ -36,10 +36,10 @@ final class AppContainer {
     }()
 
     // MARK: - Repository
-    lazy var authRepository: AuthRepository = {
+    private lazy var authRepository: AuthRepository = {
         AuthRepositoryImpl(apiClient: apiClient)
     }()
-    lazy var onboardingRepository: OnboardingRepository = {
+    private lazy var onboardingRepository: OnboardingRepository = {
         OnboardingRepositoryImpl(apiClient: apiClient)
     }()
 

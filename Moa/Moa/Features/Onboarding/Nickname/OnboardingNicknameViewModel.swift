@@ -12,7 +12,7 @@ final class OnboardingNicknameViewModel {
     
     // MARK: - Dependencies
     
-    private let repository: OnboardingRepository
+    private let usecase: OnboardingUsecase
     
     // MARK: - State
     
@@ -21,16 +21,21 @@ final class OnboardingNicknameViewModel {
     // MARK: - Init
     
     init(
-        repository: OnboardingRepository,
+        usecase: OnboardingUsecase,
         nickname: String? = nil
     ) {
-        self.repository = repository
+        self.usecase = usecase
         self.nickname = nickname
     }
 
     // MARK: - Actions
     
     func makeRandomNickname() -> String {
-        repository.generateRandomNickname()
+        usecase.generateRandomNickname()
+    }
+    
+    func updateNickname(to nickname: String?) async throws {
+        guard let nickname, !nickname.isEmpty else { return }
+        _ = try await usecase.updateNickname(to: nickname)
     }
 }

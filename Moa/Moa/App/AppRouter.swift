@@ -101,7 +101,7 @@ private extension AppRouter {
     
     func startOnboarding(animated: Bool, startStep: OnboardingStep, status: OnboardingStatusEntity) {
         let coordinator = OnboardingCoordinator(
-            repository: container.onboardingRepository,
+            usecase: container.onboardingUseCase,
             startStep: startStep,
             status: status,
             finish: { [weak self] in
