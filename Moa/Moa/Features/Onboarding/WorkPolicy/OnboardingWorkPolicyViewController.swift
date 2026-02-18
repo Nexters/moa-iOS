@@ -111,6 +111,7 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }
     
     override func setupActions() {
+        workingTimeRangeRowView.addTarget(self, action: #selector(workingHoursRowTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         weekdaySelectionView.onSelectionChanged = { [weak self] newSelection in
@@ -159,6 +160,17 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     // MARK: - Actions
     
+    @objc private func workingHoursRowTapped() {
+        let vm = WorkingHoursBottomSheetViewModel(
+            clockInTime: viewModel.clockInTime ?? "09:00",
+            clockOutTime: viewModel.clockOutTime ?? "18:00"
+        )
+        let vc = WorkingHoursBottomSheetViewController(viewModel: vm)
+        
+        vc.delegate = self
+        presentBottomSheet(vc)
+    }
+    
     @objc private func nextButtonTapped() {
         Task { @MainActor in
             do {
@@ -189,5 +201,11 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
 extension OnboardingWorkPolicyViewController: ConsentBottomSheetViewDelegate {
     func didTapConfirm() {
         onNext()
+    }
+}
+
+extension OnboardingWorkPolicyViewController: WorkingHoursBottomSheetViewDelegate {
+    func didTapConfirm(clockInTime: String, clockOutTime: String) {
+        
     }
 }
