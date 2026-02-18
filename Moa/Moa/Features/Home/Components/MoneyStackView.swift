@@ -26,6 +26,9 @@ final class EarningsStackView: UIView {
             "치킨 한 마리 살 수 있어요",
             "오늘 쌓은 월급 150,000원"
         ]
+        
+        static let solidMaskHeight: CGFloat = 90
+        static let gradientMaskHeight: CGFloat = 60
     }
 
     // MARK: - UI
@@ -79,6 +82,8 @@ final class EarningsStackView: UIView {
         return imageView
     }()
 
+    private let maskGradientLayer = CAGradientLayer()
+
     // MARK: - Properties
 
     private var stackBottomConstraint: Constraint?
@@ -97,10 +102,9 @@ final class EarningsStackView: UIView {
     init(workingType: WorkingType) {
         self.workingType = workingType
         super.init(frame: .zero)
-        
         setupUI()
+        setupMask()
     }
-
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -120,6 +124,8 @@ final class EarningsStackView: UIView {
             hasAppliedInitialPosition = true
             applyInitialPosition()
         }
+        
+        updateMaskLayout()
     }
     
     private func applyInitialPosition() {
@@ -167,25 +173,62 @@ final class EarningsStackView: UIView {
             $0.bottom.equalToSuperview()
         }
 
-        // 스택 컨테이너 (클리핑 영역)
+        // 스택 컨테이너
         stackContainer.snp.makeConstraints {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.top.equalToSuperview().offset(88)
         }
 
-        // 기둥 이미지 (컨테이너 안에서 아래에서 위로 올라옴)
+        // 기둥 이미지
         stackImageView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(stackContainer.snp.height)
             stackBottomConstraint = $0.bottom.equalToSuperview().constraint
         }
 
-        // floating 컨테이너 (기둥과 함께 움직임)
+        // floating 컨테이너
         floatingInfoContainer.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.centerX.equalToSuperview()
             floatingContainerBottomConstraint = $0.bottom.equalToSuperview().constraint
         }
+    }
+    
+    // 마스킹 설정
+    private func setupMask() {
+        layer.mask = maskGradientLayer
+        
+        maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        maskGradientLayer.endPoint   = CGPoint(x: 0.5, y: 1)
+    }
+    
+    private func updateMaskLayout() {
+        let height = bounds.height
+        guard height > 0 else { return }
+        
+        maskGradientLayer.frame = bounds
+        
+        let solid = Constants.solidMaskHeight
+        let gradient = Constants.gradientMaskHeight
+        
+        let solidStart = 1 - (solid / height)
+        let gradientStart = 1 - ((solid + gradient) / height)
+        
+        maskGradientLayer.colors = [
+            UIColor.white.cgColor,
+            UIColor.white.cgColor,
+            UIColor.white.withAlphaComponent(0.7).cgColor,
+            UIColor.white.withAlphaComponent(0.3).cgColor,
+            UIColor.white.withAlphaComponent(0.0).cgColor
+        ]
+        
+        maskGradientLayer.locations = [
+            0.0,
+            NSNumber(value: Float(gradientStart * 0.9)),
+            NSNumber(value: Float(gradientStart)),
+            NSNumber(value: Float(solidStart)),
+            1.0
+        ]
     }
 
     // MARK: - Configure
