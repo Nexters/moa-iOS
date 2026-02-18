@@ -26,7 +26,7 @@ enum WorkingType {
     var barColor: UIColor {
         switch self {
         case .work:
-            return AppColor.IconAndText.blue
+            return AppColor.IconAndText.green
         case .vacation:
             return AppColor.IconAndText.blue
         }
