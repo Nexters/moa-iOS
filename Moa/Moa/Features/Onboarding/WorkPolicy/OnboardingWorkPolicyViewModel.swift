@@ -17,8 +17,8 @@ final class OnboardingWorkPolicyViewModel {
     
     private(set) var selectedWeekdays: Set<Weekday>
     private(set) var hasPresentedTermsSheet: Bool = false
-    private(set) var clockInTime: String?
-    private(set) var clockOutTime: String?
+    private(set) var clockInTime: TimeIndicatorEntity
+    private(set) var clockOutTime: TimeIndicatorEntity
     let shouldPresentTermsSheet: Bool
 
     // MARK: - Init
@@ -27,15 +27,15 @@ final class OnboardingWorkPolicyViewModel {
         usecase: OnboardingUsecase,
         selectedWeekdays: Set<Weekday>,
         shouldPresentTermsSheet: Bool,
-        clockInTime: String? = nil,
-        clockOutTime: String? = nil
+        clockInTime: TimeIndicatorEntity?,
+        clockOutTime: TimeIndicatorEntity?
     ) {
         self.usecase = usecase
         let defaultWeekdays: Set<Weekday> = [.mon, .tue, .wed, .thu, .fri]
         self.selectedWeekdays = selectedWeekdays.isEmpty ? defaultWeekdays : selectedWeekdays
         self.shouldPresentTermsSheet = shouldPresentTermsSheet
-        self.clockInTime = clockInTime
-        self.clockOutTime = clockOutTime
+        self.clockInTime = clockInTime ?? .init(hour: 9, minute: 0)
+        self.clockOutTime = clockOutTime ?? .init(hour: 18, minute: 0)
     }
 
     // MARK: - Actions
@@ -49,12 +49,15 @@ final class OnboardingWorkPolicyViewModel {
     }
     
     func updateWorkPolicy() async throws {
-        guard
-            selectedWeekdays.isEmpty == false,
-            let clockInTime,
-            let clockOutTime
-        else { return }
-        
+        guard selectedWeekdays.isEmpty == false else { throw DomainError.missingRequiredData }
         _ = try await usecase.updateWorkPolicy(selectedWeekdays: Array(selectedWeekdays), clockInTime: clockInTime, clockOutTime: clockOutTime)
+    }
+    
+    func workingHoursConfirmFromBottomSheet(
+        start: TimeIndicatorEntity,
+        end: TimeIndicatorEntity
+    ) {
+        clockInTime = start
+        clockOutTime = end
     }
 }

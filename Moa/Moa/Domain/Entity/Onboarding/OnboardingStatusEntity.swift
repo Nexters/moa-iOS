@@ -27,8 +27,8 @@ struct PayrollEntity {
 
 struct WorkPolicyEntity {
     let workdays: [Weekday]
-    let clockInTime: String?
-    let clockOutTime: String?
+    let clockInTime: TimeIndicatorEntity?
+    let clockOutTime: TimeIndicatorEntity?
 }
 
 extension OnboardingStatusEntity {

@@ -19,3 +19,7 @@ struct FieldError: Decodable {
     let field: String
     let message: String
 }
+
+enum DomainError: Error {
+    case missingRequiredData
+}

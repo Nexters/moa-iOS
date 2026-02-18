@@ -104,9 +104,10 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupButton()
         setupLayout()
-        let startTime = viewModel.clockInTime ?? "09:00"
-        let endTime = viewModel.clockOutTime ?? "18:00"
-        workingTimeRangeRowView.configure(start: startTime, end: endTime)
+        workingTimeRangeRowView.configure(
+            start: viewModel.clockInTime.displayString,
+            end: viewModel.clockOutTime.displayString
+        )
         weekdaySelectionView.setSelectedWeekdays(viewModel.selectedWeekdays, notify: false)
     }
     
@@ -161,14 +162,14 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func workingHoursRowTapped() {
-        let vm = WorkingHoursBottomSheetViewModel(
-            clockInTime: viewModel.clockInTime ?? "09:00",
-            clockOutTime: viewModel.clockOutTime ?? "18:00"
+        let sheet = TimeSelectionBottomSheet(
+            type: .setWorkingHours,
+            startTime: viewModel.clockInTime,
+            endTime: viewModel.clockOutTime
         )
-        let vc = WorkingHoursBottomSheetViewController(viewModel: vm)
         
-        vc.delegate = self
-        presentBottomSheet(vc)
+        sheet.delegate = self
+        presentBottomSheet(sheet)
     }
     
     @objc private func nextButtonTapped() {
@@ -204,8 +205,13 @@ extension OnboardingWorkPolicyViewController: ConsentBottomSheetViewDelegate {
     }
 }
 
-extension OnboardingWorkPolicyViewController: WorkingHoursBottomSheetViewDelegate {
-    func didTapConfirm(clockInTime: String, clockOutTime: String) {
-        
+extension OnboardingWorkPolicyViewController: TimeSelectionBottomSheetDelegate {
+    func timeSelectionBottomSheet(
+        _ sheet: TimeSelectionBottomSheet,
+        didConfirmStartTime startTime: TimeIndicatorEntity,
+        endTime: TimeIndicatorEntity
+    ) {
+        viewModel.workingHoursConfirmFromBottomSheet(start: startTime, end: endTime)
+        workingTimeRangeRowView.configure(start: startTime.displayString, end: endTime.displayString)
     }
 }

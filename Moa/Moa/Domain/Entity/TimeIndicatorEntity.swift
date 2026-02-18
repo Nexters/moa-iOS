@@ -22,3 +22,20 @@ struct TimeIndicatorEntity: Equatable {
         return TimeIndicatorEntity(hour: hour, minute: minute)
     }
 }
+
+extension TimeIndicatorEntity {
+    /// "HH:mm" 형식의 문자열을 TimeIndicatorEntity로 변환 (예: "09:00" -> TimeIndicatorEntity(hour: 9, minute: 0))
+    init?(from string: String?) {
+        guard let string else { return nil }
+        let parts = string.split(separator: ":")
+        guard parts.count == 2,
+              let hour = Int(parts[0]),
+              let minute = Int(parts[1]),
+              (0..<24).contains(hour),
+              (0..<60).contains(minute)
+        else {
+            return nil
+        }
+        self.init(hour: hour, minute: minute)
+    }
+}

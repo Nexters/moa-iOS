@@ -37,7 +37,7 @@ final class OnboardingPayrollViewModel {
     }
     
     func updatePayroll() async throws {
-        guard let amount, amount != .zero else { return } // 여기서 리턴됨
+        guard let amount, amount != .zero else { throw DomainError.missingRequiredData }
         _ = try await usecase.updatePayroll(type: selectedSalaryType, amount: amount)
     }
     

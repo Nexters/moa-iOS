@@ -15,8 +15,8 @@ struct WorkPolicyResponse: Decodable {
     func toDomain() -> WorkPolicyEntity {
         .init(
             workdays: (workdays ?? []).compactMap(Self.mapWeekday),
-            clockInTime: clockInTime,
-            clockOutTime: clockOutTime
+            clockInTime: TimeIndicatorEntity(from: clockInTime),
+            clockOutTime: TimeIndicatorEntity(from: clockOutTime)
         )
     }
     

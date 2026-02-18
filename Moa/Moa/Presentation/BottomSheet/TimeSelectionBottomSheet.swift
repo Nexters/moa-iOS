@@ -20,11 +20,14 @@ protocol TimeSelectionBottomSheetDelegate: AnyObject {
 // MARK: - TimeSelectionBottomSheetCase
 enum TimeSelectionBottomSheetCase {
     case setEstimateTime
+    case setWorkingHours
     
     var title: String {
         switch self {
         case .setEstimateTime:
             return "예상 출퇴근 시간을 알려주세요"
+        case .setWorkingHours:
+            return "근무 시간을 알려주세요"
         }
     }
 }

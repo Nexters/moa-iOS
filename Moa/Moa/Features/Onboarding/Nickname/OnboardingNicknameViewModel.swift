@@ -35,7 +35,7 @@ final class OnboardingNicknameViewModel {
     }
     
     func updateNickname(to nickname: String?) async throws {
-        guard let nickname, !nickname.isEmpty else { return }
+        guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
         _ = try await usecase.updateNickname(to: nickname)
     }
 }
