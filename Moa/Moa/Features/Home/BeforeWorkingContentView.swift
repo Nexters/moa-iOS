@@ -1,5 +1,5 @@
 //
-//  BeforeWorkingView.swift
+//  BeforeWorkingContentView.swift
 //  Moa
 //
 //  Created by 정도현 on 2/18/26.
@@ -10,12 +10,12 @@ import Combine
 import SnapKit
 
 protocol BeforeWorkingViewDelegate: AnyObject {
-    func beforeWorkingViewDidTapStartWork(_ view: BeforeWorkingView)
-    func beforeWorkingViewDidTapVacation(_ view: BeforeWorkingView)
-    func beforeWorkingViewDidRequestTimeSelection(_ view: BeforeWorkingView)
+    func beforeWorkingViewDidTapStartWork(_ view: BeforeWorkingContentView)
+    func beforeWorkingViewDidTapVacation(_ view: BeforeWorkingContentView)
+    func beforeWorkingViewDidRequestTimeSelection(_ view: BeforeWorkingContentView)
 }
 
-final class BeforeWorkingView: UIView {
+final class BeforeWorkingContentView: UIView {
     
     // MARK: - Constants
     
@@ -124,7 +124,7 @@ final class BeforeWorkingView: UIView {
 
 // MARK: - Layout
 
-private extension BeforeWorkingView {
+private extension BeforeWorkingContentView {
     
     func setupHierarchy() {
         self.addSubViews([
@@ -196,7 +196,7 @@ private extension BeforeWorkingView {
 
 // MARK: - Actions
 
-private extension BeforeWorkingView {
+private extension BeforeWorkingContentView {
     
     @objc
     func didTapMainButton() {
@@ -212,7 +212,7 @@ private extension BeforeWorkingView {
 
 // MARK: - Helpers
 
-private extension BeforeWorkingView {
+private extension BeforeWorkingContentView {
     
     func getCurrentDateString() -> String {
         let formatter = DateFormatter()

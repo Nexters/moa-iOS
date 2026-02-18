@@ -34,8 +34,8 @@ final class HomeViewController: BaseViewController {
     private let navigationBarView = HomeNavigationBarView()
 
     // 근무 전 콘텐츠
-    private lazy var beforeWorkingView: BeforeWorkingView = {
-        let view = BeforeWorkingView()
+    private lazy var beforeWorkingView: BeforeWorkingContentView = {
+        let view = BeforeWorkingContentView()
         view.delegate = self
         return view
     }()
@@ -386,15 +386,15 @@ extension HomeViewController: WorkingStatusViewDelegate {
 // 근무 전 상태 뷰
 extension HomeViewController: BeforeWorkingViewDelegate {
 
-    func beforeWorkingViewDidTapStartWork(_ view: BeforeWorkingView) {
+    func beforeWorkingViewDidTapStartWork(_ view: BeforeWorkingContentView) {
         viewModel.send(.startWork)
     }
 
-    func beforeWorkingViewDidTapVacation(_ view: BeforeWorkingView) {
+    func beforeWorkingViewDidTapVacation(_ view: BeforeWorkingContentView) {
         didTapVacation()
     }
 
-    func beforeWorkingViewDidRequestTimeSelection(_ view: BeforeWorkingView) {
+    func beforeWorkingViewDidRequestTimeSelection(_ view: BeforeWorkingContentView) {
         presentTimeSelectionBottomSheet()
     }
 }
