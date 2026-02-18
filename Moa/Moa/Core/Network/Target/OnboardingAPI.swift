@@ -16,7 +16,7 @@ enum OnboardingAPI {
     case updateOnboardingPayroll(PayrollUpsertRequest) // 급여 정보 갱신
     case updateOnboardingWorkpolicy(WorkPolicyUpsertRequest) // 근무조건 정보 갱신
     case getTermsAgreementStatus // 약관 동의 현황 조회
-    case updateTermsAgreementStatus // 약관 동의 여부 갱신
+    case updateTermsAgreementStatus(TermsAgreementRequest) // 약관 동의 여부 갱신
 }
 
 extension OnboardingAPI: TargetType {
@@ -77,8 +77,8 @@ extension OnboardingAPI: TargetType {
             return .requestJSONEncodable(body)
         case .getTermsAgreementStatus:
             return .requestPlain
-        case .updateTermsAgreementStatus:
-            return .requestPlain
+        case let .updateTermsAgreementStatus(body):
+            return .requestJSONEncodable(body)
         }
     }
     

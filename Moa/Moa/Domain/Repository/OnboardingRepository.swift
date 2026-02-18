@@ -13,4 +13,6 @@ protocol OnboardingRepository {
     func updateNickname(to nickname: String) async throws -> ProfileEntity
     func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity
     func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity
+    func fetchTerms() async throws -> [TermsEntity]
+    func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity
 }

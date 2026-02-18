@@ -124,6 +124,19 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         updateNextButtonState()
     }
     
+    // MARK: - Lifecycle
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        Task {
+            do {
+                try await viewModel.loadTerms()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if viewModel.shouldPresentTermsSheet, !viewModel.hasPresentedTermsSheet {
@@ -184,7 +197,8 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     }
     
     private func showTermsAgreementBottomSheet() {
-        let vc = ConsentBottomSheetViewController()
+        let vm = TermsAgreementBottomSheetViewModel(terms: viewModel.terms)
+        let vc = TermsAgreementBottomSheetViewController(viewModel: vm)
         
         vc.delegate = self
         presentBottomSheet(vc)
@@ -199,9 +213,16 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
 
 // MARK: BottomSheetDelegate
 
-extension OnboardingWorkPolicyViewController: ConsentBottomSheetViewDelegate {
-    func didTapConfirm() {
-        onNext()
+extension OnboardingWorkPolicyViewController: TermsAgreementBottomSheetViewDelegate {
+    func didTapConfirm(agreements: [String: Bool]) {
+        Task {
+            do {
+                try await viewModel.updateTermsAgreement(agreements: agreements)
+                onNext()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
     }
 }
 

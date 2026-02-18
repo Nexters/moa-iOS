@@ -20,6 +20,7 @@ final class OnboardingWorkPolicyViewModel {
     private(set) var clockInTime: TimeIndicatorEntity
     private(set) var clockOutTime: TimeIndicatorEntity
     let shouldPresentTermsSheet: Bool
+    private(set) var terms: [TermsEntity] = []
 
     // MARK: - Init
     
@@ -59,5 +60,16 @@ final class OnboardingWorkPolicyViewModel {
     ) {
         clockInTime = start
         clockOutTime = end
+    }
+    
+    func loadTerms() async throws {
+        let fetched = try await usecase.getTerms()
+        self.terms = fetched
+    }
+    
+    func updateTermsAgreement(agreements: [String: Bool]) async throws {
+        let entities = agreements.map { AgreementEntity(code: $0.key, agreed: $0.value) }
+        
+        _ = try await usecase.updateTermsAgreement(to: entities)
     }
 }

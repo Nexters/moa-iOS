@@ -14,23 +14,6 @@ struct OnboardingStatusEntity {
     let hasRequiredTermsAgreed: Bool
 }
 
-struct ProfileEntity {
-    let nickname: String?
-    let workplace: String?
-    let paydayDay: Int?
-}
-
-struct PayrollEntity {
-    let salaryInputType: SalaryType
-    let salaryAmount: Int?
-}
-
-struct WorkPolicyEntity {
-    let workdays: [Weekday]
-    let clockInTime: TimeIndicatorEntity?
-    let clockOutTime: TimeIndicatorEntity?
-}
-
 extension OnboardingStatusEntity {
     enum NextStep {
         case step(OnboardingStep)

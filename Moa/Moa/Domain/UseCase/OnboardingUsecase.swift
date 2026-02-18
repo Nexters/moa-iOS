@@ -33,4 +33,12 @@ final class OnboardingUsecase {
     func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity {
         try await repository.updateWorkPolicy(selectedWeekdays: selectedWeekdays, clockInTime: clockInTime, clockOutTime: clockOutTime)
     }
+    
+    func getTerms() async throws -> [TermsEntity] {
+        try await repository.fetchTerms()
+    }
+    
+    func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity {
+        try await repository.updateTermsAgreement(to: agreements)
+    }
 }

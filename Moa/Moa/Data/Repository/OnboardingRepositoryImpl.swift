@@ -81,4 +81,21 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
         
         return response.toDomain()
     }
+    
+    func fetchTerms() async throws -> [TermsEntity] {
+        let response: TermsListResponse = try await apiClient.request(
+            OnboardingAPI.getOnboardingTerms
+        )
+        
+        return response.terms.compactMap { $0.toDomain() }
+    }
+    
+    func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity {
+        let request = TermsAgreementRequest(domain: agreements)
+        let response: TermsAgreementResponse = try await apiClient.request(
+            OnboardingAPI.updateTermsAgreementStatus(request)
+        )
+        
+        return response.toDomain()
+    }
 }
