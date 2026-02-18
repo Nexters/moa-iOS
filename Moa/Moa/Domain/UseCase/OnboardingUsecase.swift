@@ -29,4 +29,8 @@ final class OnboardingUsecase {
     func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity {
         try await repository.updatePayroll(type: type, amount: amount)
     }
+    
+    func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: String, clockOutTime: String) async throws -> WorkPolicyEntity {
+        try await repository.updateWorkPolicy(selectedWeekdays: selectedWeekdays, clockInTime: clockInTime, clockOutTime: clockOutTime)
+    }
 }

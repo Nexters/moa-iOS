@@ -103,6 +103,7 @@ private extension OnboardingCoordinator {
             
         case .workPolicy:
             let vm = OnboardingWorkPolicyViewModel(
+                usecase: usecase,
                 selectedWeekdays: Set(status?.workPolicy?.workdays ?? []),
                 shouldPresentTermsSheet: {
                     let hasPolicy = status?.workPolicy != nil

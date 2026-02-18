@@ -160,7 +160,14 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func nextButtonTapped() {
-        showTermsAgreementBottomSheet()
+        Task { @MainActor in
+            do {
+                try await viewModel.updateWorkPolicy()
+                showTermsAgreementBottomSheet()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
     }
     
     private func showTermsAgreementBottomSheet() {

@@ -8,7 +8,13 @@
 import Foundation
 
 final class OnboardingWorkPolicyViewModel {
+    
+    // MARK: - Dependencies
+    
+    private let usecase: OnboardingUsecase
+    
     // MARK: - State
+    
     private(set) var selectedWeekdays: Set<Weekday>
     private(set) var hasPresentedTermsSheet: Bool = false
     private(set) var clockInTime: String?
@@ -16,12 +22,15 @@ final class OnboardingWorkPolicyViewModel {
     let shouldPresentTermsSheet: Bool
 
     // MARK: - Init
+    
     init(
+        usecase: OnboardingUsecase,
         selectedWeekdays: Set<Weekday>,
         shouldPresentTermsSheet: Bool,
         clockInTime: String? = nil,
         clockOutTime: String? = nil
     ) {
+        self.usecase = usecase
         let defaultWeekdays: Set<Weekday> = [.mon, .tue, .wed, .thu, .fri]
         self.selectedWeekdays = selectedWeekdays.isEmpty ? defaultWeekdays : selectedWeekdays
         self.shouldPresentTermsSheet = shouldPresentTermsSheet
@@ -30,11 +39,22 @@ final class OnboardingWorkPolicyViewModel {
     }
 
     // MARK: - Actions
+    
     func markTermsSheetPresented() {
         hasPresentedTermsSheet = true
     }
 
     func updateSelectedWeekdays(_ weekdays: Set<Weekday>) {
         selectedWeekdays = weekdays
+    }
+    
+    func updateWorkPolicy() async throws {
+        guard
+            selectedWeekdays.isEmpty == false,
+            let clockInTime,
+            let clockOutTime
+        else { return }
+        
+        _ = try await usecase.updateWorkPolicy(selectedWeekdays: Array(selectedWeekdays), clockInTime: clockInTime, clockOutTime: clockOutTime)
     }
 }
