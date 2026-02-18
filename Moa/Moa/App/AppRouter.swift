@@ -69,12 +69,6 @@ private extension AppRouter {
 
             do {
                 let status = try await container.onboardingUseCase.getOnboardingStatus()
-//                let status = OnboardingStatusEntity(
-//                    profile: .init(nickname: "nickname", workplace: nil),
-//                    payroll: .init(salaryInputType: .annual, salaryAmount: 123123, paydayDay: 25),
-//                    workPolicy: nil,
-//                    hasRequiredTermsAgreed: false
-//                )
                 
                 // 필수 데이터 nil인 경우 해당 데이터 입력 페이지로 이동
                 switch status.nextOnboardingStep {
