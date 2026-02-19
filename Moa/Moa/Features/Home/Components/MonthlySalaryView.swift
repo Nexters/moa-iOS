@@ -12,6 +12,12 @@ import SnapKit
 final class MonthlySalaryView: UIView {
 
     // MARK: - UI Components
+    private let moneyImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(resource: .Image.imageEmptyMoney)
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
     
     private lazy var titleLabel: UILabel = {
         let label = StyledLabel()
@@ -110,10 +116,15 @@ final class MonthlySalaryView: UIView {
     // MARK: - Setup UI
 
     private func setupUI() {
-        addSubViews([titleLabel, amountStackView, subtitleLabel])
+        addSubViews([moneyImageView, titleLabel, amountStackView, subtitleLabel])
 
-        titleLabel.snp.makeConstraints {
+        moneyImageView.snp.makeConstraints {
             $0.top.equalToSuperview()
+            $0.centerX.equalToSuperview()
+        }
+        
+        titleLabel.snp.makeConstraints {
+            $0.top.equalTo(moneyImageView.snp.bottom).offset(20)
             $0.centerX.equalToSuperview()
         }
 
@@ -203,4 +214,11 @@ private extension MonthlySalaryView {
             }
         }
     }
+}
+
+
+
+@available(iOS 17.0)
+#Preview {
+    MonthlySalaryView(month: 1, amount: 1, baseAmount: 1, shouldAnimate: true)
 }

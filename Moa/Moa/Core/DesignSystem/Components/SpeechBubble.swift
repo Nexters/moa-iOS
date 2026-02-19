@@ -35,7 +35,7 @@ final class SpeechBubble: UIView {
     }()
     
     // MARK: - Init
-    init(text: String) {
+    init(text: String = "") {
         super.init(frame: .zero)
         
         setupUI()
