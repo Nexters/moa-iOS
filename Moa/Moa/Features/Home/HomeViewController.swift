@@ -41,7 +41,7 @@ final class HomeViewController: BaseViewController {
     }()
     
     // 근무 중 콘텐츠
-    private lazy var workingStatusView = WorkingContentView(workingType: .vacation)
+    private lazy var workingStatusView = WorkingContentView(workingType: .work)
     
     private let loadingIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -90,6 +90,11 @@ final class HomeViewController: BaseViewController {
                 self?.render(state)
             }
             .store(in: &cancellables)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopWorkingTimer()
     }
 }
 
