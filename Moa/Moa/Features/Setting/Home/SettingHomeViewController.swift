@@ -12,6 +12,7 @@ final class SettingHomeViewController: BaseViewController {
     
     // MARK: - Dependencies
     
+    private let coordinator: SettingCoordinator
     private let viewModel = SettingHomeViewModel()
     
     // MARK: - Constants
@@ -83,6 +84,14 @@ final class SettingHomeViewController: BaseViewController {
     
     // MARK: - Init
     
+    init(coordinator: SettingCoordinator) {
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - Setup
     
@@ -102,6 +111,10 @@ final class SettingHomeViewController: BaseViewController {
     }
     
     override func setupActions() {
-        
+        nicknameEditButton.addTarget(self, action: #selector(nicknameEditButtonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func nicknameEditButtonTapped() {
+        coordinator.moveToNicknameEdit()
     }
 }

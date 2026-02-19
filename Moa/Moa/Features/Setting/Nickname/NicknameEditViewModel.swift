@@ -1,13 +1,13 @@
 //
-//  OnboardingNicknameViewModel.swift
+//  NicknameEditViewModel.swift
 //  Moa
 //
-//  Created by mirim on 1/30/26.
+//  Created by mirim on 2/19/26.
 //
 
 import Foundation
 
-final class OnboardingNicknameViewModel {
+final class NicknameEditViewModel {
     
     // MARK: - Dependencies
     
@@ -15,8 +15,8 @@ final class OnboardingNicknameViewModel {
     
     // MARK: - State
     
-    private(set) var nickname: String?
-
+    private(set) var nickname: String? // TODO: 현재 닉네임 전달 필요
+    
     // MARK: - Init
     
     init(
@@ -35,6 +35,8 @@ final class OnboardingNicknameViewModel {
     
     func updateNickname(to nickname: String?) async throws {
         guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
+        
+        // FIXME: api 변경
         _ = try await usecase.updateNickname(to: nickname)
     }
 }

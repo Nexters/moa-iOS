@@ -27,4 +27,17 @@ extension UIViewController {
         navigationItem.hidesBackButton = true
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: button)
     }
+    
+    func setupNavigationTitle(as title: String) {
+        let titleLabel = StyledLabel()
+        titleLabel.setText(
+            title,
+            style: .init(
+                typography: AppTypography.t3_500,
+                color: AppColor.IconAndText.highEmphasis
+            )
+        )
+        titleLabel.textAlignment = .center
+        navigationItem.titleView = titleLabel
+    }
 }
