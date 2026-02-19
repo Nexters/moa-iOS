@@ -1,5 +1,5 @@
 //
-//  OnboardingSalaryViewController.swift
+//  OnboardingPayrollViewController.swift
 //  Moa
 //
 //  Created by mirim on 2/3/26.
@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-final class OnboardingSalaryViewController: BaseViewController {
+final class OnboardingPayrollViewController: BaseViewController {
     
     // MARK: - Constants
     
@@ -22,7 +22,7 @@ final class OnboardingSalaryViewController: BaseViewController {
     
     // MARK: - Dependencies
     
-    private let viewModel: OnboardingSalaryViewModel
+    private let viewModel: OnboardingPayrollViewModel
     private let onNext: (() -> Void)
     
     // MARK: - UI Components
@@ -162,7 +162,7 @@ final class OnboardingSalaryViewController: BaseViewController {
     // MARK: - Init
     
     init(
-        viewModel: OnboardingSalaryViewModel,
+        viewModel: OnboardingPayrollViewModel,
         onNext: @escaping () -> Void
     ) {
         self.viewModel = viewModel
@@ -205,6 +205,13 @@ final class OnboardingSalaryViewController: BaseViewController {
         let initialDigits = (amountTextField.text ?? "").filter(\.isNumber)
         let initialValue = Int(initialDigits) ?? 0
         koreanAmountLabel.text = viewModel.koreanCurrencyText(for: initialValue)
+        
+        if let amount = viewModel.amount {
+            let formatted = NumberFormatter.localizedString(from: NSNumber(value: amount), number: .decimal)
+            amountTextField.text = formatted
+            koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: amount))
+            updateNextButtonState()
+        }
     }
     
     // MARK: - Actions
@@ -215,10 +222,18 @@ final class OnboardingSalaryViewController: BaseViewController {
         let digits = (amountTextField.text ?? "").filter(\.isNumber)
         let value = Int(digits) ?? 0
         koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: value))
+        viewModel.updateAmount(fromTextFieldText: amountTextField.text)
     }
     
     @objc private func nextButtonTapped() {
-        onNext()
+        Task { @MainActor in
+            do {
+                try await viewModel.updatePayroll()
+                onNext()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
     }
     
     @objc private func backgroundTapped() {
@@ -228,7 +243,7 @@ final class OnboardingSalaryViewController: BaseViewController {
 
 // MARK: - UI Configuration
 
-private extension OnboardingSalaryViewController {
+private extension OnboardingPayrollViewController {
     func setupButton() {
         nextButton.setTitle(Constant.next, for: .normal)
         nextButton.applyStyle(.primary())
@@ -297,7 +312,7 @@ private extension OnboardingSalaryViewController {
 
 // MARK: - Private Methods
 
-private extension OnboardingSalaryViewController {
+private extension OnboardingPayrollViewController {
     func updateNextButtonState() {
         let digits = (amountTextField.text ?? "").filter(\.isNumber)
         let amount = Int(digits) ?? 0
@@ -314,7 +329,7 @@ private extension OnboardingSalaryViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension OnboardingSalaryViewController: UITextFieldDelegate {
+extension OnboardingPayrollViewController: UITextFieldDelegate {
     func textField(
         _ textField: UITextField,
         shouldChangeCharactersInRanges ranges: [NSValue],

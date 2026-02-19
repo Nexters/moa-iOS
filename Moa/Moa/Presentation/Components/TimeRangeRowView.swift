@@ -122,10 +122,12 @@ final class TimeRangeRowView: UIControl {
     }
     
     private func setupInteraction() {
-        addTarget(self, action: #selector(rowTapped), for: .touchUpInside)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(rowTapped))
+        addGestureRecognizer(tap)
+        isUserInteractionEnabled = true
     }
     
     @objc private func rowTapped() {
-        sendActions(for: .primaryActionTriggered)
+        sendActions(for: .touchUpInside)
     }
 }

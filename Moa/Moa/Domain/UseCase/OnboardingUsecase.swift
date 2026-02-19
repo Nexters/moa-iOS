@@ -1,0 +1,44 @@
+//
+//  OnboardingUsecase.swift
+//  Moa
+//
+//  Created by mirim on 2/16/26.
+//
+
+import Foundation
+
+final class OnboardingUsecase {
+    private let repository: OnboardingRepository
+    
+    init(repository: OnboardingRepository) {
+        self.repository = repository
+    }
+    
+    func getOnboardingStatus() async throws -> OnboardingStatusEntity {
+        try await repository.fetchOnboardingStatus()
+    }
+    
+    func generateRandomNickname() -> String {
+        repository.generateRandomNickname()
+    }
+    
+    func updateNickname(to nickname: String) async throws -> ProfileEntity {
+        try await repository.updateNickname(to: nickname)
+    }
+    
+    func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity {
+        try await repository.updatePayroll(type: type, amount: amount)
+    }
+    
+    func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity {
+        try await repository.updateWorkPolicy(selectedWeekdays: selectedWeekdays, clockInTime: clockInTime, clockOutTime: clockOutTime)
+    }
+    
+    func getTerms() async throws -> [TermsEntity] {
+        try await repository.fetchTerms()
+    }
+    
+    func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity {
+        try await repository.updateTermsAgreement(to: agreements)
+    }
+}

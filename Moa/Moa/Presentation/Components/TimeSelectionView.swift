@@ -209,7 +209,7 @@ final class TimeSelectionView: UIView {
             endTimeButton.setActive(false)
             
         case .selectingEnd, .completed:
-            startTimeButton.setActive(true)
+            startTimeButton.setActive(false)
             endTimeButton.setActive(true)
         }
     }

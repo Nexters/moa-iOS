@@ -19,7 +19,7 @@ final class AppContainer {
 
         let plugins: [PluginType] = [
             MoyaPlugin(tokenProvider: {
-                nil     // TODO: 실제 사용되는 TOKEN 주입 필요
+                AuthSessionManager.shared.currentAccessToken()
             }),
             TimeoutPlugin(timeout: 10),
             NetworkLoggingPlugin()
@@ -36,12 +36,18 @@ final class AppContainer {
     }()
 
     // MARK: - Repository
-    lazy var authRepository: AuthRepository = {
+    private lazy var authRepository: AuthRepository = {
         AuthRepositoryImpl(apiClient: apiClient)
+    }()
+    private lazy var onboardingRepository: OnboardingRepository = {
+        OnboardingRepositoryImpl(apiClient: apiClient)
     }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
         AuthUsecase(repository: authRepository)
+    }()
+    lazy var onboardingUseCase: OnboardingUsecase = {
+        OnboardingUsecase(repository: onboardingRepository)
     }()
 }

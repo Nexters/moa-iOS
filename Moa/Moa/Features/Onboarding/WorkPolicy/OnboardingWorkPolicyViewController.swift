@@ -104,11 +104,15 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupButton()
         setupLayout()
-        workingTimeRangeRowView.configure(start: "09:00", end: "18:00")
+        workingTimeRangeRowView.configure(
+            start: viewModel.clockInTime.displayString,
+            end: viewModel.clockOutTime.displayString
+        )
         weekdaySelectionView.setSelectedWeekdays(viewModel.selectedWeekdays, notify: false)
     }
     
     override func setupActions() {
+        workingTimeRangeRowView.addTarget(self, action: #selector(workingHoursRowTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         weekdaySelectionView.onSelectionChanged = { [weak self] newSelection in
@@ -118,6 +122,30 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
         }
         
         updateNextButtonState()
+    }
+    
+    // MARK: - Lifecycle
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        Task {
+            do {
+                try await viewModel.loadTerms()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if viewModel.shouldPresentTermsSheet, !viewModel.hasPresentedTermsSheet {
+            viewModel.markTermsSheetPresented()
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.showTermsAgreementBottomSheet()
+            }
+        }
     }
     
     // MARK: - UI Configuration
@@ -146,12 +174,31 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
     
     // MARK: - Actions
     
+    @objc private func workingHoursRowTapped() {
+        let sheet = TimeSelectionBottomSheet(
+            type: .setWorkingHours,
+            startTime: viewModel.clockInTime,
+            endTime: viewModel.clockOutTime
+        )
+        
+        sheet.delegate = self
+        presentBottomSheet(sheet)
+    }
+    
     @objc private func nextButtonTapped() {
-        showTermsAgreementBottomSheet()
+        Task { @MainActor in
+            do {
+                try await viewModel.updateWorkPolicy()
+                showTermsAgreementBottomSheet()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
     }
     
     private func showTermsAgreementBottomSheet() {
-        let vc = ConsentBottomSheetViewController()
+        let vm = TermsAgreementBottomSheetViewModel(terms: viewModel.terms)
+        let vc = TermsAgreementBottomSheetViewController(viewModel: vm)
         
         vc.delegate = self
         presentBottomSheet(vc)
@@ -166,8 +213,26 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
 
 // MARK: BottomSheetDelegate
 
-extension OnboardingWorkPolicyViewController: ConsentBottomSheetViewDelegate {
-    func didTapConfirm() {
-        onNext()
+extension OnboardingWorkPolicyViewController: TermsAgreementBottomSheetViewDelegate {
+    func didTapConfirm(agreements: [String: Bool]) {
+        Task {
+            do {
+                try await viewModel.updateTermsAgreement(agreements: agreements)
+                onNext()
+            } catch {
+                // TODO: 에러처리
+            }
+        }
+    }
+}
+
+extension OnboardingWorkPolicyViewController: TimeSelectionBottomSheetDelegate {
+    func timeSelectionBottomSheet(
+        _ sheet: TimeSelectionBottomSheet,
+        didConfirmStartTime startTime: TimeIndicatorEntity,
+        endTime: TimeIndicatorEntity
+    ) {
+        viewModel.workingHoursConfirmFromBottomSheet(start: startTime, end: endTime)
+        workingTimeRangeRowView.configure(start: startTime.displayString, end: endTime.displayString)
     }
 }

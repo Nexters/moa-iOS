@@ -9,12 +9,12 @@ import Foundation
 
 enum SalaryType {
     case monthly
-    case yearly
+    case annual
     
     var maxDigits: Int {
         switch self {
         case .monthly: 9
-        case .yearly: 10
+        case .annual: 10
         }
     }
 }
