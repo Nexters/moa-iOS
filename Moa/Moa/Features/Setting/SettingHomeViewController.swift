@@ -8,7 +8,11 @@
 import UIKit
 import SnapKit
 
-final class SettingHomeViewController {
+final class SettingHomeViewController: BaseViewController {
+    
+    // MARK: - Dependencies
+    
+    private let viewModel = SettingHomeViewModel()
     
     // MARK: - Constants
     
@@ -36,6 +40,7 @@ final class SettingHomeViewController {
         stack.spacing = 4
         stack.distribution = .fill
         stack.alignment = .leading
+        stack.addArrangedSubViews([accountProviderLabel, nicknameStack])
         return stack
     }()
     
@@ -44,6 +49,7 @@ final class SettingHomeViewController {
         stack.axis = .horizontal
         stack.spacing = 8
         stack.distribution = .fill
+        stack.addArrangedSubViews([nicknameLabel, nicknameEditButton])
         return stack
     }()
     
@@ -74,4 +80,28 @@ final class SettingHomeViewController {
         btn.setImage(UIImage(resource: .Icon.iconEdit), for: .normal)
         return btn
     }()
+    
+    // MARK: - Init
+    
+    
+    // MARK: - Setup
+    
+    override func setupUI() {
+        replaceSystemBackButtonWithAppBackButton()
+        
+        view.addSubViews([memberInfoStack])
+        
+        memberInfoStack.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
+        }
+        
+        // api 연결 후 수정
+        accountProviderLabel.setText(viewModel.accountProvider.displayName)
+        nicknameLabel.setText(viewModel.nickname)
+    }
+    
+    override func setupActions() {
+        
+    }
 }

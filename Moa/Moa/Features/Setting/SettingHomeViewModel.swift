@@ -1,5 +1,5 @@
 //
-//  SettingViewModel.swift
+//  SettingHomeViewModel.swift
 //  Moa
 //
 //  Created by mirim on 2/19/26.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class SettingViewModel {
+final class SettingHomeViewModel {
     
     // MARK: - Dependencies
     

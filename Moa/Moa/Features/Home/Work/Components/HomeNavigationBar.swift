@@ -10,6 +10,9 @@ import SnapKit
 
 final class HomeNavigationBarView: UIView {
     
+    // MARK: - Callbacks
+    
+    var onTapSetting: (() -> Void)?
     var onCalendarTap: (() -> Void)?
     
     // MARK: - UI Components
@@ -59,6 +62,12 @@ final class HomeNavigationBarView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayout()
+        setupActions()
+    }
+    
+    convenience init(onTapSetting: (() -> Void)?) {
+        self.init(frame: .zero)
+        self.onTapSetting = onTapSetting
     }
     
     required init?(coder: NSCoder) { fatalError() }
@@ -93,9 +102,15 @@ final class HomeNavigationBarView: UIView {
         
         calendarButton.addTarget(self, action: #selector(handleCalendarTap), for: .touchUpInside)
     }
-    
     // MARK: - Action
 
+    
+    private func setupActions() {
+        settingButton.addTarget(self, action: #selector(didTapSetting), for: .touchUpInside)
+    }
+    
+    @objc private func didTapSetting() {
+        onTapSetting?()
     @objc private func handleCalendarTap() {
         onCalendarTap?()
     }
