@@ -29,14 +29,20 @@ struct CalendarDay {
 
 final class HistoryViewController: BaseViewController {
     
-    override var prefersNavigationBarHidden: Bool { true }
-    
     private let calendarView = CalendarView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+    
+    override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
+        
+        replaceSystemBackButtonWithAppBackButton()
         
         calendarView.delegate = self
         

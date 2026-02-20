@@ -1,5 +1,5 @@
 //
-//  HomeViewModel.swift
+//  WorkViewModel.swift
 //  Moa
 //
 //  Created by 정도현 on 2/17/26.
@@ -22,13 +22,13 @@ enum WorkStatus: Equatable {
 
 // MARK: - ViewState
 
-enum HomeViewState: Equatable {
+enum WorkViewState: Equatable {
     case idle
     case loading
     case loaded(HomeViewData)
     case error(HomeError)
 
-    static func == (lhs: HomeViewState, rhs: HomeViewState) -> Bool {
+    static func == (lhs: WorkViewState, rhs: WorkViewState) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle), (.loading, .loading):
             return true
@@ -128,11 +128,11 @@ enum HomeError: LocalizedError {
 
 // MARK: - ViewModel
 
-final class HomeViewModel {
+final class WorkViewModel {
 
     // MARK: - Output
 
-    @Published private(set) var state: HomeViewState = .idle
+    @Published private(set) var state: WorkViewState = .idle
 
     // MARK: - Input
 
@@ -159,7 +159,7 @@ final class HomeViewModel {
 
 // MARK: - Public Methods
 
-extension HomeViewModel {
+extension WorkViewModel {
 
     func send(_ input: Input) {
         switch input {
@@ -180,7 +180,7 @@ extension HomeViewModel {
 
 // MARK: - Private Methods
 
-private extension HomeViewModel {
+private extension WorkViewModel {
 
     func loadInitialData() {
         guard state != .loading else { return }
@@ -307,8 +307,8 @@ private extension HomeViewModel {
 // MARK: - Testable (Unit Test용)
 
 #if DEBUG
-extension HomeViewModel {
-    func setState(_ state: HomeViewState) {
+extension WorkViewModel {
+    func setState(_ state: WorkViewState) {
         self.state = state
     }
 

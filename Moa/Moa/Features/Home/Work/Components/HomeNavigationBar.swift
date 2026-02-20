@@ -10,6 +10,8 @@ import SnapKit
 
 final class HomeNavigationBarView: UIView {
     
+    var onCalendarTap: (() -> Void)?
+    
     // MARK: - UI Components
     
     private lazy var titleImageView: UIImageView = {
@@ -19,18 +21,18 @@ final class HomeNavigationBarView: UIView {
         return imageView
     }()
     
-    private lazy var calendarButton: AppIconButton = {
-        AppIconButton(
-            image: UIImage(resource: .Icon.iconCalendar),
-            tintColor: AppColor.IconAndText.highEmphasis
-        )
+    private let calendarButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(resource: .Icon.iconCalendar).withRenderingMode(.alwaysTemplate), for: .normal)
+        b.tintColor = AppColor.IconAndText.highEmphasis
+        return b
     }()
     
-    private lazy var settingButton: AppIconButton = {
-        AppIconButton(
-            image: UIImage(resource: .Icon.iconSetting),
-            tintColor: AppColor.IconAndText.highEmphasis
-        )
+    private let settingButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(resource: .Icon.iconSetting).withRenderingMode(.alwaysTemplate), for: .normal)
+        b.tintColor = AppColor.IconAndText.highEmphasis
+        return b
     }()
     
     private lazy var rightStackView: UIStackView = {
@@ -76,8 +78,25 @@ final class HomeNavigationBarView: UIView {
             top: 0,
             left: 4,
             bottom: 0,
-            right: 0
+            right: 4
         )
+        
+        calendarButton.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(CGSize(width: 44, height: 44))
+        }
+        
+        settingButton.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(CGSize(width: 44, height: 44))
+        }
+        
+        calendarButton.addTarget(self, action: #selector(handleCalendarTap), for: .touchUpInside)
     }
+    
+    // MARK: - Action
 
+    @objc private func handleCalendarTap() {
+        onCalendarTap?()
+    }
 }
