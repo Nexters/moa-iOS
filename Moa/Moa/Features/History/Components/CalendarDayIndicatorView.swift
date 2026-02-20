@@ -114,9 +114,9 @@ final class CalendarDayIndicatorView: UIView {
     }
     
     private static func makeLabel() -> StyledLabel {
-        let l = StyledLabel()
-        l.setStyle(.init(typography: AppTypography.c1_400, color: AppColor.IconAndText.mediumEmphasis))
-        l.textAlignment = .center
-        return l
+        let label = StyledLabel()
+        label.setStyle(.init(typography: AppTypography.c1_400, color: AppColor.IconAndText.mediumEmphasis))
+        label.textAlignment = .center
+        return label
     }
 }
