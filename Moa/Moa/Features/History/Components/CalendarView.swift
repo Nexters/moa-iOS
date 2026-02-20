@@ -30,7 +30,7 @@ final class CalendarView: UIView {
     
     // MARK: - Subviews
     
-    private let navBar     = CalendarNavigationBar()
+    private let navBar     = CalendarNavigationBar(type: .history)
     private let infoCard   = CalendarInfoCard()
     private let weekHeader = CalendarWeekdayHeader()
     private let gridView   = CalendarGridView()

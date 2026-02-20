@@ -8,6 +8,18 @@
 import UIKit
 import SnapKit
 
+enum CalendarNavigationType {
+    case history
+    case bottomSheet
+    
+    var showsAddButton: Bool {
+        switch self {
+        case .history: return true
+        case .bottomSheet: return false
+        }
+    }
+}
+
 protocol CalendarNavigationBarDelegate: AnyObject {
     func navigationBarDidTapPrev()
     func navigationBarDidTapNext()
@@ -17,75 +29,114 @@ protocol CalendarNavigationBarDelegate: AnyObject {
 final class CalendarNavigationBar: UIView {
     
     weak var delegate: CalendarNavigationBarDelegate?
+    private let type: CalendarNavigationType
     
-    private let prevButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setImage(UIImage(resource: .Icon.iconChevronLeft), for: .normal)
-        b.tintColor = AppColor.IconAndText.highEmphasis
-        return b
+    // MARK: - UI
+    
+    private let prevButton = UIButton(type: .system)
+    private let monthLabel = StyledLabel()
+    private let nextButton = UIButton(type: .system)
+    private let addButton  = UIButton(type: .system)
+    
+    private let monthStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.alignment = .center
+        sv.distribution = .equalSpacing
+        return sv
     }()
     
-    private let monthLabel: StyledLabel = {
-        let l = StyledLabel()
-        l.setStyle(.init(typography: AppTypography.t2_500, color: AppColor.IconAndText.highEmphasis))
-        l.textAlignment = .center
-        return l
-    }()
+    // MARK: - Init
     
-    private let nextButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setImage(UIImage(resource: .Icon.iconChevronRight), for: .normal)
-        b.tintColor = AppColor.IconAndText.highEmphasis
-        return b
-    }()
-    
-    private let addButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.backgroundColor = AppColor.Container.secondary
-        b.layer.cornerRadius = 16
-        b.clipsToBounds = true
-        b.setImage(UIImage(resource: .Icon.iconPlus), for: .normal)
-        b.tintColor = AppColor.IconAndText.highEmphasis
-        return b
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(type: CalendarNavigationType) {
+        self.type = type
+        super.init(frame: .zero)
+        
         setup()
     }
+    
     required init?(coder: NSCoder) { fatalError() }
     
+    // MARK: - Setup
+    
     private func setup() {
-        [prevButton, monthLabel, nextButton, addButton].forEach { addSubview($0) }
+        configureUI()
+        configureLayout()
+        configureActions()
+    }
+    
+    private func configureUI() {
         
-        prevButton.snp.makeConstraints {
-            $0.leading.centerY.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 24, height: 24))
-        }
-
-        monthLabel.snp.makeConstraints {
-            $0.leading.equalTo(prevButton.snp.trailing).offset(12)
-            $0.width.equalTo(36)
-            $0.centerY.equalToSuperview()
-        }
-
-        nextButton.snp.makeConstraints {
-            $0.leading.equalTo(monthLabel.snp.trailing).offset(12)
-            $0.centerY.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 24, height: 24))
-        }
-
-        addButton.snp.makeConstraints {
-            $0.trailing.centerY.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 32, height: 32))
+        prevButton.setImage(UIImage(resource: .Icon.iconChevronLeft), for: .normal)
+        nextButton.setImage(UIImage(resource: .Icon.iconChevronRight), for: .normal)
+        
+        [prevButton, nextButton].forEach {
+            $0.tintColor = AppColor.IconAndText.highEmphasis
         }
         
+        monthLabel.setStyle(.init(
+            typography: AppTypography.t2_500,
+            color: AppColor.IconAndText.highEmphasis
+        ))
+        monthLabel.textAlignment = .center
+        
+        addButton.backgroundColor = AppColor.Container.secondary
+        addButton.layer.cornerRadius = 16
+        addButton.setImage(UIImage(resource: .Icon.iconPlus), for: .normal)
+        addButton.tintColor = AppColor.IconAndText.highEmphasis
+    }
+    
+    private func configureLayout() {
+        
+        monthStackView.addArrangedSubview(prevButton)
+        monthStackView.addArrangedSubview(monthLabel)
+        monthStackView.addArrangedSubview(nextButton)
+        
+        addSubview(monthStackView)
+        
+        if type.showsAddButton {
+            addSubview(addButton)
+        }
+        
+        switch type {
+            
+        case .history:
+            
+            monthStackView.snp.makeConstraints {
+                $0.leading.equalToSuperview()
+                $0.centerY.equalToSuperview()
+                $0.width.equalTo(100)
+            }
+            
+            addButton.snp.makeConstraints {
+                $0.trailing.centerY.equalToSuperview()
+                $0.size.equalTo(32)
+            }
+            
+        case .bottomSheet:
+            
+            monthStackView.snp.makeConstraints {
+                $0.center.equalToSuperview()
+                $0.width.equalTo(100)
+            }
+        }
+        
+        prevButton.snp.makeConstraints { $0.size.equalTo(24) }
+        nextButton.snp.makeConstraints { $0.size.equalTo(24) }
+        addButton.snp.makeConstraints { $0.size.equalTo(32) }
+    }
+    
+    private func configureActions() {
         prevButton.addTarget(self, action: #selector(tappedPrev), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(tappedNext), for: .touchUpInside)
         addButton.addTarget(self, action: #selector(tappedAdd), for: .touchUpInside)
     }
     
-    func setTitle(_ title: String) { monthLabel.setText(title) }
+    // MARK: - Public
+    
+    func setTitle(_ title: String) {
+        monthLabel.setText(title)
+    }
     
     func setNextEnabled(_ enabled: Bool) {
         nextButton.isEnabled = enabled
@@ -93,6 +144,8 @@ final class CalendarNavigationBar: UIView {
             ? AppColor.IconAndText.highEmphasis
             : AppColor.IconAndText.disabled
     }
+    
+    // MARK: - Actions
     
     @objc private func tappedPrev() { delegate?.navigationBarDidTapPrev() }
     @objc private func tappedNext() { delegate?.navigationBarDidTapNext() }
