@@ -18,6 +18,7 @@ final class AppRouter: AppRouting {
     private let navigationController: UINavigationController
     private let container: AppContainer
     private var onboardingCoordinator: OnboardingCoordinator?
+    private var homeCoordinator: HomeCoordinator?
     
     init(
         navigationController: UINavigationController,
@@ -28,7 +29,7 @@ final class AppRouter: AppRouting {
     }
     
     func start() {
-        navigate(to: .splash, animated: false)
+        navigate(to: .home, animated: false)
     }
     
     func routeAfterSplash() {
@@ -48,7 +49,7 @@ final class AppRouter: AppRouting {
             navigationController.setViewControllers([makeLogin()], animated: false) // 스플래시 -> 로그인 넘어갈때는 애니메이션 false 처리
             
         case .home:
-            navigationController.setViewControllers([makeHome()], animated: animated)
+            startHome(animated: animated)
             
         case .settings:
             break
@@ -58,7 +59,10 @@ final class AppRouter: AppRouting {
     }
 }
 
+// MARK: - Private
+
 private extension AppRouter {
+
     func routeToAppropriateDestination() {
         Task { @MainActor in
             let token = AuthSessionManager.shared.currentAccessToken()
@@ -69,8 +73,7 @@ private extension AppRouter {
 
             do {
                 let status = try await container.onboardingUseCase.getOnboardingStatus()
-                
-                // 필수 데이터 nil인 경우 해당 데이터 입력 페이지로 이동
+
                 switch status.nextOnboardingStep {
                 case let .step(step):
                     startOnboarding(animated: true, startStep: step, status: status)
@@ -103,12 +106,13 @@ private extension AppRouter {
                 self?.navigate(to: .home)
             }
         )
-        
         onboardingCoordinator = coordinator
         coordinator.start(from: navigationController, animated: animated)
     }
-    
-    func makeHome() -> UIViewController {
-        return HomeViewController()
+
+    func startHome(animated: Bool) {
+        let coordinator = HomeCoordinator()
+        homeCoordinator = coordinator
+        coordinator.start(from: navigationController, animated: animated)
     }
 }
