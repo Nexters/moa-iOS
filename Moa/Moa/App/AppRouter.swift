@@ -29,7 +29,7 @@ final class AppRouter: AppRouting {
     }
     
     func start() {
-        navigate(to: .home, animated: false)
+        navigate(to: .splash, animated: false)
     }
     
     func routeAfterSplash() {
