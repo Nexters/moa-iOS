@@ -1,5 +1,5 @@
 //
-//  CalendarBottomSheet.swift
+//  DatePickerCalendarBottomSheet.swift
 //  Moa
 //
 //  Created by 정도현 on 2/20/26.
@@ -9,14 +9,14 @@ import UIKit
 import SnapKit
 
 // MARK: - Simple Test Bottom Sheet Delegate
-protocol CalendarBottomSheetDelegate: AnyObject {
-    func calendarBottomSheet(_ sheet: CalendarBottomSheet, didSelect date: Date)
+protocol DatePickerCalendarBottomSheetDelegate: AnyObject {
+    func calendarBottomSheet(_ sheet: DatePickerCalendarBottomSheet, didSelect date: Date)
 }
 
-final class CalendarBottomSheet: UIViewController, BottomSheetPresentable {
+final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresentable {
     
     // MARK: - Properties
-    weak var delegate: CalendarBottomSheetDelegate?
+    weak var delegate: DatePickerCalendarBottomSheetDelegate?
     
     // MARK: - UI
 
@@ -94,7 +94,7 @@ final class CalendarBottomSheet: UIViewController, BottomSheetPresentable {
     }
 }
 
-extension CalendarBottomSheet: DatePickerCalendarViewDelegate {
+extension DatePickerCalendarBottomSheet: DatePickerCalendarViewDelegate {
     
     func datePickerCalendarView(_ view: DatePickerCalendarView, didSelectDate date: Date) {
         confirmButton.isEnabled = true
@@ -104,5 +104,5 @@ extension CalendarBottomSheet: DatePickerCalendarViewDelegate {
 
 @available(iOS 17.0)
 #Preview {
-    CalendarBottomSheet()
+    DatePickerCalendarBottomSheet()
 }
