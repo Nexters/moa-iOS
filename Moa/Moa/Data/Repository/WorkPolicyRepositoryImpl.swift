@@ -33,4 +33,9 @@ final class WorkPolicyRepositoryImpl: WorkPolicyRepository {
         
         return response.toDomain()
     }
+    
+    func updateWorkplace(to workplace: String) async throws {
+        let request = WorkplaceUpdateRequest(workplace: workplace)
+        let _: WorkPolicyResponse = try await apiClient.request(ProfileAPI.updateWorkplace(request))
+    }
 }

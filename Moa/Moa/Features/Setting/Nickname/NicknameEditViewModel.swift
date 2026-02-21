@@ -16,7 +16,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
     // MARK: - Dependencies
     
     private let onboardingUsecase: OnboardingUsecase
-    private let profileUsecase: SettingUsecase
+    private let settingUsecase: SettingUsecase
     
     // MARK: - State
     
@@ -26,11 +26,11 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
     
     init(
         onboardingUsecase: OnboardingUsecase,
-        profileUsecase: SettingUsecase,
+        settingUsecase: SettingUsecase,
         currentNickname: String? = nil
     ) {
         self.onboardingUsecase = onboardingUsecase
-        self.profileUsecase = profileUsecase
+        self.settingUsecase = settingUsecase
         self.currentNickname = currentNickname
     }
 
@@ -45,7 +45,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
             do {
                 guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
                 
-                _ = try await profileUsecase.updateNickname(to: nickname)
+                _ = try await settingUsecase.updateNickname(to: nickname)
                 
                 self.send(.nicknameEdited)
             } catch {

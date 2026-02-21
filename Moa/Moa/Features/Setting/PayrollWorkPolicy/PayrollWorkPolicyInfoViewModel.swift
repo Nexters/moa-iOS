@@ -35,7 +35,8 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private(set) var salaryAmount: Int?
     
     // 근무 정보
-    private(set) var workplace: String = ""
+    private(set) var currentWorkplace: String?
+    private(set) var workplaceDisplayText: String = ""
     private(set) var workingDays: String = ""
     private(set) var workingHours: String = ""
     
@@ -102,10 +103,12 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
                 self.payday = Constants.unregistered
             }
             
+            currentWorkplace = profile.workplace
+            
             if let workplace = profile.workplace {
-                self.workplace = workplace
+                self.workplaceDisplayText = workplace
             } else {
-                self.workplace = Constants.unregistered
+                self.workplaceDisplayText = Constants.unregistered
             }
             
             self.send(.profileFetched)

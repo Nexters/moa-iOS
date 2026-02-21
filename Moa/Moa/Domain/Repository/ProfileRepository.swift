@@ -10,4 +10,5 @@ import Foundation
 protocol ProfileRepository {
     func getProfile() async throws -> ProfileEntity
     func updateNickname(to nickname: String?) async throws
+    func updateWorkplace(to workplace: String) async throws
 }

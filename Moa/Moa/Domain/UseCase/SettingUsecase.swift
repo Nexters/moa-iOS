@@ -56,4 +56,8 @@ final class SettingUsecase {
             clockOutTime: clockOutTime
         )
     }
+    
+    func updateWorkplace(to workplace: String) async throws {
+        try await workPolicyRepository.updateWorkplace(to: workplace)
+    }
 }

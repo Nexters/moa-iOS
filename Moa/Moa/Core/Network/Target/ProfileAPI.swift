@@ -13,7 +13,7 @@ enum ProfileAPI {
     case getProfile
     case updateNickname(ProfileUpsertRequest)
     case updatePayday
-    case updateWorkplace
+    case updateWorkplace(WorkplaceUpdateRequest)
 }
 
 extension ProfileAPI: TargetType {
@@ -52,8 +52,8 @@ extension ProfileAPI: TargetType {
             return .requestJSONEncodable(body)
         case .updatePayday:
             return .requestPlain
-        case .updateWorkplace:
-            return .requestPlain
+        case let .updateWorkplace(body):
+            return .requestJSONEncodable(body)
         }
     }
     

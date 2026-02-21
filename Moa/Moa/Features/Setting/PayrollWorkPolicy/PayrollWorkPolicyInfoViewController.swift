@@ -118,7 +118,7 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
     
     @objc private func companyNameButtonTapped() {
-        
+        coordinator?.moveToWorkplaceEdit(currentWorkplace: viewModel.currentWorkplace)
     }
     
     @objc private func workingDaysButtonTapped() {
@@ -188,7 +188,7 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
 
             case .profileFetched:
                 self?.paydayRow?.updateValue(self?.viewModel.payday)
-                self?.companyRow?.updateValue(self?.viewModel.workplace)
+                self?.companyRow?.updateValue(self?.viewModel.workplaceDisplayText)
             }
         }
     }

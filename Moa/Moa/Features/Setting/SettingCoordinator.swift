@@ -22,7 +22,7 @@ final class SettingCoordinator {
     func moveToNicknameEdit(currentNickname: String) {
         let vm = NicknameEditViewModel(
             onboardingUsecase: container.onboardingUseCase,
-            profileUsecase: container.settingUsecase,
+            settingUsecase: container.settingUsecase,
             currentNickname: currentNickname
         )
         let vc = NicknameEditViewController(viewModel: vm)
@@ -50,6 +50,16 @@ final class SettingCoordinator {
         )
         
         let vc = PayrollEditViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
+    
+    func moveToWorkplaceEdit(currentWorkplace: String?) {
+        let vm = WorkPlaceEditViewModel(
+            settingUsecase: container.settingUsecase,
+            currentWorkplace: currentWorkplace
+        )
+        let vc = WorkPlaceEditViewController(viewModel: vm)
         
         nav?.pushViewController(vc, animated: true)
     }

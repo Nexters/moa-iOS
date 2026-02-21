@@ -29,4 +29,9 @@ final class ProfileRepositoryImpl: ProfileRepository {
             ProfileAPI.updateNickname(request)
         )
     }
+    
+    func updateWorkplace(to workplace: String) async throws {
+        let request = WorkplaceUpdateRequest(workplace: workplace)
+        let _: ProfileResponse = try await apiClient.request(ProfileAPI.updateWorkplace(request))
+    }
 }
