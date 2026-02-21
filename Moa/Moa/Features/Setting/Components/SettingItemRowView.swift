@@ -10,6 +10,12 @@ import SnapKit
 
 final class SettingItemRowView: UIView {
     
+    // MARK: - Constants
+    
+    private enum Constants {
+        static let unregistered = "미등록"
+    }
+    
     // 탭 액션 콜백
     var onTap: (() -> Void)?
     
@@ -82,7 +88,15 @@ final class SettingItemRowView: UIView {
     // MARK: - Public Update APIs
     func updateValue(_ newValue: String?) {
         if let newValue, !newValue.isEmpty {
-            valueLabel.setText(newValue)
+            let isUnregistered = newValue == Constants.unregistered
+            
+            valueLabel.setText(
+                newValue,
+                style: .init(
+                    typography: AppTypography.b1_500,
+                    color: isUnregistered ? AppColor.IconAndText.disabled : AppColor.IconAndText.green
+                )
+            )
             valueLabel.isHidden = false
         } else {
             valueLabel.setText("")
@@ -140,4 +154,3 @@ final class SettingItemRowView: UIView {
         onTap?()
     }
 }
-

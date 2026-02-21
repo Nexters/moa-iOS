@@ -60,7 +60,7 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private func getPayroll() async throws {
         let payroll = try await settingUsecase.getPayroll()
         await MainActor.run {
-            let salaryType = "\(payroll.salaryInputType.displayName)·"
+            let salaryType = "\(payroll.salaryInputType.displayName) · "
             let salaryAmount = AppNumberFormatter.koreanCurrencyText(for: payroll.salaryAmount ?? 0)
             
             self.salary = salaryType + salaryAmount
