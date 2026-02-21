@@ -31,6 +31,8 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     // 월급 정보
     private(set) var salary: String = ""
     private(set) var payday: String = ""
+    private(set) var salaryType: SalaryType = .annual
+    private(set) var salaryAmount: Int?
     
     // 근무 정보
     private(set) var workplace: String = ""
@@ -64,6 +66,8 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
             let salaryAmount = AppNumberFormatter.koreanCurrencyText(for: payroll.salaryAmount ?? 0)
             
             self.salary = salaryType + salaryAmount
+            self.salaryType = payroll.salaryInputType
+            self.salaryAmount = payroll.salaryAmount
             self.send(.payrollFetched)
         }
     }
@@ -73,14 +77,14 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
         await MainActor.run {
             let workingDays = workPolicy.workdays.map({ $0.displayName })
             if !workingDays.isEmpty {
-                self.workingDays = workingDays.joined(separator: ",")
+                self.workingDays = workingDays.joined(separator: ", ")
             } else {
                 self.workingDays = Constants.unregistered
             }
             
             if let clockInTime = workPolicy.clockInTime,
                let clockOutTime = workPolicy.clockOutTime {
-                self.workingHours = "\(clockInTime)~\(clockOutTime)"
+                self.workingHours = "\(clockInTime.displayString)~\(clockOutTime.displayString)"
             } else {
                 self.workingHours = Constants.unregistered
             }

@@ -29,11 +29,27 @@ final class SettingCoordinator {
         nav?.pushViewController(vc, animated: true)
     }
     
-    func moveToPayrollWorkPolicyEdit(accountProvider: AccountProvider) {
+    func moveToWorkPolicyEdit(accountProvider: AccountProvider) {
         let vm = PayrollWorkPolicyInfoViewModel(
             accountProvider: accountProvider,
-            settingUsecase: container.settingUsecase)
-        let vc = PayrollWorkPolicyInfoViewController(viewModel: vm)
+            settingUsecase: container.settingUsecase
+        )
+        let vc = PayrollWorkPolicyInfoViewController(
+            viewModel: vm,
+            coordinator: self
+        )
+        
+        nav?.pushViewController(vc, animated: true)
+    }
+    
+    func moveToPayrollEdit(salaryType: SalaryType, amount: Int?) {
+        let vm = PayrollEditViewModel(
+            settingUsecase: container.settingUsecase,
+            selectedSalaryType: salaryType,
+            amount: amount
+        )
+        
+        let vc = PayrollEditViewController(viewModel: vm)
         
         nav?.pushViewController(vc, animated: true)
     }

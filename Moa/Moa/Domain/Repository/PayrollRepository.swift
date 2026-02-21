@@ -9,5 +9,5 @@ import Foundation
 
 protocol PayrollRepository {
     func getPayroll() async throws -> PayrollEntity
-    func updateWorkPolicy(salaryInputType: String, salaryAmount: Int) async throws -> PayrollEntity
+    func updatePayroll(salaryInputType: SalaryType, salaryAmount: Int) async throws -> PayrollEntity
 }

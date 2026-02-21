@@ -234,7 +234,7 @@ final class SettingHomeViewController: BaseViewController {
                 rows: [myInfoRow],
                 onRowTap: { [weak self] index in
                     guard let self else { return }
-                    self.coordinator.moveToPayrollWorkPolicyEdit(accountProvider: viewModel.accountProvider)
+                    self.coordinator.moveToWorkPolicyEdit(accountProvider: viewModel.accountProvider)
                 }
             ),
             SettingSectionView(

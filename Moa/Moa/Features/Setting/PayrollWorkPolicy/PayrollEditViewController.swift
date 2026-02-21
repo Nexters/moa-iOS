@@ -1,14 +1,14 @@
 //
-//  OnboardingPayrollViewController.swift
+//  PayrollEditViewController.swift
 //  Moa
 //
-//  Created by mirim on 2/3/26.
+//  Created by mirim on 2/22/26.
 //
 
 import UIKit
 import SnapKit
 
-final class OnboardingPayrollViewController: BaseViewController {
+final class PayrollEditViewController: BaseViewController {
     
     // MARK: - Constants
     
@@ -17,13 +17,13 @@ final class OnboardingPayrollViewController: BaseViewController {
         static let subtitle = "입력한 정보를 바탕으로 실시간 급여가 계산되며,\n급여 정보는 누구에게도 공개되지 않아요."
         static let amount = "금액"
         static let won = "원"
-        static let next = "다음"
+        static let complete = "완료"
+        static let salary = "급여"
     }
     
     // MARK: - Dependencies
     
-    private let viewModel: OnboardingPayrollViewModel
-    private let onNext: (() -> Void)
+    private let viewModel: PayrollEditViewModel
     
     // MARK: - UI Components
     
@@ -138,7 +138,7 @@ final class OnboardingPayrollViewController: BaseViewController {
         return stack
     }()
     
-    private let nextButton = AppButton()
+    private let completeButton = AppButton()
     
     private lazy var commaFormatter = CommaNumberTextFieldFormatter(
         textField: amountTextField,
@@ -161,11 +161,9 @@ final class OnboardingPayrollViewController: BaseViewController {
     // MARK: - Init
     
     init(
-        viewModel: OnboardingPayrollViewModel,
-        onNext: @escaping () -> Void
+        viewModel: PayrollEditViewModel
     ) {
         self.viewModel = viewModel
-        self.onNext = onNext
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -177,6 +175,7 @@ final class OnboardingPayrollViewController: BaseViewController {
     
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
+        setupNavigationTitle(as: Constant.salary)
         setupButton()
         setupHierarchy()
         setupLayout()
@@ -187,7 +186,7 @@ final class OnboardingPayrollViewController: BaseViewController {
         amountTextField.delegate = self
         amountTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
         
-        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+        completeButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         
         salaryTypeView.setSelected(viewModel.selectedSalaryType, notify: false)
         commaFormatter.updateMaxDigits(viewModel.selectedSalaryType.maxDigits)
@@ -228,7 +227,7 @@ final class OnboardingPayrollViewController: BaseViewController {
         Task { @MainActor in
             do {
                 try await viewModel.updatePayroll()
-                onNext()
+                self.navigationController?.popViewController(animated: true)
             } catch {
                 // TODO: 에러처리
             }
@@ -242,15 +241,15 @@ final class OnboardingPayrollViewController: BaseViewController {
 
 // MARK: - UI Configuration
 
-private extension OnboardingPayrollViewController {
+private extension PayrollEditViewController {
     func setupButton() {
-        nextButton.setTitle(Constant.next, for: .normal)
-        nextButton.applyStyle(.primary())
+        completeButton.setTitle(Constant.complete, for: .normal)
+        completeButton.applyStyle(.primary())
     }
     
     func setupHierarchy() {
         amountTextFieldStack.addArrangedSubViews([amountTextField, currencyLabel, trailingSpacer])
-        ctaContainer.addSubview(nextButton)
+        ctaContainer.addSubview(completeButton)
         
         view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, koreanAmountLabel, ctaContainer])
     }
@@ -301,7 +300,7 @@ private extension OnboardingPayrollViewController {
             make.bottom.equalTo(view.keyboardLayoutGuide.snp.top).offset(-AppSpacing.ctaBottom)
         }
         
-        nextButton.snp.makeConstraints { make in
+        completeButton.snp.makeConstraints { make in
             make.top.bottom.equalTo(ctaContainer)
             make.leading.trailing.equalTo(ctaContainer)
             make.height.greaterThanOrEqualTo(64)
@@ -311,12 +310,12 @@ private extension OnboardingPayrollViewController {
 
 // MARK: - Private Methods
 
-private extension OnboardingPayrollViewController {
+private extension PayrollEditViewController {
     func updateNextButtonState() {
         let digits = (amountTextField.text ?? "").filter(\.isNumber)
         let amount = Int(digits) ?? 0
         
-        nextButton.isEnabled = amount > 0
+        completeButton.isEnabled = amount > 0
     }
     
     func setupGesture() {
@@ -328,7 +327,7 @@ private extension OnboardingPayrollViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension OnboardingPayrollViewController: UITextFieldDelegate {
+extension PayrollEditViewController: UITextFieldDelegate {
     func textField(
         _ textField: UITextField,
         shouldChangeCharactersInRanges ranges: [NSValue],
@@ -344,4 +343,5 @@ extension OnboardingPayrollViewController: UITextFieldDelegate {
         
         return (currentDigitsCount + addingDigitsCount) <= limit
     }
+
 }

@@ -27,6 +27,7 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     
     // MARK: - Dependencies
     
+    private weak var coordinator: SettingCoordinator?
     private let viewModel: PayrollWorkPolicyInfoViewModel
     
     // MARK: - UI Components
@@ -67,8 +68,12 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     
     // MARK: - Init
     
-    init(viewModel: PayrollWorkPolicyInfoViewModel) {
+    init(
+        viewModel: PayrollWorkPolicyInfoViewModel,
+        coordinator: SettingCoordinator?
+    ) {
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -96,7 +101,6 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
             $0.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide)
         }
 
-        // 섹션 데이터 구성 후 UI 빌드
         sections = makeSections()
         buildSections()
     }
@@ -106,7 +110,7 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
     
     @objc private func payrollButtonTapped() {
-        
+        coordinator?.moveToPayrollEdit(salaryType: viewModel.salaryType, amount: viewModel.salaryAmount)
     }
     
     @objc private func paydayButtonTapped() {
@@ -126,7 +130,6 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
     
     private func buildSections() {
-        // 기존 서브뷰 정리 후 재구성
         contentStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         for section in sections {
@@ -159,7 +162,7 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         hoursRow.onTap = { [weak self] in self?.workingHoursButtonTapped() }
         self.hoursRow = hoursRow
 
-        let accountRow = SettingItemRowView(title: viewModel.accountProvider.displayDescription)
+        let accountRow = SettingItemRowView(title: viewModel.accountProvider.displayDescription, showsChevron: false)
         self.accountRow = accountRow
 
         let accountRows = [accountRow]

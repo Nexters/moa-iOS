@@ -41,6 +41,10 @@ final class SettingUsecase {
         try await payrollRepository.getPayroll()
     }
     
+    func updatePayroll(salaryType: SalaryType, amount: Int) async throws -> PayrollEntity {
+        try await payrollRepository.updatePayroll(salaryInputType: salaryType, salaryAmount: amount)
+    }
+    
     func getWorkPolicy() async throws -> WorkPolicyEntity {
         try await workPolicyRepository.getWorkPolicy()
     }
