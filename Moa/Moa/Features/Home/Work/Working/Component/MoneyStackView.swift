@@ -66,8 +66,8 @@ final class EarningsStackView: UIView {
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText("원", style: .init(
-            typography: AppTypography.h1_700,
-            color: AppColor.IconAndText.highEmphasis
+            typography: AppTypography.h2_500,
+            color: AppColor.IconAndText.mediumEmphasis
         ))
         label.setContentHuggingPriority(.required, for: .horizontal)
         return label
