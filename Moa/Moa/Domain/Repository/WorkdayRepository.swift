@@ -18,4 +18,9 @@ protocol WorkdayRepository {
         date: String,
         request: ClockEndRequest
     ) async throws -> Workday
+    
+    func fetchHistory(
+        year: Int,
+        month: Int
+    ) async throws -> [History]
 }
