@@ -7,23 +7,58 @@
 
 import Foundation
 
-final class SettingHomeViewModel {
+enum SettingHomeOutput {
+    case profileFetched
+    case memberFetched
+}
+
+final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     
     // MARK: - Dependencies
-    
-    // usecase
+    private let profileUsecase: ProfileUsecase
+    private let memberUsecase: MemberUsecase
     
     // MARK: - State
     
     private(set) var accountProvider: AccountProvider = .kakao
-    private(set) var nickname: String = "집계사장"
+    private(set) var nickname: String = ""
     
     
     // MARK: - Init
     
+    init(
+        profileUsecase: ProfileUsecase,
+        memberUsecase: MemberUsecase
+    ) {
+        self.profileUsecase = profileUsecase
+        self.memberUsecase = memberUsecase
+    }
+    
     // MARK: - Actions
     
-    func getMemberInfo() async throws {
-        // usecase로 api 호출하기
+    func viewAppeared() {
+        Task {
+            async let profileTask: Void = getProfile()
+            async let memberTask: Void = getMember()
+            
+            _ = try await (profileTask, memberTask)
+        }
+    }
+    
+    func getProfile() async throws {
+        let profile = try await profileUsecase.getProfile()
+        await MainActor.run {
+            self.nickname = profile.nickname ?? ""
+            self.send(.profileFetched)
+            
+        }
+    }
+    
+    func getMember() async throws {
+        let member = try await memberUsecase.getMember()
+        await MainActor.run {
+            self.accountProvider = member.provider
+            self.send(.memberFetched)
+        }
     }
 }

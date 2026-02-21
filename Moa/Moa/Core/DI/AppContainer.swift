@@ -42,6 +42,12 @@ final class AppContainer {
     private lazy var onboardingRepository: OnboardingRepository = {
         OnboardingRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var profileRepository: ProfileRepository = {
+        ProfileRepositoryImpl(apiClient: apiClient)
+    }()
+    private lazy var memberRepository: MemberRepository = {
+        MemberRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
@@ -49,5 +55,11 @@ final class AppContainer {
     }()
     lazy var onboardingUseCase: OnboardingUsecase = {
         OnboardingUsecase(repository: onboardingRepository)
+    }()
+    lazy var profileUsecase: ProfileUsecase = {
+        ProfileUsecase(repository: profileRepository)
+    }()
+    lazy var memberUsecase: MemberUsecase = {
+        MemberUsecase(repository: memberRepository)
     }()
 }

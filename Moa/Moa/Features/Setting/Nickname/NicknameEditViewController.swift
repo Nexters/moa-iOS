@@ -15,7 +15,7 @@ final class NicknameEditViewController: BaseViewController {
     private enum Constant {
         static let nicknameEdit = "닉네임 수정"
         static let nickname = "닉네임"
-        static let nicknameSuffix = "로 시작할래요"
+        static let nicknameSuffix = "로 수정할게요"
         static let nicknamePlaceholder = "닉네임을 입력해주세요"
         static let nicknameHint = "10자까지 입력할 수 있어요"
         static let randomChange = "랜덤변경"
@@ -26,6 +26,7 @@ final class NicknameEditViewController: BaseViewController {
     // MARK: - Dependencies
     
     private let viewModel: NicknameEditViewModel
+    private weak var router: AppRouting?
     
     // MARK: - UI Components
     
@@ -174,7 +175,7 @@ final class NicknameEditViewController: BaseViewController {
         randomChangeButton.addTarget(self, action: #selector(randomChangeButtonTapped), for: .touchUpInside)
         completeButton.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
         
-        if let initialNickname = viewModel.nickname {
+        if let initialNickname = viewModel.currentNickname {
             nicknameTextField.text = initialNickname
         } else {
             nicknameTextField.text = viewModel.makeRandomNickname()
@@ -195,17 +196,20 @@ final class NicknameEditViewController: BaseViewController {
     }
     
     @objc private func completeButtonTapped() {
-        Task { @MainActor in
-            do {
-                try await viewModel.updateNickname(to: nicknameTextField.text)
-            } catch {
-                // TODO: 에러처리
-            }
-        }
+        viewModel.updateNickname(to: nicknameTextField.text)
     }
     
     @objc private func backgroundTapped() {
         view.endEditing(true)
+    }
+    
+    override func bind() {
+        bindOutput(viewModel.outputs) { [weak self] output in
+            switch output {
+            case .nicknameEdited:
+                self?.navigationController?.popViewController(animated: true)
+            }
+        }
     }
 }
 

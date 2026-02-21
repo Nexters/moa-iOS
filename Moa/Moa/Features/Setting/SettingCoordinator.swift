@@ -19,9 +19,17 @@ final class SettingCoordinator {
         self.nav = nav
     }
     
-    func moveToNicknameEdit() {
-        let vm = NicknameEditViewModel(usecase: container.onboardingUseCase)
+    func moveToNicknameEdit(currentNickname: String) {
+        let vm = NicknameEditViewModel(
+            onboardingUsecase: container.onboardingUseCase,
+            profileUsecase: container.profileUsecase,
+            currentNickname: currentNickname
+        )
         let vc = NicknameEditViewController(viewModel: vm)
         nav?.pushViewController(vc, animated: true)
+    }
+    
+    func moveToPayrollWorkPolicyEdit() { // TODO: 현재 정보 전달
+        
     }
 }

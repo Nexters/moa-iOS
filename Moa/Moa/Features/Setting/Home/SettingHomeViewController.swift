@@ -13,7 +13,7 @@ final class SettingHomeViewController: BaseViewController {
     // MARK: - Dependencies
     
     private let coordinator: SettingCoordinator
-    private let viewModel = SettingHomeViewModel()
+    private let viewModel: SettingHomeViewModel
     
     // MARK: - Constants
     
@@ -54,6 +54,53 @@ final class SettingHomeViewController: BaseViewController {
         return stack
     }()
     
+    private let logoutLeadingSpacer: UIView = {
+        let v = UIView()
+        v.setContentHuggingPriority(.required, for: .horizontal)
+        v.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return v
+    }()
+
+    private let logoutTrailingSpacer: UIView = {
+        let v = UIView()
+        v.setContentHuggingPriority(.required, for: .horizontal)
+        v.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return v
+    }()
+    
+    private lazy var logOutAndWithdrawalStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 16
+        stack.distribution = .equalCentering
+        stack.addArrangedSubViews([logoutLeadingSpacer, logoutButton, VerticalDividerView(height: 11.5), withdrawalButton, logoutTrailingSpacer])
+        return stack
+    }()
+    
+    private let logoutButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        var title = AttributedString(Constants.logout)
+        title.font = AppTypography.b1_500.font()
+        title.foregroundColor = AppColor.IconAndText.mediumEmphasis
+        config.attributedTitle = title
+        config.titleAlignment = .trailing
+        
+        let button = UIButton(configuration: config)
+        return button
+    }()
+    
+    private let withdrawalButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        var title = AttributedString(Constants.withdrawal)
+        title.font = AppTypography.b1_500.font()
+        title.foregroundColor = AppColor.IconAndText.mediumEmphasis
+        config.attributedTitle = title
+        config.titleAlignment = .leading
+        
+        let button = UIButton(configuration: config)
+        return button
+    }()
+    
     private let accountProviderLabel: StyledLabel = {
         let label = StyledLabel()
         label.setStyle(
@@ -82,15 +129,38 @@ final class SettingHomeViewController: BaseViewController {
         return btn
     }()
     
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 24
+        return stack
+    }()
+    
     // MARK: - Init
     
-    init(coordinator: SettingCoordinator) {
+    init(
+        coordinator: SettingCoordinator,
+        viewModel: SettingHomeViewModel
+    ) {
         self.coordinator = coordinator
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
+        
+        setupNavigationTitle(as: Constants.setting)
+        configureContentStack()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - App LifeCycle
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewModel.viewAppeared()
     }
     
     // MARK: - Setup
@@ -98,16 +168,68 @@ final class SettingHomeViewController: BaseViewController {
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
         
-        view.addSubViews([memberInfoStack])
+        view.addSubViews([memberInfoStack, contentStack, logOutAndWithdrawalStack])
         
         memberInfoStack.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).inset(20)
             make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
         }
         
-        // api 연결 후 수정
-        accountProviderLabel.setText(viewModel.accountProvider.displayName)
-        nicknameLabel.setText(viewModel.nickname)
+        contentStack.snp.makeConstraints { make in
+            make.top.equalTo(memberInfoStack.snp.bottom).offset(32)
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
+        }
+        
+        logOutAndWithdrawalStack.snp.makeConstraints { make in
+            make.top.equalTo(contentStack.snp.bottom).offset(24)
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(AppSpacing.screenHorizontal)
+        }
+        
+        logOutAndWithdrawalStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+    }
+    
+    func configureContentStack() {
+        let myInfoRow = SettingItemRowView(
+            title: Constants.salaryWorkPolicyInfo
+        )
+        
+        let notificationRow = SettingItemRowView(
+            title: Constants.notificationSetting
+        )
+        
+        let versionInfoRow = SettingItemRowView(
+            title: Constants.versionInfo,
+            subtitle: "v1.0.0",
+            value: Constants.latestVersion,
+            showsChevron: false
+        )
+        
+        let termsAndPolicy = SettingItemRowView(
+            title: Constants.termsAndPolicy
+        )
+        
+        let inquiry = SettingItemRowView(
+            title: Constants.inquiry
+        )
+        
+        contentStack.addArrangedSubViews([
+            SettingSectionView(
+                title: Constants.myInfo,
+                rows: [myInfoRow]
+            ),
+            SettingSectionView(
+                title: Constants.appSetting,
+                rows: [notificationRow]
+            ),
+            SettingSectionView(
+                title: Constants.appInfoOrHelp,
+                rows: [
+                    versionInfoRow,
+                    termsAndPolicy,
+                    inquiry
+                ]
+            )
+        ])
     }
     
     override func setupActions() {
@@ -115,6 +237,21 @@ final class SettingHomeViewController: BaseViewController {
     }
     
     @objc private func nicknameEditButtonTapped() {
-        coordinator.moveToNicknameEdit()
+        coordinator.moveToNicknameEdit(currentNickname: viewModel.nickname)
+    }
+    
+    override func bind() {
+        bindOutput(viewModel.outputs) { [weak self] output in
+            guard let self else { return }
+            
+            switch output {
+            case .memberFetched:
+                nicknameLabel.setText(viewModel.nickname)
+                
+            case .profileFetched:
+                accountProviderLabel.setText(viewModel.accountProvider.displayName)
+            }
+        }
     }
 }
+

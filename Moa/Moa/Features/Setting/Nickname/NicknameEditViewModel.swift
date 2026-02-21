@@ -7,36 +7,50 @@
 
 import Foundation
 
-final class NicknameEditViewModel {
+enum NicknameEditOutput {
+    case nicknameEdited
+}
+
+final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
     
     // MARK: - Dependencies
     
-    private let usecase: OnboardingUsecase
+    private let onboardingUsecase: OnboardingUsecase
+    private let profileUsecase: ProfileUsecase
     
     // MARK: - State
     
-    private(set) var nickname: String? // TODO: 현재 닉네임 전달 필요
+    private(set) var currentNickname: String?
     
     // MARK: - Init
     
     init(
-        usecase: OnboardingUsecase,
-        nickname: String? = nil
+        onboardingUsecase: OnboardingUsecase,
+        profileUsecase: ProfileUsecase,
+        currentNickname: String? = nil
     ) {
-        self.usecase = usecase
-        self.nickname = nickname
+        self.onboardingUsecase = onboardingUsecase
+        self.profileUsecase = profileUsecase
+        self.currentNickname = currentNickname
     }
 
     // MARK: - Actions
     
     func makeRandomNickname() -> String {
-        usecase.generateRandomNickname()
+        onboardingUsecase.generateRandomNickname()
     }
     
-    func updateNickname(to nickname: String?) async throws {
-        guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
-        
-        // FIXME: api 변경
-        _ = try await usecase.updateNickname(to: nickname)
+    func updateNickname(to nickname: String?) {
+        Task {
+            do {
+                guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
+                
+                _ = try await profileUsecase.updateNickname(to: nickname)
+                
+                self.send(.nicknameEdited)
+            } catch {
+                // TODO: 에러처리
+            }
+        }
     }
 }

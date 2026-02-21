@@ -121,6 +121,9 @@ private extension AppRouter {
             container: container,
             nav: navigationController
         )
-        return SettingHomeViewController(coordinator: coordinator)
+        return SettingHomeViewController(
+            coordinator: coordinator,
+            viewModel: .init(profileUsecase: container.profileUsecase, memberUsecase: container.memberUsecase)
+        )
     }
 }

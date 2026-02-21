@@ -35,7 +35,7 @@ final class TermsAgreementBottomSheetViewController: UIViewController, BottomShe
         makeTermsAgreementButton(title: Constant.agreeAll, font: AppTypography.b1_600.font(), color: AppColor.IconAndText.highEmphasis)
     }()
     
-    private let dividerView = DividerView(inset: 16)
+    private let dividerView = HorizontalDividerView(inset: 16)
     
     private let termsAgreementStackView: UIStackView = {
         let stack = UIStackView()
