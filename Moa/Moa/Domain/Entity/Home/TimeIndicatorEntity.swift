@@ -21,6 +21,8 @@ struct TimeIndicatorEntity: Equatable {
     static func from(hour: Int, minute: Int) -> TimeIndicatorEntity {
         return TimeIndicatorEntity(hour: hour, minute: minute)
     }
+    
+    var totalMinutes: Int { hour * 60 + minute }
 }
 
 extension TimeIndicatorEntity {

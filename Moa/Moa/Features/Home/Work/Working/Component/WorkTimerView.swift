@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-// MARK: - WorkTimerView (타이머 컴포넌트)
+// MARK: - WorkTimerView
 
 final class WorkTimerView: UIView {
 

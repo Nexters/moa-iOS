@@ -111,7 +111,7 @@ final class TimeSelectionBottomSheet: UIViewController {
         timeSelectionView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().inset(24)
+            make.bottom.equalToSuperview()
         }
     }
 }
