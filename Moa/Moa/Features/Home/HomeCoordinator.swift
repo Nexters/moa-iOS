@@ -10,12 +10,14 @@ import UIKit
 final class HomeCoordinator {
 
     // MARK: - Properties
-
+    private let container: AppContainer
     private weak var nav: UINavigationController?
 
     // MARK: - Init
 
-    init() {}
+    init(container: AppContainer) {
+        self.container = container
+    }
 
     // MARK: - Start
 
@@ -45,6 +47,22 @@ private extension HomeCoordinator {
     func showHistory() {
         nav?.pushViewController(makeHistoryViewController(), animated: true)
     }
+    
+    func makeSettingViewController() -> SettingHomeViewController {
+        let coordinator = SettingCoordinator(
+            container: container,
+            nav: nav
+        )
+        
+        return SettingHomeViewController(
+            coordinator: coordinator,
+            viewModel: .init(settingUsecase: container.settingUsecase)
+        )
+    }
+    
+    func showSetting() {
+        nav?.pushViewController(makeSettingViewController(), animated: true)
+    }
 
     func popToWork() {
         nav?.popViewController(animated: true)
@@ -57,5 +75,9 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController) {
         showHistory()
+    }
+    
+    func workViewControllerDidTapSetting(_ viewController: WorkViewController) {
+        showSetting()
     }
 }

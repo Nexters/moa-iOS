@@ -15,8 +15,7 @@ enum SettingHomeOutput {
 final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     
     // MARK: - Dependencies
-    private let profileUsecase: ProfileUsecase
-    private let memberUsecase: MemberUsecase
+    private let settingUsecase: SettingUsecase
     
     // MARK: - State
     
@@ -27,26 +26,24 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     // MARK: - Init
     
     init(
-        profileUsecase: ProfileUsecase,
-        memberUsecase: MemberUsecase
+        settingUsecase: SettingUsecase
     ) {
-        self.profileUsecase = profileUsecase
-        self.memberUsecase = memberUsecase
+        self.settingUsecase = settingUsecase
     }
     
     // MARK: - Actions
     
     func viewAppeared() {
         Task {
-            async let profileTask: Void = getProfile()
-            async let memberTask: Void = getMember()
+            async let profile: Void = getProfile()
+            async let member: Void = getMember()
             
-            _ = try await (profileTask, memberTask)
+            _ = try await (profile, member)
         }
     }
     
     func getProfile() async throws {
-        let profile = try await profileUsecase.getProfile()
+        let profile = try await settingUsecase.getProfile()
         await MainActor.run {
             self.nickname = profile.nickname ?? ""
             self.send(.profileFetched)
@@ -55,7 +52,7 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     }
     
     func getMember() async throws {
-        let member = try await memberUsecase.getMember()
+        let member = try await settingUsecase.getMember()
         await MainActor.run {
             self.accountProvider = member.provider
             self.send(.memberFetched)

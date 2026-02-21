@@ -79,24 +79,33 @@ final class SettingItemRowView: UIView {
         return imgView
     }()
     
-    init(title: String, subtitle: String? = nil, value: String? = nil, showsChevron: Bool = true) {
-        super.init(frame: .zero)
-        
-        titleLabel.setText(title)
-        if let value, !value.isEmpty {
-            valueLabel.setText(value)
+    // MARK: - Public Update APIs
+    func updateValue(_ newValue: String?) {
+        if let newValue, !newValue.isEmpty {
+            valueLabel.setText(newValue)
             valueLabel.isHidden = false
         } else {
             valueLabel.setText("")
             valueLabel.isHidden = true
         }
-        if let subtitle, !subtitle.isEmpty {
-            subtitleLabel.setText(subtitle)
+    }
+
+    func updateSubtitle(_ newSubtitle: String?) {
+        if let newSubtitle, !newSubtitle.isEmpty {
+            subtitleLabel.setText(newSubtitle)
             subtitleLabel.isHidden = false
         } else {
             subtitleLabel.setText("")
             subtitleLabel.isHidden = true
         }
+    }
+    
+    init(title: String, subtitle: String? = nil, value: String? = nil, showsChevron: Bool = true) {
+        super.init(frame: .zero)
+        
+        titleLabel.setText(title)
+        updateValue(value)
+        updateSubtitle(subtitle)
         chevronImage.isHidden = !showsChevron
         
         setupUI()
@@ -131,3 +140,4 @@ final class SettingItemRowView: UIView {
         onTap?()
     }
 }
+

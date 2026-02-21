@@ -13,6 +13,7 @@ import SnapKit
 
 protocol WorkViewControllerCoordinatorDelegate: AnyObject {
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController)
+    func workViewControllerDidTapSetting(_ viewController: WorkViewController)
 }
 
 // MARK: - WorkViewController
@@ -99,6 +100,11 @@ final class WorkViewController: BaseViewController {
         navigationBarView.onCalendarTap = { [weak self] in
             guard let self else { return }
             coordinatorDelegate?.workViewControllerDidTapCalendar(self)
+        }
+        
+        navigationBarView.onTapSetting = { [weak self] in
+            guard let self else { return }
+            coordinatorDelegate?.workViewControllerDidTapSetting(self)
         }
     }
 

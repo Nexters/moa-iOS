@@ -11,6 +11,5 @@ enum AppRoute {
     case splash
     case login
     case home
-    case settings
     case history
 }
