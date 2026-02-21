@@ -36,7 +36,7 @@ protocol WorkScheduleChangeBottomSheetDelegate: AnyObject {
 
 // MARK: - WorkScheduleChangeBottomSheet
 
-final class WorkScheduleChangeBottomSheet: UIViewController, BottomSheetPresentable {
+final class WorkScheduleChangeBottomSheet: UIViewController {
 
     // MARK: - Properties
 
@@ -99,6 +99,7 @@ final class WorkScheduleChangeBottomSheet: UIViewController, BottomSheetPresenta
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = AppColor.Container.primary
+        
         setupHierarchy()
         setupConstraints()
         buildCards()
@@ -158,8 +159,14 @@ final class WorkScheduleChangeBottomSheet: UIViewController, BottomSheetPresenta
         delegate?.workScheduleChangeBottomSheet(self, didConfirm: type)
         dismissBottomSheet()
     }
-
+    
     private func dismissBottomSheet() {
-        (parent as? BottomSheetViewController)?.animateDismiss()
+        if let bottomSheet = parent as? BottomSheetViewController {
+            bottomSheet.animateDismiss()
+        }
     }
+}
+
+extension WorkScheduleChangeBottomSheet: BottomSheetPresentable {
+
 }
