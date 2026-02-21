@@ -2,318 +2,269 @@
 //  WorkViewModel.swift
 //  Moa
 //
-//  Created by 정도현 on 2/17/26.
-//
 
-import Foundation
+import UIKit
 import Combine
 
-// MARK: - WorkStatus
-
-enum WorkStatus: Equatable {
-    case beforeWork
-    case working(startedAt: Date)
-
-    var isWorking: Bool {
-        if case .working = self { return true }
-        return false
-    }
-}
-
-// MARK: - ViewState
-
-enum WorkViewState: Equatable {
-    case idle
-    case loading
-    case loaded(HomeViewData)
-    case error(HomeError)
-
-    static func == (lhs: WorkViewState, rhs: WorkViewState) -> Bool {
-        switch (lhs, rhs) {
-        case (.idle, .idle), (.loading, .loading):
-            return true
-        case let (.loaded(lData), .loaded(rData)):
-            return lData == rData
-        case let (.error(lError), .error(rError)):
-            return lError.localizedDescription == rError.localizedDescription
-        default:
-            return false
-        }
-    }
-}
-
-// MARK: - ViewData
-
-struct HomeViewData: Equatable {
-    let wage: Int
-    let workTime: WorkTime
-    let monthlyInfo: MonthlyInfo
-    let location: LocationInfo
-    let workStatus: WorkStatus
-
-    var autoWorkText: String {
-        "\(workTime.start.displayString) 자동 출근 예정"
-    }
-
-    static func == (lhs: HomeViewData, rhs: HomeViewData) -> Bool {
-        lhs.wage == rhs.wage &&
-        lhs.workTime == rhs.workTime &&
-        lhs.monthlyInfo == rhs.monthlyInfo &&
-        lhs.location == rhs.location &&
-        lhs.workStatus == rhs.workStatus
-    }
-}
-
-// MARK: - WorkTime
-
-struct WorkTime: Equatable {
-    let start: TimeIndicatorEntity
-    let end: TimeIndicatorEntity
-
-    var displayRange: String {
-        "\(start.displayString) - \(end.displayString)"
-    }
-
-    var durationInHours: Double {
-        let startMinutes = start.hour * 60 + start.minute
-        let endMinutes = end.hour * 60 + end.minute
-        return Double(max(endMinutes - startMinutes, 0)) / 60.0
-    }
-}
-
-// MARK: - MonthlyInfo
-
-struct MonthlyInfo: Equatable {
-    let month: Int
-    let currentAmount: Int
-    let baseAmount: Int
-
-    var progressRate: Double {
-        guard baseAmount > 0 else { return 0 }
-        return Double(currentAmount) / Double(baseAmount)
-    }
-}
-
-// MARK: - LocationInfo
-
-struct LocationInfo: Equatable {
-    let name: String
-    let address: String?
-}
-
-// MARK: - HomeError
-
-enum HomeError: LocalizedError {
-    case networkError
-    case dataParsingError
-    case unauthorized
-    case workTimeInvalid
-    case unknown(Error)
-
-    var errorDescription: String? {
-        switch self {
-        case .networkError:
-            return "네트워크 연결을 확인해주세요."
-        case .dataParsingError:
-            return "데이터를 처리하는 중 문제가 발생했습니다."
-        case .unauthorized:
-            return "로그인이 필요합니다."
-        case .workTimeInvalid:
-            return "종료 시간이 시작 시간보다 빨라요."
-        case .unknown(let error):
-            return error.localizedDescription
-        }
-    }
-}
-
-// MARK: - ViewModel
+// MARK: - WorkViewModel
 
 final class WorkViewModel {
 
-    // MARK: - Output
+    // MARK: Output
 
     @Published private(set) var state: WorkViewState = .idle
 
-    // MARK: - Input
+    // MARK: Input
 
     enum Input {
         case viewDidLoad
         case updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
         case startWork
+        case endWork
         case requestVacation
     }
 
-    // MARK: - Private Properties
+    // MARK: Private
 
-    private var cancellables = Set<AnyCancellable>()
-    private var currentData: HomeViewData?
+    private var cancellables  = Set<AnyCancellable>()
 
-    // MARK: - Init
+    // 원본 도메인 데이터 보관 (업데이트 시 재조합용)
+    private var currentSchedule: WorkSchedule?
+    private var currentSalary:   SalarySummary?
+    private var currentStatus:   WorkStatus = .idle
 
-    init() { }
-
-    deinit {
-        cancellables.removeAll()
-    }
+    deinit { cancellables.removeAll() }
 }
 
-// MARK: - Public Methods
+// MARK: - Public Interface
 
 extension WorkViewModel {
 
     func send(_ input: Input) {
         switch input {
-        case .viewDidLoad:
-            loadInitialData()
-
-        case let .updateWorkTime(start, end):
-            updateWorkTime(start: start, end: end)
-
-        case .startWork:
-            handleStartWork()
-
-        case .requestVacation:
-            handleVacationRequest()
+        case .viewDidLoad:                        loadInitialData()
+        case let .updateWorkTime(start, end):     handleUpdateWorkTime(start: start, end: end)
+        case .startWork:                          handleStartWork()
+        case .endWork:                            handleEndWork()
+        case .requestVacation:                    handleRequestVacation()
         }
     }
 }
 
-// MARK: - Private Methods
+// MARK: - Data Loading
 
 private extension WorkViewModel {
 
     func loadInitialData() {
         guard state != .loading else { return }
         state = .loading
-
-        // 실제 구현: API 호출
-        // workRepository.fetchTodayWork()
-        //     .receive(on: DispatchQueue.main)
-        //     .sink { ... }
-        //     .store(in: &cancellables)
-
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.loadMockData()
         }
     }
 
-    func updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity) {
-        guard var data = currentData else {
-            state = .error(.dataParsingError)
-            return
-        }
-
-        guard validateWorkTime(start: start, end: end) else {
-            state = .error(.workTimeInvalid)
-            return
-        }
-
-        let newWorkTime = WorkTime(start: start, end: end)
-        let calculatedWage = calculateWage(for: newWorkTime)
-
-        data = HomeViewData(
-            wage: calculatedWage,
-            workTime: newWorkTime,
-            monthlyInfo: data.monthlyInfo,
-            location: data.location,
-            workStatus: data.workStatus
+    func loadMockData() {
+        let scheduleDTO = WorkScheduleDTO(
+            date: "2026-02-21",
+            type: .work,
+            clockInTime:  "20:00",
+            clockOutTime: "24:00"
         )
+        let salaryDTO = SalaryDTO(salaryInputType: .monthly, salaryAmount: 3_300_000)
 
-        currentData = data
-        state = .loaded(data)
+        guard let schedule = WorkSchedule(dto: scheduleDTO, workplace: "을지로") else {
+            state = .error(.dataCorrupted)
+            return
+        }
+        let salary = SalarySummary(dto: salaryDTO)
 
-        // 실제 구현: API 호출하여 서버에 저장
-        // workRepository.updateWorkTime(start: start, end: end)
+        currentSchedule = schedule
+        currentSalary   = salary
+
+        // 현재 시각 기준으로 WorkStatus 자동 결정
+        currentStatus = resolveAutoStatus(for: schedule)
+        publish()
     }
+}
+
+// MARK: - Work Time Adjustment
+
+private extension WorkViewModel {
+
+    func handleUpdateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity) {
+        guard var schedule = currentSchedule else {
+            state = .error(.dataCorrupted); return
+        }
+        guard start.totalMinutes < end.totalMinutes else {
+            state = .error(.invalidWorkTime); return
+        }
+
+        // 스케줄 shift 교체
+        let newShift = WorkShift(
+            clockIn:  WorkTime(hour: start.hour, minute: start.minute),
+            clockOut: WorkTime(hour: end.hour,   minute: end.minute)
+        )
+        schedule = WorkSchedule(date: schedule.date, kind: schedule.kind,
+                                shift: newShift, workplace: schedule.workplace)
+        currentSchedule = schedule
+
+        // 새 clockIn이 현재 시각보다 이후이면 근무 전(idle)으로 복귀
+        if start.totalMinutes > nowInMinutes(), currentStatus.isActive {
+            currentStatus = .idle
+        }
+        publish()
+    }
+}
+
+// MARK: - Work Session Control
+
+private extension WorkViewModel {
 
     func handleStartWork() {
-        guard var data = currentData else {
-            state = .error(.dataParsingError)
+        guard case .idle = currentStatus else { return }
+        currentStatus = .working(startedAt: Date())
+        publish()
+    }
+
+    func handleEndWork() {
+        guard currentStatus.isActive else { return }
+        currentStatus = .finished(finishedAt: Date())
+        publish()
+    }
+
+    func handleRequestVacation() {
+        switch currentStatus {
+        case .idle:
+            // 출근 전 "오늘 휴가에요" → 바로 vacation WorkingContentView 진입
+            currentStatus = .onVacation(startedAt: Date())
+            // 스케줄 kind도 vacation으로 전환
+            if let schedule = currentSchedule {
+                currentSchedule = WorkSchedule(
+                    date: schedule.date, kind: .vacation,
+                    shift: schedule.shift, workplace: schedule.workplace
+                )
+            }
+
+        case .working(let startedAt):
+            // 근무 중 → 휴가 전환 (startedAt 유지)
+            currentStatus = .onVacation(startedAt: startedAt)
+
+        default:
+            break
+        }
+        publish()
+    }
+}
+
+// MARK: - Auto Session Resolution
+
+private extension WorkViewModel {
+
+    /// 앱 진입 시 현재 시각 기준으로 WorkStatus 자동 결정
+    ///
+    /// - clockIn ≤ 현재 < clockOut  →  근무/휴가 중 (스케줄 kind에 따라)
+    ///   - startedAt = 실제 clockIn Date → 경과 시간 = 현재 - clockIn = 정확한 값
+    /// - 현재 ≥ clockOut            →  finished
+    /// - 현재 < clockIn             →  idle
+    func resolveAutoStatus(for schedule: WorkSchedule) -> WorkStatus {
+        guard let shift = schedule.shift, schedule.kind != .holiday else {
+            return .idle
+        }
+
+        let now      = nowInMinutes()
+        let clockIn  = shift.clockIn.totalMinutes
+        let clockOut = shift.clockOut.totalMinutes
+
+        if now >= clockIn && now < clockOut {
+            // startedAt을 실제 clockIn 시각으로 생성 → 타이머가 08:xx ~ 현재까지 정확히 표시
+            let startedAt = makeDate(hour: shift.clockIn.hour, minute: shift.clockIn.minute)
+            return schedule.kind == .vacation
+                ? .onVacation(startedAt: startedAt)
+                : .working(startedAt: startedAt)
+
+        } else if now >= clockOut {
+            let finishedAt = makeDate(hour: shift.clockOut.hour, minute: shift.clockOut.minute)
+            return .finished(finishedAt: finishedAt)
+        }
+
+        return .idle
+    }
+}
+
+// MARK: - Publish
+
+private extension WorkViewModel {
+
+    func publish() {
+        guard let schedule = currentSchedule,
+              let salary   = currentSalary
+        else {
+            state = .error(.dataCorrupted)
             return
         }
 
-        // 이미 근무 중이면 무시
-        guard !data.workStatus.isWorking else { return }
+        let display = buildDisplayData(schedule: schedule, salary: salary, status: currentStatus)
+        state = .loaded(display)
+    }
 
-        // 실제 구현: API 호출 후 성공 시 상태 변경
-        // workRepository.startWork()
-        //     .sink { ... }
-        //     .store(in: &cancellables)
+    func buildDisplayData(
+        schedule: WorkSchedule,
+        salary: SalarySummary,
+        status: WorkStatus
+    ) -> HomeDisplayData {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M월 d일 (E)"
+        formatter.locale = Locale(identifier: "ko_KR")
 
-        data = HomeViewData(
-            wage: data.wage,
-            workTime: data.workTime,
-            monthlyInfo: data.monthlyInfo,
-            location: data.location,
-            workStatus: .working(startedAt: Date())
+        let shift = schedule.shift
+        let clockIn  = TimeIndicatorEntity(
+            hour:   shift?.clockIn.hour   ?? 9,
+            minute: shift?.clockIn.minute ?? 0
+        )
+        let clockOut = TimeIndicatorEntity(
+            hour:   shift?.clockOut.hour   ?? 18,
+            minute: shift?.clockOut.minute ?? 0
         )
 
-        currentData = data
-        state = .loaded(data)
+        return HomeDisplayData(
+            formattedDate:    formatter.string(from: schedule.date),
+            workplace:        schedule.workplace,
+            scheduledClockIn:  clockIn,
+            scheduledClockOut: clockOut,
+            dailyWage:        salary.dailyWage,
+            hourlyWage:       salary.hourlyWage,
+            scheduleStatus:   resolveScheduleStatus(kind: schedule.kind, workStatus: status),
+            workStatus:       status
+        )
     }
 
-    func handleVacationRequest() {
-        // 실제 구현: API 호출
-        // workRepository.requestVacation()
-    }
-
-    func handleError(_ error: Error) {
-        let homeError: HomeError
-        if let urlError = error as? URLError {
-            homeError = urlError.code == .notConnectedToInternet ? .networkError : .unknown(error)
-        } else {
-            homeError = .unknown(error)
+    /// WorkScheduleKind + WorkStatus → HomeScheduleStatus (화면 상태)
+    func resolveScheduleStatus(kind: WorkScheduleKind, workStatus: WorkStatus) -> HomeScheduleStatus {
+        switch kind {
+        case .holiday:  return .holiday
+        case .vacation: return .onVacation
+        case .regular:
+            switch workStatus {
+            case .idle, .working:         return .beforeWork
+            case .onVacation:             return .onVacation
+            case .finished:               return .afterWork
+            }
         }
-        state = .error(homeError)
-    }
-
-    func validateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity) -> Bool {
-        let startMinutes = start.hour * 60 + start.minute
-        let endMinutes = end.hour * 60 + end.minute
-        return endMinutes > startMinutes
-    }
-
-    func calculateWage(for workTime: WorkTime) -> Int {
-        let hourlyWage = 15_000 // 실제로는 사용자 데이터에서 가져와야 함
-        return Int(Double(hourlyWage) * workTime.durationInHours)
-    }
-
-    // MARK: - Mock Data (개발용)
-
-    func loadMockData() {
-        let initialWorkTime = WorkTime(
-            start: .from(hour: 9, minute: 0),
-            end: .from(hour: 18, minute: 0)
-        )
-        let data = HomeViewData(
-            wage: 150_000,
-            workTime: initialWorkTime,
-            monthlyInfo: MonthlyInfo(
-                month: 2,
-                currentAmount: 1_500_000,
-                baseAmount: 1_200_000
-            ),
-            location: LocationInfo(
-                name: "을지로",
-                address: "서울특별시 중구 을지로"
-            ),
-            workStatus: .beforeWork
-        )
-        currentData = data
-        state = .loaded(data)
     }
 }
 
-// MARK: - Testable (Unit Test용)
+// MARK: - Helpers
 
-#if DEBUG
-extension WorkViewModel {
-    func setState(_ state: WorkViewState) {
-        self.state = state
+private extension WorkViewModel {
+
+    func nowInMinutes() -> Int {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        return (c.hour ?? 0) * 60 + (c.minute ?? 0)
     }
 
-    func getCurrentData() -> HomeViewData? {
-        return currentData
+    func makeDate(hour: Int, minute: Int) -> Date {
+        var c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        c.hour = hour; c.minute = minute; c.second = 0
+        return Calendar.current.date(from: c) ?? Date()
     }
 }
-#endif
