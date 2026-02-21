@@ -47,4 +47,15 @@ extension WorkdayRepositoryImpl {
         
         return response.toDomain()
     }
+    
+    func fetchHistory(
+        year: Int,
+        month: Int
+    ) async throws -> [History] {
+        let response: HistoryListResponse = try await apiClient.request(
+            WorkdayAPI.getWorkdayList(year: year, month: month)
+        )
+        
+        return response.content.map { $0.toDomain() }
+    }
 }
