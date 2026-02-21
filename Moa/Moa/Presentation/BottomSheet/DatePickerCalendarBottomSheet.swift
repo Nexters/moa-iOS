@@ -23,7 +23,7 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
     private let titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
-            "날짜를 선택해주세요!",
+            "날짜를 선택해주세요",
             style: .init(
                 typography: AppTypography.t1_700,
                 color: AppColor.IconAndText.highEmphasis
