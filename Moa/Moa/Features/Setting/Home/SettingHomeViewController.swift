@@ -192,10 +192,18 @@ final class SettingHomeViewController: BaseViewController {
         let myInfoRow = SettingItemRowView(
             title: Constants.salaryWorkPolicyInfo
         )
+        myInfoRow.onTap = { [weak self] in
+            guard let self else { return }
+//            self.coordinator.moveToPayrollWorkPolicyInfo()
+        }
         
         let notificationRow = SettingItemRowView(
             title: Constants.notificationSetting
         )
+        notificationRow.onTap = { [weak self] in
+            guard let self else { return }
+//            self.coordinator.moveToNotificationSetting()
+        }
         
         let versionInfoRow = SettingItemRowView(
             title: Constants.versionInfo,
@@ -207,19 +215,34 @@ final class SettingHomeViewController: BaseViewController {
         let termsAndPolicy = SettingItemRowView(
             title: Constants.termsAndPolicy
         )
+        termsAndPolicy.onTap = { [weak self] in
+            guard let self else { return }
+//            self.coordinator.moveToTermsAndPolicy()
+        }
         
         let inquiry = SettingItemRowView(
             title: Constants.inquiry
         )
+        inquiry.onTap = { [weak self] in
+            guard let self else { return }
+//            self.coordinator.moveToInquiry()
+        }
         
         contentStack.addArrangedSubViews([
             SettingSectionView(
                 title: Constants.myInfo,
-                rows: [myInfoRow]
+                rows: [myInfoRow],
+                onRowTap: { [weak self] index in
+                    guard let self else { return }
+                    self.coordinator.moveToPayrollWorkPolicyEdit(accountProvider: viewModel.accountProvider)
+                }
             ),
             SettingSectionView(
                 title: Constants.appSetting,
-                rows: [notificationRow]
+                rows: [notificationRow],
+                onRowTap: { [weak self] index in
+                    
+                }
             ),
             SettingSectionView(
                 title: Constants.appInfoOrHelp,
@@ -227,7 +250,10 @@ final class SettingHomeViewController: BaseViewController {
                     versionInfoRow,
                     termsAndPolicy,
                     inquiry
-                ]
+                ],
+                onRowTap: { [weak self] index in
+                    
+                }
             )
         ])
     }

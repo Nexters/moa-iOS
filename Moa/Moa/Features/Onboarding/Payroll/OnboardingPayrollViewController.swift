@@ -204,12 +204,12 @@ final class OnboardingPayrollViewController: BaseViewController {
         
         let initialDigits = (amountTextField.text ?? "").filter(\.isNumber)
         let initialValue = Int(initialDigits) ?? 0
-        koreanAmountLabel.text = viewModel.koreanCurrencyText(for: initialValue)
+        koreanAmountLabel.text = AppNumberFormatter.koreanCurrencyText(for: initialValue)
         
         if let amount = viewModel.amount {
             let formatted = NumberFormatter.localizedString(from: NSNumber(value: amount), number: .decimal)
             amountTextField.text = formatted
-            koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: amount))
+            koreanAmountLabel.setText(AppNumberFormatter.koreanCurrencyText(for: amount))
             updateNextButtonState()
         }
     }
@@ -221,7 +221,7 @@ final class OnboardingPayrollViewController: BaseViewController {
         updateNextButtonState()
         let digits = (amountTextField.text ?? "").filter(\.isNumber)
         let value = Int(digits) ?? 0
-        koreanAmountLabel.setText(viewModel.koreanCurrencyText(for: value))
+        koreanAmountLabel.setText(AppNumberFormatter.koreanCurrencyText(for: value))
         viewModel.updateAmount(fromTextFieldText: amountTextField.text)
     }
     
