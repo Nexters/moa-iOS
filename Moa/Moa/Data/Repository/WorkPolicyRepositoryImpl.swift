@@ -20,13 +20,13 @@ final class WorkPolicyRepositoryImpl: WorkPolicyRepository {
         return response.toDomain()
     }
     
-    func updateWorkPolicy(weekdays: [Weekday], clockInTime: String?, clockOutTime: String?) async throws -> WorkPolicyEntity {
+    func updateWorkPolicy(weekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity {
         let mapped = weekdays.map { $0.apiValue }
         
         let request = WorkPolicyUpsertRequest(
             workdays: mapped.isEmpty ? nil : mapped,
-            clockInTime: clockInTime,
-            clockOutTime: clockOutTime
+            clockInTime: clockInTime.displayString,
+            clockOutTime: clockOutTime.displayString
         )
         
         let response: WorkPolicyResponse = try await apiClient.request(WorkPolicyAPI.updateWorkPolicy(request))

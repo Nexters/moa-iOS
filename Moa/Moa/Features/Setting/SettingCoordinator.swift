@@ -29,7 +29,7 @@ final class SettingCoordinator {
         nav?.pushViewController(vc, animated: true)
     }
     
-    func moveToWorkPolicyEdit(accountProvider: AccountProvider) {
+    func moveToPayrollWorkPolicyInfo(accountProvider: AccountProvider) {
         let vm = PayrollWorkPolicyInfoViewModel(
             accountProvider: accountProvider,
             settingUsecase: container.settingUsecase
@@ -60,6 +60,30 @@ final class SettingCoordinator {
             currentWorkplace: currentWorkplace
         )
         let vc = WorkPlaceEditViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
+    
+    func moveToWorkPolicyEdit(
+        selectedWeekdays: Set<Weekday>,
+        clockInTime: TimeIndicatorEntity,
+        clockOutTime: TimeIndicatorEntity
+    ) {
+        let vm = WorkPolicyEditViewModel(
+            usecase: container.settingUsecase,
+            selectedWeekdays: selectedWeekdays,
+            clockInTime: clockInTime,
+            clockOutTime: clockOutTime
+        )
+        
+        let vc = WorkPolicyEditViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
+    
+    func moveToTermsAndPolicy() {
+        let vm = TermsAndPolicyViewModel(settingUsecase: container.settingUsecase)
+        let vc = TermsAndPolicyViewController(viewModel: vm)
         
         nav?.pushViewController(vc, animated: true)
     }

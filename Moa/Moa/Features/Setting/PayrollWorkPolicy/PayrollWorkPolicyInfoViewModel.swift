@@ -39,6 +39,9 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private(set) var workplaceDisplayText: String = ""
     private(set) var workingDays: String = ""
     private(set) var workingHours: String = ""
+    private(set) var clockInTime: TimeIndicatorEntity?
+    private(set) var clockOutTime: TimeIndicatorEntity?
+    private(set) var selectedWeekdays: Set<Weekday> = []
     
     // MARK: - Init
     
@@ -76,6 +79,10 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private func getWorkPolicy() async throws {
         let workPolicy = try await settingUsecase.getWorkPolicy()
         await MainActor.run {
+            self.selectedWeekdays = Set(workPolicy.workdays)
+            self.clockInTime = workPolicy.clockInTime
+            self.clockOutTime = workPolicy.clockOutTime
+            
             let workingDays = workPolicy.workdays.map({ $0.displayName })
             if !workingDays.isEmpty {
                 self.workingDays = workingDays.joined(separator: ", ")

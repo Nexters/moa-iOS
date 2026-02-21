@@ -79,7 +79,8 @@ final class AppContainer {
             profileRepository: profileRepository,
             memberRepository: memberRepository,
             payrollRepository: payrollRepository,
-            workPolicyRepository: workPolicyRepository
+            workPolicyRepository: workPolicyRepository,
+            onboardingRepository: onboardingRepository
         )
     }()
 }

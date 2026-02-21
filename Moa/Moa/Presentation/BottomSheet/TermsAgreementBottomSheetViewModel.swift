@@ -66,14 +66,6 @@ final class TermsAgreementBottomSheetViewModel {
         agreedMap[code] ?? false
     }
     
-    func url(for code: String) -> URL? {
-        guard let term = terms.first(where: { $0.code == code }),
-                let urlString = term.contentUrl
-        else { return nil }
-        
-        return URL(string: urlString)
-    }
-    
     func urlString(for code: String) -> String {
         guard let term = terms.first(where: { $0.code == code }) else { return "" }
         return term.contentUrl ?? ""

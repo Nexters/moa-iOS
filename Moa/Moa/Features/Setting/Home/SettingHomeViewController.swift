@@ -192,10 +192,6 @@ final class SettingHomeViewController: BaseViewController {
         let myInfoRow = SettingItemRowView(
             title: Constants.salaryWorkPolicyInfo
         )
-        myInfoRow.onTap = { [weak self] in
-            guard let self else { return }
-//            self.coordinator.moveToPayrollWorkPolicyInfo()
-        }
         
         let notificationRow = SettingItemRowView(
             title: Constants.notificationSetting
@@ -215,9 +211,10 @@ final class SettingHomeViewController: BaseViewController {
         let termsAndPolicy = SettingItemRowView(
             title: Constants.termsAndPolicy
         )
+        
         termsAndPolicy.onTap = { [weak self] in
             guard let self else { return }
-//            self.coordinator.moveToTermsAndPolicy()
+            self.coordinator.moveToTermsAndPolicy()
         }
         
         let inquiry = SettingItemRowView(
@@ -232,9 +229,9 @@ final class SettingHomeViewController: BaseViewController {
             SettingSectionView(
                 title: Constants.myInfo,
                 rows: [myInfoRow],
-                onRowTap: { [weak self] index in
+                onRowTap: { [weak self] _ in
                     guard let self else { return }
-                    self.coordinator.moveToWorkPolicyEdit(accountProvider: viewModel.accountProvider)
+                    self.coordinator.moveToPayrollWorkPolicyInfo(accountProvider: viewModel.accountProvider)
                 }
             ),
             SettingSectionView(

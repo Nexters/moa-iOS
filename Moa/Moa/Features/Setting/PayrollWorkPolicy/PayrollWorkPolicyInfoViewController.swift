@@ -122,11 +122,33 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
     
     @objc private func workingDaysButtonTapped() {
+        guard viewModel.selectedWeekdays.isEmpty == false,
+              let clockInTime = viewModel.clockInTime,
+              let clockOutTime = viewModel.clockOutTime
+        else {
+            return
+        }
         
+        coordinator?.moveToWorkPolicyEdit(
+            selectedWeekdays: viewModel.selectedWeekdays,
+            clockInTime: clockInTime,
+            clockOutTime: clockOutTime
+        )
     }
     
     @objc private func workingHoursButtonTapped() {
+        guard viewModel.selectedWeekdays.isEmpty == false,
+              let clockInTime = viewModel.clockInTime,
+              let clockOutTime = viewModel.clockOutTime
+        else {
+            return
+        }
         
+        coordinator?.moveToWorkPolicyEdit(
+            selectedWeekdays: viewModel.selectedWeekdays,
+            clockInTime: clockInTime,
+            clockOutTime: clockOutTime
+        )
     }
     
     private func buildSections() {
