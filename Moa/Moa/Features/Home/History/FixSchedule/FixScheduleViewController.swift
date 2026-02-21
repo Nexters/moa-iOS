@@ -197,7 +197,7 @@ private extension FixScheduleViewController {
     func setupConstraints() {
         // 타이틀
         titleLabel.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(12)
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
 
