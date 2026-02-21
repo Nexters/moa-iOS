@@ -16,7 +16,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
     // MARK: - Dependencies
     
     private let onboardingUsecase: OnboardingUsecase
-    private let profileUsecase: ProfileUsecase
+    private let profileUsecase: SettingUsecase
     
     // MARK: - State
     
@@ -26,7 +26,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
     
     init(
         onboardingUsecase: OnboardingUsecase,
-        profileUsecase: ProfileUsecase,
+        profileUsecase: SettingUsecase,
         currentNickname: String? = nil
     ) {
         self.onboardingUsecase = onboardingUsecase

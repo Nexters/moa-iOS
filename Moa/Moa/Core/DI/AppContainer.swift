@@ -48,6 +48,12 @@ final class AppContainer {
     private lazy var memberRepository: MemberRepository = {
         MemberRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var payrollRepository: PayrollRepository = {
+        PayrollRepositoryImpl(apiClient: apiClient)
+    }()
+    private lazy var workPolicyRepository: WorkPolicyRepository = {
+        WorkPolicyRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
@@ -56,10 +62,12 @@ final class AppContainer {
     lazy var onboardingUseCase: OnboardingUsecase = {
         OnboardingUsecase(repository: onboardingRepository)
     }()
-    lazy var profileUsecase: ProfileUsecase = {
-        ProfileUsecase(repository: profileRepository)
-    }()
-    lazy var memberUsecase: MemberUsecase = {
-        MemberUsecase(repository: memberRepository)
+    lazy var settingUsecase: SettingUsecase = {
+        SettingUsecase(
+            profileRepository: profileRepository,
+            memberRepository: memberRepository,
+            payrollRepository: payrollRepository,
+            workPolicyRepository: workPolicyRepository
+        )
     }()
 }

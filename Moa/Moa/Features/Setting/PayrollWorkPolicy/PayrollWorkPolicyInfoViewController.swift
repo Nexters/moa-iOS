@@ -22,11 +22,12 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         static let unregistered = "미등록"
         static let workingDays = "근무 요일"
         static let workingHours = "근무 시간"
+        static let navigationTitle = "월급 · 근무 정보"
     }
     
     // MARK: - Dependencies
     
-    private let viewModel = PayrollWorkPolicyInfoViewModel()
+    private let viewModel: PayrollWorkPolicyInfoViewModel
     
     // MARK: - UI Components
     
@@ -45,7 +46,6 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         return stack
     }()
     
-    // 섹션 스택 (타이틀 + 행들을 수직으로 쌓는 컨테이너)
     private let contentStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -54,13 +54,40 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         stack.spacing = 24
         return stack
     }()
-
-    // 화면을 구성할 섹션 데이터 (타이틀 + 행 배열)
+    
     private var sections: [(title: String, rows: [SettingItemRowView])] = []
+    
+    // Row references for updates
+    private var payrollRow: SettingItemRowView?
+    private var paydayRow: SettingItemRowView?
+    private var companyRow: SettingItemRowView?
+    private var daysRow: SettingItemRowView?
+    private var hoursRow: SettingItemRowView?
+    private var accountRow: SettingItemRowView?
+    
+    // MARK: - Init
+    
+    init(viewModel: PayrollWorkPolicyInfoViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - LifeCycle
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.getInfo()
+    }
     
     // MARK: - Actions
     
     override func setupUI() {
+        replaceSystemBackButtonWithAppBackButton()
+        setupNavigationTitle(as: Constants.navigationTitle)
         view.addSubview(contentStack)
 
         contentStack.snp.makeConstraints {
@@ -112,25 +139,31 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
 
     private func makeSections() -> [(title: String, rows: [SettingItemRowView])] {
-        let payrollRow = SettingItemRowView(title: Constants.payroll, value: "연봉 3,600만원")
+        // Build rows and keep references
+        let payrollRow = SettingItemRowView(title: Constants.payroll)
         payrollRow.onTap = { [weak self] in self?.payrollButtonTapped() }
+        self.payrollRow = payrollRow
 
-        let paydayRow = SettingItemRowView(title: Constants.payday, value: "매월 25일")
+        let paydayRow = SettingItemRowView(title: Constants.payday)
         paydayRow.onTap = { [weak self] in self?.paydayButtonTapped() }
+        self.paydayRow = paydayRow
 
-        let companyRow = SettingItemRowView(title: Constants.companyName, value: Constants.unregistered)
+        let companyRow = SettingItemRowView(title: Constants.companyName)
         companyRow.onTap = { [weak self] in self?.companyNameButtonTapped() }
+        self.companyRow = companyRow
 
-        let daysRow = SettingItemRowView(title: Constants.workingDays, value: "월 화 수 목 금")
+        let daysRow = SettingItemRowView(title: Constants.workingDays)
         daysRow.onTap = { [weak self] in self?.workingDaysButtonTapped() }
+        self.daysRow = daysRow
 
-        let hoursRow = SettingItemRowView(title: Constants.workingHours, value: "09:00 - 18:00")
+        let hoursRow = SettingItemRowView(title: Constants.workingHours)
         hoursRow.onTap = { [weak self] in self?.workingHoursButtonTapped() }
+        self.hoursRow = hoursRow
 
-        // 섹션 묶기
-        let accountRows = [
-            SettingItemRowView(title: Constants.account, value: "apple@moa.com")
-        ]
+        let accountRow = SettingItemRowView(title: viewModel.accountProvider.displayDescription)
+        self.accountRow = accountRow
+
+        let accountRows = [accountRow]
         let payrollRows = [payrollRow, paydayRow]
         let workPolicyRows = [companyRow, daysRow, hoursRow]
 
@@ -140,4 +173,22 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
             (title: Constants.workingInfo, rows: workPolicyRows)
         ]
     }
+    
+    override func bind() {
+        bindOutput(viewModel.outputs) { [weak self] output in
+            switch output {
+            case .payrollFetched:
+                self?.payrollRow?.updateValue(self?.viewModel.salary)
+
+            case .workPolicyFetched:
+                self?.daysRow?.updateValue(self?.viewModel.workingDays)
+                self?.hoursRow?.updateValue(self?.viewModel.workingHours)
+
+            case .profileFetched:
+                self?.paydayRow?.updateValue(self?.viewModel.payday)
+                self?.companyRow?.updateValue(self?.viewModel.workplace)
+            }
+        }
+    }
 }
+

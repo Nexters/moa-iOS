@@ -73,7 +73,7 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
     }
     
     func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity {
-        let workdays = selectedWeekdays.compactMap { $0.apiValue }
+        let workdays = selectedWeekdays.map { $0.apiValue }
         let request = WorkPolicyUpsertRequest(workdays: workdays, clockInTime: clockInTime.displayString, clockOutTime: clockOutTime.displayString)
         let response: WorkPolicyResponse = try await apiClient.request(
             OnboardingAPI.updateOnboardingWorkpolicy(request)
