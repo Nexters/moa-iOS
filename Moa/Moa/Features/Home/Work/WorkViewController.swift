@@ -19,11 +19,7 @@ protocol WorkViewControllerCoordinatorDelegate: AnyObject {
 
 final class WorkViewController: BaseViewController {
 
-    // MARK: - Constants
-
     private enum Constant {
-        static let earlyWork = "일찍 출근하기"
-        static let todayVacation = "오늘 휴가예요"
         static let navigationBarHeight: CGFloat = 44
     }
 
@@ -34,24 +30,23 @@ final class WorkViewController: BaseViewController {
     private var workingTimer: Timer?
 
     override var prefersNavigationBarHidden: Bool { true }
-
-    /// Coordinator가 주입하는 델리게이트
     weak var coordinatorDelegate: WorkViewControllerCoordinatorDelegate?
 
-    private let contentView = UIView()
+    // MARK: - UI
 
-    // 네비게이션
     private let navigationBarView = HomeNavigationBarView()
 
-    // 근무 전 콘텐츠
-    private lazy var beforeWorkingView: BeforeWorkingContentView = {
-        let view = BeforeWorkingContentView()
+    private lazy var workMainView: WorkMainContentView = {
+        let view = WorkMainContentView()
         view.delegate = self
         return view
     }()
 
-    // 근무 중 콘텐츠
-    private lazy var workingStatusView = WorkingContentView(workingType: .work)
+    private lazy var workingContentView: WorkingContentView = {
+        let view = WorkingContentView(workingType: .work)
+        view.delegate = self
+        return view
+    }()
 
     private let loadingIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -66,9 +61,7 @@ final class WorkViewController: BaseViewController {
         super.init(nibName: nil, bundle: nil)
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { fatalError() }
 
     // MARK: - Lifecycle
 
@@ -77,36 +70,43 @@ final class WorkViewController: BaseViewController {
         viewModel.send(.viewDidLoad)
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // 캘린더 이탈 후 재진입 시 타이머 재시작
+        // viewWillDisappear에서 stopWorkingTimer()로 중단됐기 때문에 재시작 필요 (시간 동기화)
+        if case .loaded(let data) = viewModel.state, data.workStatus.isActive {
+            startWorkingTimer()
+        }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         showWorkAlarmBottomSheetIfNeeded()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopWorkingTimer()
+    }
+
+    // MARK: - Setup
+
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
-        replaceSystemBackButtonWithAppBackButton()
         setupHierarchy()
         setupConstraints()
 
-        // 네비게이션 바 캘린더 아이콘 탭 연결
         navigationBarView.onCalendarTap = { [weak self] in
             guard let self else { return }
-            self.coordinatorDelegate?.workViewControllerDidTapCalendar(self)
+            coordinatorDelegate?.workViewControllerDidTapCalendar(self)
         }
     }
 
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                self?.render(state)
-            }
+            .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        stopWorkingTimer()
     }
 }
 
@@ -115,35 +115,22 @@ final class WorkViewController: BaseViewController {
 private extension WorkViewController {
 
     func setupHierarchy() {
-        view.addSubViews([contentView, loadingIndicator])
-        contentView.addSubViews([navigationBarView, beforeWorkingView, workingStatusView])
+        view.addSubViews([navigationBarView, workMainView, workingContentView, loadingIndicator])
     }
 
     func setupConstraints() {
-        contentView.snp.makeConstraints {
-            $0.edges.equalTo(view.safeAreaLayoutGuide)
-        }
-
         navigationBarView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(Constant.navigationBarHeight)
         }
-
-        beforeWorkingView.snp.makeConstraints {
-            $0.top.equalTo(navigationBarView.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.bottom.equalToSuperview()
+        [workMainView, workingContentView].forEach {
+            $0.snp.makeConstraints {
+                $0.top.equalTo(navigationBarView.snp.bottom)
+                $0.leading.trailing.bottom.equalToSuperview()
+            }
         }
-
-        workingStatusView.snp.makeConstraints {
-            $0.top.equalTo(navigationBarView.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.bottom.equalToSuperview()
-        }
-
-        loadingIndicator.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
+        loadingIndicator.snp.makeConstraints { $0.center.equalToSuperview() }
     }
 }
 
@@ -153,69 +140,77 @@ private extension WorkViewController {
 
     func render(_ state: WorkViewState) {
         switch state {
-        case .idle:   break
-        case .loading:            renderLoading()
-        case .loaded(let data):   renderLoaded(data)
-        case .error(let error):   renderError(error)
+        case .idle:             break
+        case .loading:          renderLoading()
+        case .loaded(let data): renderLoaded(data)
+        case .error(let error): renderError(error)
         }
     }
 
     func renderLoading() {
         loadingIndicator.startAnimating()
-        beforeWorkingView.isHidden = true
-        workingStatusView.isHidden = true
+        workMainView.isHidden       = true
+        workingContentView.isHidden = true
     }
 
-    func renderLoaded(_ data: HomeViewData) {
+    func renderLoaded(_ data: HomeDisplayData) {
         loadingIndicator.stopAnimating()
-        updateMonthlySalary(data.monthlyInfo)
-
         switch data.workStatus {
-        case .beforeWork:               renderBeforeWork(data)
-        case .working(let startedAt):   renderWorking(data, startedAt: startedAt)
+        case .idle, .finished:
+            renderMainView(data)
+        case .working(let startedAt):
+            renderActiveWork(data, startedAt: startedAt, workingType: .work)
+        case .onVacation(let startedAt):
+            renderActiveWork(data, startedAt: startedAt, workingType: .vacation)
         }
     }
 
-    func renderError(_ error: HomeError) {
-        loadingIndicator.stopAnimating()
-        showErrorAlert(message: error.localizedDescription)
-    }
-
-    func renderBeforeWork(_ data: HomeViewData) {
+    func renderMainView(_ data: HomeDisplayData) {
         stopWorkingTimer()
-        beforeWorkingView.isHidden = false
-        workingStatusView.isHidden = true
-        beforeWorkingView.configure(
-            monthlyInfo: data.monthlyInfo,
-            workTime: data.workTime,
-            wage: data.wage
-        )
+        workingContentView.stopAnimations()
+
+        workMainView.isHidden       = false
+        workingContentView.isHidden = true
+        workMainView.configure(with: data)
     }
 
-    func renderWorking(_ data: HomeViewData, startedAt: Date) {
-        beforeWorkingView.isHidden = true
-        workingStatusView.isHidden = false
-        workingStatusView.configure(
-            todayAmount: 12_000,
-            startTime: "09:00",
-            endTime: "18:00",
-            startedAt: startedAt
+    func renderActiveWork(_ data: HomeDisplayData, startedAt: Date, workingType: WorkingType) {
+        workMainView.isHidden       = true
+        workingContentView.isHidden = false
+
+        // 현재 경과 초 기준 초기 금액 계산
+        let elapsed     = max(0, Int(Date().timeIntervalSince(startedAt)))
+        let todayAmount = Int(Double(data.hourlyWage) * Double(elapsed) / 3600.0)
+
+        workingContentView.configure(
+            todayAmount:  todayAmount,
+            hourlyWage:   data.hourlyWage,
+            startTime:    data.scheduledClockIn,
+            endTime:      data.scheduledClockOut,
+            startedAt:    startedAt,
+            workingType:  workingType
         )
+
+        // 항상 재시작 (viewWillDisappear 후 재진입 포함)
         startWorkingTimer()
     }
 
-    func updateMonthlySalary(_ info: MonthlyInfo) {}
+    func renderError(_ error: WorkViewError) {
+        loadingIndicator.stopAnimating()
+        showErrorAlert(message: error.localizedDescription ?? "")
+    }
 }
 
-// MARK: - Working Timer
+// MARK: - Timer
 
 private extension WorkViewController {
 
     func startWorkingTimer() {
-        stopWorkingTimer()
-        workingTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.workingStatusView.tick()
+        stopWorkingTimer()  // 기존 타이머 정리 후 새로 시작
+        workingTimer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.workingContentView.tick()
         }
+        RunLoop.main.add(workingTimer!, forMode: .common)
     }
 
     func stopWorkingTimer() {
@@ -224,36 +219,14 @@ private extension WorkViewController {
     }
 }
 
-// MARK: - Actions
-
-private extension WorkViewController {
-
-    @objc func didTapMainButton() {
-        viewModel.send(.startWork)
-    }
-
-    @objc func didTapVacation() {
-        let alert = UIAlertController(
-            title: "휴가 신청",
-            message: "오늘 휴가를 신청하시겠어요?",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "신청", style: .default) { [weak self] _ in
-            self?.viewModel.send(.requestVacation)
-        })
-        present(alert, animated: true)
-    }
-}
-
-// MARK: - Bottom Sheets
+// MARK: - Bottom Sheet Presentation
 
 private extension WorkViewController {
 
     func showWorkAlarmBottomSheetIfNeeded() {
-        guard !hasShownWorkAlarmSheet else { return }
-        let hasUserDismissedPermanently = UserDefaults.standard.bool(forKey: "HasDismissedWorkAlarmSheet")
-        guard !hasUserDismissedPermanently else { return }
+        guard !hasShownWorkAlarmSheet,
+              !UserDefaults.standard.bool(forKey: "HasDismissedWorkAlarmSheet")
+        else { return }
         hasShownWorkAlarmSheet = true
         DispatchQueue.main.async { [weak self] in self?.showWorkAlarmBottomSheet() }
     }
@@ -266,11 +239,26 @@ private extension WorkViewController {
 
     func presentTimeSelectionBottomSheet() {
         guard case .loaded(let data) = viewModel.state else { return }
-        let sheet = TimeSelectionBottomSheet(
-            type: .setEstimateTime,
-            startTime: data.workTime.start,
-            endTime: data.workTime.end
-        )
+        let present = { [weak self] in
+            guard let self else { return }
+            let sheet = TimeSelectionBottomSheet(
+                type: .setEstimateTime,
+                startTime: data.scheduledClockIn,
+                endTime:   data.scheduledClockOut
+            )
+            sheet.delegate = self
+            self.presentBottomSheet(sheet)
+        }
+        if presentedViewController != nil {
+            dismiss(animated: true, completion: present)
+        } else {
+            present()
+        }
+    }
+
+    func presentScheduleChangeBottomSheet() {
+        guard presentedViewController == nil else { return }
+        let sheet = WorkScheduleChangeBottomSheet()
         sheet.delegate = self
         presentBottomSheet(sheet)
     }
@@ -285,6 +273,19 @@ private extension WorkViewController {
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
     }
+
+    func showVacationConfirmAlert() {
+        let alert = UIAlertController(
+            title: "휴가 신청",
+            message: "오늘 휴가를 신청하시겠어요?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "신청", style: .default) { [weak self] _ in
+            self?.viewModel.send(.requestVacation)
+        })
+        present(alert, animated: true)
+    }
 }
 
 // MARK: - WorkAlarmBottomSheetDelegate
@@ -295,7 +296,9 @@ extension WorkViewController: WorkAlarmBottomSheetDelegate {
     func didTapLater() {}
 
     private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(
+            options: [.alert, .sound, .badge]
+        ) { granted, error in
             DispatchQueue.main.async {
                 if granted { print("알림 권한 승인됨") }
                 else if let error { print("알림 권한 오류: \(error.localizedDescription)") }
@@ -317,32 +320,55 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
     }
 }
 
-// MARK: - WorkingStatusViewDelegate
+// MARK: - WorkingContentViewDelegate
 
-extension WorkViewController: WorkingStatusViewDelegate {
-    func workingStatusViewDidTapScheduleAdjust(_ view: WorkingStatusView) {
-        presentTimeSelectionBottomSheet()
+extension WorkViewController: WorkingContentViewDelegate {
+
+    func workingContentViewDidTapScheduleAdjust(_ view: WorkingContentView) {
+        presentScheduleChangeBottomSheet()
     }
 }
 
-// MARK: - BeforeWorkingViewDelegate
+// MARK: - WorkMainContentViewDelegate
 
-extension WorkViewController: BeforeWorkingViewDelegate {
+extension WorkViewController: WorkMainContentViewDelegate {
 
-    func beforeWorkingViewDidTapStartWork(_ view: BeforeWorkingContentView) {
+    func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
         viewModel.send(.startWork)
     }
-    func beforeWorkingViewDidTapVacation(_ view: BeforeWorkingContentView) {
-        didTapVacation()
+
+    func workMainContentViewDidTapVacation(_ view: WorkMainContentView) {
+        showVacationConfirmAlert()
     }
-    func beforeWorkingViewDidRequestTimeSelection(_ view: BeforeWorkingContentView) {
+
+    func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView) {
         presentTimeSelectionBottomSheet()
+    }
+
+    func workMainContentViewDidTapWorkHistory(_ view: WorkMainContentView) {
+        coordinatorDelegate?.workViewControllerDidTapCalendar(self)
     }
 }
 
-// MARK: - Preview
+// MARK: - WorkScheduleChangeBottomSheetDelegate
 
-@available(iOS 17.0, *)
-#Preview {
-    WorkViewController(viewModel: WorkViewModel())
+extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
+
+    func workScheduleChangeBottomSheet(
+        _ sheet: WorkScheduleChangeBottomSheet,
+        didConfirm type: WorkScheduleChangeType
+    ) {
+        switch type {
+        case .vacation:
+            dismiss(animated: true) { [weak self] in self?.viewModel.send(.requestVacation) }
+        case .endWork:
+            dismiss(animated: true) { [weak self] in self?.viewModel.send(.endWork) }
+        case .changeSchedule:
+            dismiss(animated: true) { [weak self] in self?.presentTimeSelectionBottomSheet() }
+        }
+    }
+
+    func workScheduleChangeBottomSheetDidCancel(_ sheet: WorkScheduleChangeBottomSheet) {
+        dismiss(animated: true)
+    }
 }

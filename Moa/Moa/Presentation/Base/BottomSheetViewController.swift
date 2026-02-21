@@ -89,6 +89,11 @@ final class BottomSheetViewController: UIViewController {
     private var dismissibleHeight: CGFloat {
         return bottomSheetHeight * 0.3
     }
+
+    /// 현재 기기의 하단 SafeArea 높이
+    private var safeAreaBottomInset: CGFloat {
+        view.safeAreaInsets.bottom
+    }
     
     // MARK: - UI Components
     private lazy var dimmedView: UIView = {
@@ -126,7 +131,7 @@ final class BottomSheetViewController: UIViewController {
     
     private var containerViewBottomConstraint: Constraint?
     private var containerViewHeightConstraint: Constraint?
-    
+
     // MARK: - Initialization
     init(
         contentViewController: BottomSheetPresentable,
@@ -153,6 +158,11 @@ final class BottomSheetViewController: UIViewController {
         setupGestures()
     }
     
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        view.setNeedsLayout()
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         animatePresent()
@@ -176,7 +186,8 @@ final class BottomSheetViewController: UIViewController {
             + configuration.handleTopPadding
             + configuration.handleHeight
             + configuration.handleTopPadding
-        
+            + safeAreaBottomInset
+
         guard containerViewHeightConstraint?.layoutConstraints.first?.constant != totalHeight else {
             return
         }
