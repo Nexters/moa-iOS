@@ -139,7 +139,6 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     }
 
     private func makeSections() -> [(title: String, rows: [SettingItemRowView])] {
-        // Build rows and keep references
         let payrollRow = SettingItemRowView(title: Constants.payroll)
         payrollRow.onTap = { [weak self] in self?.payrollButtonTapped() }
         self.payrollRow = payrollRow

@@ -23,9 +23,9 @@ extension WorkPolicyAPI: TargetType {
     var path: String {
         switch self {
         case .getWorkPolicy:
-            "/api/v1/profile"
+            "/api/v1/work-policy"
         case .updateWorkPolicy:
-            "/api/v1/profile/nickname"
+            "/api/v1/work-policy"
         }
     }
     

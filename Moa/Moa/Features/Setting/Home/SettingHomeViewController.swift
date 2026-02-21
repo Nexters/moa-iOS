@@ -272,10 +272,10 @@ final class SettingHomeViewController: BaseViewController {
             
             switch output {
             case .memberFetched:
-                nicknameLabel.setText(viewModel.nickname)
+                accountProviderLabel.setText(viewModel.accountProvider.displayName)
                 
             case .profileFetched:
-                accountProviderLabel.setText(viewModel.accountProvider.displayName)
+                nicknameLabel.setText(viewModel.nickname)
             }
         }
     }
