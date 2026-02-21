@@ -111,6 +111,8 @@ final class HomeNavigationBarView: UIView {
     
     @objc private func didTapSetting() {
         onTapSetting?()
+    }
+    
     @objc private func handleCalendarTap() {
         onCalendarTap?()
     }

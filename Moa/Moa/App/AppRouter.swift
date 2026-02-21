@@ -115,6 +115,7 @@ private extension AppRouter {
         let coordinator = HomeCoordinator()
         homeCoordinator = coordinator
         coordinator.start(from: navigationController, animated: animated)
+    }
     
     func makeSetting() -> UIViewController {
         let coordinator = SettingCoordinator(
