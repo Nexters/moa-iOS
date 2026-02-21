@@ -8,52 +8,55 @@
 import UIKit
 import SnapKit
 
+// MARK: - KeyValueRowType
+
 enum KeyValueRowType {
     case wageRow(wage: Int)
     case timeRow(startTime: String, endTime: String)
-    
+    case customRow(key: String, value: String)   // holiday 등 범용 케이스
+
     var title: String {
         switch self {
-        case .wageRow:
-            return "오늘 일급"
-        case .timeRow:
-            return "근무 시간"
+        case .wageRow:                  return "오늘 일급"
+        case .timeRow:                  return "근무 시간"
+        case let .customRow(key, _):    return key
         }
     }
-    
+
     var value: String {
         switch self {
         case let .wageRow(wage):
             return "\(AppNumberFormatter.decimalString(from: wage))원"
         case let .timeRow(startTime, endTime):
             return "\(startTime) - \(endTime)"
+        case let .customRow(_, value):
+            return value
         }
     }
 }
 
+// MARK: - KeyValueRowView
+
 /// title + value + optional chevron
 final class KeyValueRowView: UIControl {
-    
+
     // MARK: - UI
+
     private lazy var titleLabel: StyledLabel = {
         let label = StyledLabel()
-        label.setStyle(
-            .init(
-                typography: AppTypography.b1_400,
-                color: AppColor.IconAndText.mediumEmphasis
-            )
-        )
+        label.setStyle(.init(
+            typography: AppTypography.b1_400,
+            color: AppColor.IconAndText.mediumEmphasis
+        ))
         return label
     }()
 
     private lazy var valueLabel: StyledLabel = {
         let label = StyledLabel()
-        label.setStyle(
-            .init(
-                typography: AppTypography.b1_600,
-                color: AppColor.IconAndText.highEmphasis
-            )
-        )
+        label.setStyle(.init(
+            typography: AppTypography.b1_600,
+            color: AppColor.IconAndText.highEmphasis
+        ))
         label.setContentHuggingPriority(.required, for: .horizontal)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return label
@@ -69,100 +72,80 @@ final class KeyValueRowView: UIControl {
         return imageView
     }()
 
-    
     // MARK: - Properties
-    
+
     private let showsChevron: Bool
-    
-    /// 외부 액션
+
     var onTap: (() -> Void)? {
-        didSet {
-            isUserInteractionEnabled = onTap != nil
-        }
+        didSet { isUserInteractionEnabled = onTap != nil }
     }
-    
+
     // MARK: - Init
-    
+
     init(type: KeyValueRowType, showsChevron: Bool = false) {
         self.showsChevron = showsChevron
         super.init(frame: .zero)
-        
         setupUI()
         configure(with: type)
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+
+    required init?(coder: NSCoder) { fatalError() }
+
     // MARK: - Setup
-    
+
     private func setupUI() {
-        
-        clipsToBounds = true
+        clipsToBounds  = true
         backgroundColor = .clear
-        
+
         addTarget(self, action: #selector(didTapRow), for: .touchUpInside)
-                
-        addSubViews(
-            [
-                titleLabel,
-                valueLabel,
-                chevronImageView
-            ]
-        )
-        
+        addSubViews([titleLabel, valueLabel, chevronImageView])
+
         titleLabel.snp.makeConstraints {
             $0.leading.equalToSuperview()
             $0.centerY.equalToSuperview()
         }
-        
+
         chevronImageView.snp.makeConstraints {
             $0.trailing.equalToSuperview()
             $0.centerY.equalToSuperview()
             $0.size.equalTo(24)
         }
-        
+
         valueLabel.snp.makeConstraints {
             $0.leading.equalTo(titleLabel.snp.trailing).offset(12)
             $0.centerY.equalToSuperview()
             $0.trailing.lessThanOrEqualTo(
-                showsChevron
-                ? chevronImageView.snp.leading
-                : snp.trailing
+                showsChevron ? chevronImageView.snp.leading : snp.trailing
             ).offset(showsChevron ? -8 : 0)
         }
-        
+
         isAccessibilityElement = true
         accessibilityTraits = .button
     }
-    
+
     // MARK: - Configure
-    
+
     private func configure(with type: KeyValueRowType) {
         titleLabel.setText(type.title)
         valueLabel.setText(type.value)
         updateAccessibility()
     }
-    
+
     func updateValue(_ value: String) {
         valueLabel.setText(value)
         updateAccessibility()
     }
-    
+
     private func updateAccessibility() {
         accessibilityLabel = "\(titleLabel.text ?? ""), \(valueLabel.text ?? "")"
     }
-    
+
     // MARK: - Action
-    
-    @objc
-    private func didTapRow() {
-        onTap?()
-    }
-    
+
+    @objc private func didTapRow() { onTap?() }
+
     // MARK: - Intrinsic Size
-    
+
     override var intrinsicContentSize: CGSize {
         CGSize(width: UIView.noIntrinsicMetric, height: 24)
     }
