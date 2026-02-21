@@ -52,7 +52,8 @@ final class AppRouter: AppRouting {
             startHome(animated: animated)
             
         case .settings:
-            break
+            navigationController.pushViewController(makeSetting(), animated: animated)
+            
         case .history:
             break
         }
@@ -114,5 +115,16 @@ private extension AppRouter {
         let coordinator = HomeCoordinator()
         homeCoordinator = coordinator
         coordinator.start(from: navigationController, animated: animated)
+    }
+    
+    func makeSetting() -> UIViewController {
+        let coordinator = SettingCoordinator(
+            container: container,
+            nav: navigationController
+        )
+        return SettingHomeViewController(
+            coordinator: coordinator,
+            viewModel: .init(profileUsecase: container.profileUsecase, memberUsecase: container.memberUsecase)
+        )
     }
 }
