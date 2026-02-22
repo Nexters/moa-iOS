@@ -19,7 +19,7 @@ final class WorkdayRepositoryImpl: WorkdayRepository {
 
 extension WorkdayRepositoryImpl {
     
-    func fetchWorkday(date: String) async throws -> Workday {
+    func fetchWorkday(date: String) async throws -> WorkdayEntity {
         let response: WorkdayResponse = try await apiClient.request(
             WorkdayAPI.getWorkday(date: date)
         )
@@ -29,7 +29,7 @@ extension WorkdayRepositoryImpl {
     func updateWorkdayAll(
         date: String,
         request: WorkdayUpdateRequest
-    ) async throws -> Workday {
+    ) async throws -> WorkdayEntity {
         let response: WorkdayResponse = try await apiClient.request(
             WorkdayAPI.updateWorkdayAll(date: date, body: request)
         )
@@ -40,7 +40,7 @@ extension WorkdayRepositoryImpl {
     func updateClockOut(
         date: String,
         request: ClockEndRequest
-    ) async throws -> Workday {
+    ) async throws -> WorkdayEntity {
         let response: WorkdayResponse = try await apiClient.request(
             WorkdayAPI.updateWorkdayClockEnd(date: date, body: request)
         )

@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct Workday {
+struct WorkdayEntity {
     let date: String
     let type: String
-    let clockInTime: String
-    let clockOutTime: String
+    let clockInTime: TimeIndicatorEntity?
+    let clockOutTime: TimeIndicatorEntity?
 }
