@@ -20,4 +20,20 @@ final class HistoryUseCase {
     func getWorkdayList(year: Int, month: Int) async throws -> [History] {
         try await workdayRepository.fetchHistory(year: year, month: month)
     }
+
+    func updateWorkday(
+        date: String,
+        type: WorkdayType,
+        clockInTime: TimeIndicatorEntity?,
+        clockOutTime: TimeIndicatorEntity?
+    ) async throws -> WorkdayEntity {
+        try await workdayRepository.updateWorkdayAll(
+            date: date,
+            request: WorkdayUpdateRequest(
+                type: type.rawValue,
+                clockInTime: clockInTime?.displayString,
+                clockOutTime: clockOutTime?.displayString
+            )
+        )
+    }
 }

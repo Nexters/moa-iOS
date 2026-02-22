@@ -248,6 +248,7 @@ final class EarningsStackView: UIView {
         
         stopStackGrowth()
         
+        // 툴팁 완전 제거
         stopTooltip()
         tooltipView.layer.removeAllAnimations()
         tooltipView.alpha = 0

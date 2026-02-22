@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Combine
 
 // MARK: - Coordinator Delegate
 
@@ -29,7 +30,7 @@ enum CalendarDayType: Equatable {
     case singleLabel(CalendarLabelStyle)
 }
 
-struct CalendarDay {
+struct CalendarDay: Equatable {
     let date: Date
     let contentType: CalendarDayType
     let isToday: Bool
@@ -37,18 +38,13 @@ struct CalendarDay {
     let isCurrentMonth: Bool
 }
 
-// MARK: - HistoryViewController
 
 final class HistoryViewController: BaseViewController {
 
-    override var preferredStatusBarStyle:    UIStatusBarStyle { .lightContent }
+    // MARK: - Properties
 
-    // MARK: - Delegate
-
-    weak var coordinatorDelegate: HistoryViewControllerCoordinatorDelegate?
-
-    // MARK: - State
-
+    private let viewModel: HistoryViewModel
+    
     /// CalendarView에서 마지막으로 선택된 날짜
     private var selectedDate: Date?
 
@@ -56,61 +52,118 @@ final class HistoryViewController: BaseViewController {
 
     private let calendarView = CalendarView()
 
+    // MARK: - Init
+
+    init(viewModel: HistoryViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        .lightContent
+    }
+    
+    weak var coordinatorDelegate: HistoryViewControllerCoordinatorDelegate?
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupCalendar()
-    }
-
-    // MARK: - Setup
-
-    private func setupCalendar() {
-        replaceSystemBackButtonWithAppBackButton()
         
+        setupUI()
+        bind()
+        viewModel.send(.viewDidLoad)
+    }
+    
+    override func setupUI() {
+        replaceSystemBackButtonWithAppBackButton()
+
         view.backgroundColor = AppColor.Background.primary
         calendarView.delegate = self
 
         view.addSubview(calendarView)
+
         calendarView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.leading.trailing.bottom.equalToSuperview()
         }
-
-        calendarView.updateWorkInfo(
-            CalendarWorkInfo(
-                workedHours:  "12",
-                totalHours:   "20",
-                earnedSalary: "300,000",
-                totalSalary:  "1,500,000"
-            )
-        )
+    }
+    
+    override func bind() {
+        viewModel.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                self?.render(state)
+            }
+            .store(in: &cancellables)
     }
 }
+
+// MARK: - Bind
+
+private extension HistoryViewController {
+
+
+    func render(_ state: HistoryViewState) {
+        switch state {
+
+        case .idle:
+            break
+
+        case .loading:
+            showLoading()
+
+        case .loaded(let days):
+            hideLoading()
+            
+        case .error(let error):
+            hideLoading()
+            handleError(error)
+        }
+    }
+}
+
+private extension HistoryViewController {
+
+    func showLoading() {
+        // 필요하면 ActivityIndicator 추가
+    }
+
+    func hideLoading() {
+        // 필요하면 로딩 제거
+    }
+
+    func handleError(_ error: HistoryError) {
+        let message: String
+
+        switch error {
+        case .network:
+            message = "네트워크 오류가 발생했습니다."
+        case .dataCorrupted:
+            message = "데이터를 불러올 수 없습니다."
+        }
+    }
+}
+
 
 // MARK: - CalendarViewDelegate
 
 extension HistoryViewController: CalendarViewDelegate {
 
     func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay) {
-        // 날짜 셀 탭 → selectedDate 갱신
         selectedDate = day.date
     }
 
     func calendarView(_ view: CalendarView, didChangeToDate date: Date) {
-        // 월 변경 시 선택 초기화
         selectedDate = nil
+        viewModel.send(.changeMonth(date))
     }
 
     func calendarViewDidTapAdd(_ view: CalendarView) {
-        // 선택된 날짜를 Coordinator에 전달
-        coordinatorDelegate?.historyViewControllerDidTapAdd(self)
+        // Coordinator 연결 시 여기서 처리
     }
-}
-
-// MARK: - Preview
-
-@available(iOS 17.0, *)
-#Preview {
-    HistoryViewController()
 }

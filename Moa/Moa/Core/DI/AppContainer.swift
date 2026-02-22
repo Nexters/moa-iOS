@@ -71,6 +71,9 @@ final class AppContainer {
     lazy var homeUseCase: HomeUsecase = {
         HomeUsecase(homeRepository: homeRepository, workdayRepository: workdayRepository)
     }()
+    lazy var historyUseCase: HistoryUseCase = {
+        HistoryUseCase(workdayRepository: workdayRepository)
+    }()
     lazy var settingUsecase: SettingUsecase = {
         SettingUsecase(
             profileRepository: profileRepository,

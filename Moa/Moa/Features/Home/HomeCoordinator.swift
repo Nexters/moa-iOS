@@ -43,7 +43,8 @@ private extension HomeCoordinator {
     // MARK: History
 
     func makeHistoryViewController() -> HistoryViewController {
-        let vc = HistoryViewController()
+        let vm = HistoryViewModel(historyUseCase: container.historyUseCase)
+        let vc = HistoryViewController(viewModel: vm)
         vc.coordinatorDelegate = self
         return vc
     }

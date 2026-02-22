@@ -20,7 +20,7 @@ extension HistoryResponse {
     func toDomain() -> History {
         History(
             date: date,
-            type: WorkType(rawValue: type) ?? .none
+            type: WorkdayType(rawValue: type) ?? .none
         )
     }
 }
