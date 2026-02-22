@@ -2,8 +2,6 @@
 //  MoneyStackView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/18/26.
-//
 
 import UIKit
 import SnapKit
@@ -11,21 +9,21 @@ import SnapKit
 // MARK: - EarningsStackView
 
 final class EarningsStackView: UIView {
-
+    
     // MARK: - Constants
-
+    
     private enum Constants {
         static let minHeightRatio: CGFloat      = 0.30
         static let maxHeightRatio: CGFloat      = 0.70
-        static let growthDuration: TimeInterval = 30 * 60   // 30분 1사이클
+        static let growthDuration: TimeInterval = 30 * 60
         static let tooltipInterval: TimeInterval = 5.0
         static let tooltipDisplay:  TimeInterval = 3.0
         static let solidMaskHeight: CGFloat     = 90
         static let gradientMaskHeight: CGFloat  = 60
     }
-
+    
     // MARK: - Tooltip Thresholds
-
+    
     private static let thresholds: [(minAmount: Int, message: String)] = [
         (10_000,  "커피와 조각 케이크를 살 수 있어요"),
         (20_000,  "치킨 한 마리 살 수 있어요"),
@@ -40,16 +38,16 @@ final class EarningsStackView: UIView {
         (450_000, "닌텐도 스위치를 살 수 있어요"),
         (500_000, "플레이스테이션 5를 살 수 있어요"),
     ]
-
+    
     private static func tooltipMessage(for amount: Int) -> String? {
         thresholds.last(where: { amount >= $0.minAmount })?.message
     }
-
+    
     // MARK: - UI
-
+    
     private let floatingInfoContainer = UIView()
     private let tooltipView           = SpeechBubble()
-
+    
     private let titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText("오늘 쌓은 월급", style: .init(
@@ -59,10 +57,9 @@ final class EarningsStackView: UIView {
         label.textAlignment = .center
         return label
     }()
-
-    // 슬롯머신 롤링 금액 레이블
+    
     private let rollingLabel = RollingAmountLabel()
-
+    
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText("원", style: .init(
@@ -72,74 +69,78 @@ final class EarningsStackView: UIView {
         label.setContentHuggingPriority(.required, for: .horizontal)
         return label
     }()
-
+    
     private lazy var amountRow: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [rollingLabel, unitLabel])
         sv.axis = .horizontal; sv.alignment = .center; sv.spacing = 2
         return sv
     }()
-
+    
     private let stackContainer = UIView()
-
+    
     private let stackImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode     = .scaleAspectFit
         iv.backgroundColor = .clear
         return iv
     }()
-
+    
     private let maskGradientLayer = CAGradientLayer()
-
+    
     // MARK: - State
-
+    private var isStopped = false
+    
     private var stackBottomConstraint: Constraint?
     private var floatingContainerBottomConstraint: Constraint?
-
-    private var growthStartTime: Date?
+    
+    private var growthCycleStart: Date?
     private var growthDisplayLink: CADisplayLink?
     private var hasAppliedInitialPosition = false
-
+    
     private var tooltipTimer: Timer?
     private var lastTooltipMessage: String?
     private var currentAmount: Int = 0
-
+    
     // MARK: - Init
-
+    
     init(workingType: WorkingType) {
         super.init(frame: .zero)
+        
         stackImageView.image = workingType.stackImage
         setupUI()
         setupMask()
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
     deinit { stopAnimations() }
-
+    
     // MARK: - Layout
-
+    
     override func layoutSubviews() {
         super.layoutSubviews()
+        
         if !hasAppliedInitialPosition, stackContainer.bounds.height > 0 {
             hasAppliedInitialPosition = true
             applyInitialPosition()
         }
         updateMaskLayout()
     }
-
+    
     private func applyInitialPosition() {
+        let ratio = currentCycleRatio()
         let h = stackContainer.bounds.height
-        stackBottomConstraint?.update(offset: h * (1 - Constants.minHeightRatio))
-        updateFloatingContainerPosition(ratio: Constants.minHeightRatio)
+        stackBottomConstraint?.update(offset: h * (1 - ratio))
+        updateFloatingContainerPosition(ratio: ratio)
         layoutIfNeeded()
     }
-
+    
     // MARK: - Setup
-
+    
     private func setupUI() {
         floatingInfoContainer.addSubViews([tooltipView, titleLabel, amountRow])
         addSubViews([stackContainer])
         stackContainer.addSubViews([floatingInfoContainer, stackImageView])
-
+        
         tooltipView.snp.makeConstraints {
             $0.top.centerX.equalToSuperview()
         }
@@ -165,23 +166,23 @@ final class EarningsStackView: UIView {
             floatingContainerBottomConstraint = $0.bottom.equalToSuperview().constraint
         }
     }
-
+    
     private func setupMask() {
         layer.mask = maskGradientLayer
         maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         maskGradientLayer.endPoint   = CGPoint(x: 0.5, y: 1)
     }
-
+    
     private func updateMaskLayout() {
         let h = bounds.height
         guard h > 0 else { return }
         maskGradientLayer.frame = bounds
-
+        
         let solid         = Constants.solidMaskHeight
         let gradient      = Constants.gradientMaskHeight
         let solidStart    = 1 - (solid / h)
         let gradientStart = 1 - ((solid + gradient) / h)
-
+        
         maskGradientLayer.colors = [
             UIColor.white.cgColor,
             UIColor.white.cgColor,
@@ -197,27 +198,27 @@ final class EarningsStackView: UIView {
             1.0,
         ]
     }
-
+    
     // MARK: - Configure
-
-    func configure(amount: Int) {
-        currentAmount   = amount
-        growthStartTime = Date()
-        rollingLabel.setText(formatted(amount))   // 초기값 = 롤링 없이 즉시
+    
+    func configure(amount: Int, startedAt: Date) {
+        currentAmount    = amount
+        growthCycleStart = resolveCycleStart(from: startedAt)
+        
+        rollingLabel.setText(formatted(amount))
         layoutIfNeeded()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.startAnimations()
         }
     }
-
-    /// 1초마다 WorkingContentView에서 호출 — 롤링 애니메이션으로 금액 갱신
+    
     func updateAmount(_ amount: Int) {
         guard amount != currentAmount else { return }
         let old = formatted(currentAmount)
         let new = formatted(amount)
         currentAmount = amount
-
-        // 자릿수 동일: 롤링 / 자릿수 변경(쉼표 추가 등): 즉시 교체
+        
         if old.count == new.count {
             rollingLabel.rollTo(new)
         } else {
@@ -225,41 +226,122 @@ final class EarningsStackView: UIView {
         }
         refreshTooltipIfNeeded()
     }
-
+    
     func updateWorkingType(_ type: WorkingType) {
         UIView.transition(with: stackImageView, duration: 0.3, options: .transitionCrossDissolve) {
             self.stackImageView.image = type.stackImage
         }
     }
-
+    
     // MARK: - Animations
-
+    
     func startAnimations() {
+        isStopped = false
         startStackGrowth()
         scheduleTooltip()
     }
-
+    
+    /// 근무 완료 1 진입 시 호출 — 성장 애니메이션 + 툴팁 중지 및 완전 숨김
     func stopAnimations() {
+        
+        isStopped = true
+        
         stopStackGrowth()
+        
+        // 툴팁 완전 제거
         stopTooltip()
+        tooltipView.layer.removeAllAnimations()
+        tooltipView.alpha = 0
+        tooltipView.isHidden = true
+        
+        // 최대 높이 강제
+        snapToMaxHeightNow()
     }
-
+    
+    private func snapToMaxHeightNow() {
+        
+        layoutIfNeeded() // 현재 오토레이아웃 확정
+        
+        let h = stackContainer.bounds.height
+        guard h > 0 else { return }
+        
+        let maxRatio = Constants.maxHeightRatio
+        
+        stackBottomConstraint?.update(offset: h * (1 - maxRatio))
+        updateFloatingContainerPosition(ratio: maxRatio)
+        
+        UIView.animate(withDuration: 0.35,
+                       delay: 0,
+                       options: .curveEaseOut) {
+            self.layoutIfNeeded()
+        }
+    }
+    
+    /// 근무완료 1: money stack을 최대 높이(maxHeightRatio)로 즉시 고정
+    /// DisplayLink를 중지하고 constraints를 최대값으로 업데이트
+    func snapToMaxHeight() {
+        stopStackGrowth()
+        let h = stackContainer.bounds.height
+        guard h > 0 else {
+            // layoutSubviews가 아직 안 된 경우 → 레이아웃 완료 후 처리
+            DispatchQueue.main.async { [weak self] in self?.snapToMaxHeightInternal() }
+            return
+        }
+        snapToMaxHeightInternal()
+    }
+    
     // MARK: - Format
-
+    
     private func formatted(_ amount: Int) -> String {
         AppNumberFormatter.decimalString(from: amount)
     }
-
+    
+    // MARK: - 30분 사이클 역산
+    
+    private func resolveCycleStart(from startedAt: Date) -> Date {
+        let now            = Date()
+        let totalElapsed   = max(0, now.timeIntervalSince(startedAt))
+        let cycleCount     = Int(totalElapsed / Constants.growthDuration)
+        let cycleStartDate = startedAt.addingTimeInterval(
+            Double(cycleCount) * Constants.growthDuration
+        )
+        return cycleStartDate
+    }
+    
+    private func currentCycleRatio() -> CGFloat {
+        guard let cycleStart = growthCycleStart else {
+            return Constants.minHeightRatio
+        }
+        let elapsed  = max(0, Date().timeIntervalSince(cycleStart))
+        let progress = min(CGFloat(elapsed) / CGFloat(Constants.growthDuration), 1.0)
+        let eased    = easeOutQuad(progress)
+        return Constants.minHeightRatio +
+        (Constants.maxHeightRatio - Constants.minHeightRatio) * eased
+    }
+    
+    // MARK: - Private Snap
+    
+    private func snapToMaxHeightInternal() {
+        let h = stackContainer.bounds.height
+        guard h > 0 else { return }
+        let maxRatio = Constants.maxHeightRatio
+        stackBottomConstraint?.update(offset: h * (1 - maxRatio))
+        updateFloatingContainerPosition(ratio: maxRatio)
+        UIView.animate(withDuration: 0.4, delay: 0, options: .curveEaseOut) {
+            self.stackContainer.layoutIfNeeded()
+        }
+    }
+    
     // MARK: - Tooltip
-
+    
     private func refreshTooltipIfNeeded() {
         let message = Self.tooltipMessage(for: currentAmount)
         guard message != lastTooltipMessage else { return }
         lastTooltipMessage = message
         guard let msg = message else { return }
-        showTooltip(msg)   // 구간 변경 시 즉시 교체
+        showTooltip(msg)
     }
-
+    
     private func scheduleTooltip() {
         stopTooltip()
         tooltipTimer = Timer.scheduledTimer(
@@ -270,60 +352,73 @@ final class EarningsStackView: UIView {
             self.showTooltip(msg)
         }
     }
-
+    
     private func showTooltip(_ message: String) {
+
+        guard !isStopped else { return }
+
         stopTooltip()
+
+        tooltipView.isHidden = false
+        tooltipView.alpha = 0
         tooltipView.configure(text: message)
-        UIView.animate(withDuration: 0.3) { self.tooltipView.alpha = 1 } completion: { _ in
+
+        UIView.animate(withDuration: 0.3) {
+            self.tooltipView.alpha = 1
+        } completion: { _ in
+
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.Constants.tooltipDisplay) { [weak self] in
-                UIView.animate(withDuration: 0.3) { self?.tooltipView.alpha = 0 } completion: { _ in
-                    self?.scheduleTooltip()
+                guard let self, !self.isStopped else { return }
+
+                UIView.animate(withDuration: 0.3) {
+                    self.tooltipView.alpha = 0
+                } completion: { _ in
+                    self.scheduleTooltip()
                 }
             }
         }
     }
-
+    
     private func stopTooltip() {
         tooltipTimer?.invalidate()
         tooltipTimer = nil
     }
-
+    
     // MARK: - Stack Growth
-
+    
     private func startStackGrowth() {
         stopStackGrowth()
-        growthStartTime   = Date()
         growthDisplayLink = CADisplayLink(target: self, selector: #selector(updateStackPosition))
         growthDisplayLink?.add(to: .main, forMode: .common)
     }
-
+    
     private func stopStackGrowth() {
         growthDisplayLink?.invalidate()
         growthDisplayLink = nil
     }
-
+    
     @objc private func updateStackPosition() {
-        guard let startTime = growthStartTime else { return }
-
-        let elapsed      = Date().timeIntervalSince(startTime)
-        let cycleElapsed = elapsed.truncatingRemainder(dividingBy: Constants.growthDuration)
-        let progress     = cycleElapsed / Constants.growthDuration
-        let eased        = easeOutQuad(CGFloat(progress))
-        let ratio        = Constants.minHeightRatio +
-            (Constants.maxHeightRatio - Constants.minHeightRatio) * eased
-
+        guard let cycleStart = growthCycleStart else { return }
+        
+        let elapsed = Date().timeIntervalSince(cycleStart)
+        
+        if elapsed >= Constants.growthDuration {
+            growthCycleStart = Date()
+        }
+        
+        let ratio = currentCycleRatio()
         let h = stackContainer.bounds.height
         guard h > 0 else { return }
-
+        
         stackBottomConstraint?.update(offset: h * (1 - ratio))
         updateFloatingContainerPosition(ratio: ratio)
     }
-
+    
     private func updateFloatingContainerPosition(ratio: CGFloat) {
         let h = stackContainer.bounds.height
         guard h > 0 else { return }
         floatingContainerBottomConstraint?.update(offset: -(h * ratio) - 20)
     }
-
+    
     private func easeOutQuad(_ t: CGFloat) -> CGFloat { t * (2 - t) }
 }

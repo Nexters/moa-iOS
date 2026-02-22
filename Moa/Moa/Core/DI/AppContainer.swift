@@ -54,6 +54,12 @@ final class AppContainer {
     private lazy var workPolicyRepository: WorkPolicyRepository = {
         WorkPolicyRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var workdayRepository: WorkdayRepository = {
+        WorkdayRepositoryImpl(apiClient: apiClient)
+    }()
+    private lazy var homeRepository: HomeRepository = {
+        HomeRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
@@ -61,6 +67,12 @@ final class AppContainer {
     }()
     lazy var onboardingUseCase: OnboardingUsecase = {
         OnboardingUsecase(repository: onboardingRepository)
+    }()
+    lazy var homeUseCase: HomeUsecase = {
+        HomeUsecase(homeRepository: homeRepository, workdayRepository: workdayRepository)
+    }()
+    lazy var historyUseCase: HistoryUseCase = {
+        HistoryUseCase(workdayRepository: workdayRepository)
     }()
     lazy var settingUsecase: SettingUsecase = {
         SettingUsecase(

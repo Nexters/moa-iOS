@@ -9,10 +9,5 @@ import Foundation
 
 struct History {
     let date: String
-    let type: WorkType
-}
-
-enum WorkType: String {
-    case work = "WORK"
-    case none = "NONE"
+    let type: WorkdayType
 }

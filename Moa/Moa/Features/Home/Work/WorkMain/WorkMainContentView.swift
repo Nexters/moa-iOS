@@ -2,8 +2,8 @@
 //  WorkMainContentView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/18/26.
-//
+//  idle: 출근 버튼, 자동출근 말풍선, 휴가 버튼
+//  finished(최종완료): 헤더 + "이번달 근무 기록 확인하기" 버튼
 
 import UIKit
 import SnapKit
@@ -14,14 +14,13 @@ protocol WorkMainContentViewDelegate: AnyObject {
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView)
     func workMainContentViewDidTapVacation(_ view: WorkMainContentView)
     func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView)
+    /// 최종완료: "이번달 근무 기록 확인하기" 탭 → 캘린더(History) 화면
     func workMainContentViewDidTapWorkHistory(_ view: WorkMainContentView)
 }
 
 // MARK: - WorkMainContentView
 
 final class WorkMainContentView: UIView {
-
-    // MARK: - Delegate
 
     weak var delegate: WorkMainContentViewDelegate?
 
@@ -33,7 +32,17 @@ final class WorkMainContentView: UIView {
         return view
     }()
 
+    /// idle 전용 하단 버튼 영역 (자동출근 말풍선 + 출근 버튼 + 휴가 버튼)
     private let bottomButtonView = WorkMainBottomButtonView()
+
+    /// 최종완료 전용 하단 버튼
+    private lazy var workHistoryButton: AppButton = {
+        let button = AppButton()
+        button.setTitle("이번달 근무 기록 확인하기", for: .normal)
+        button.applyStyle(.primary())
+        button.addTarget(self, action: #selector(didTapWorkHistory), for: .touchUpInside)
+        return button
+    }()
 
     // MARK: - Init
 
@@ -49,50 +58,54 @@ final class WorkMainContentView: UIView {
     private func setup() {
         backgroundColor = AppColor.Background.primary
 
-        addSubViews([headerView, bottomButtonView])
+        addSubViews([headerView, bottomButtonView, workHistoryButton])
 
         headerView.snp.makeConstraints {
             $0.top.equalToSuperview().inset(20)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
-
         bottomButtonView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.bottom.equalTo(safeAreaLayoutGuide)
+        }
+        workHistoryButton.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.bottom.equalTo(safeAreaLayoutGuide).inset(24)
+            $0.height.equalTo(64)
         }
     }
 
     // MARK: - Configure
 
-    /// ViewModel이 내려준 HomeDisplayData를 그대로 받아 하위 뷰로 전달합니다.
-    func configure(with display: HomeDisplayData) {
-        headerView.configure(with: display)
+    func configure(data: HomeEntity, status: WorkStatus) {
+        headerView.configure(data: data, status: status)
 
-        bottomButtonView.configure(
-            status:        display.scheduleStatus,
-            autoWorkText:  autoWorkText(for: display),
-            primaryAction: { [weak self] in
-                guard let self else { return }
-                switch display.scheduleStatus {
-                case .afterWork, .onVacation:
-                    // "이번달 근무 기록 확인하기" → 캘린더 이동
-                    delegate?.workMainContentViewDidTapWorkHistory(self)
-                default:
-                    delegate?.workMainContentViewDidTapPrimaryAction(self)
+        let isFinished = (status == .finished)
+
+        // 최종완료: "이번달 근무 기록 확인하기" 버튼만 표시
+        workHistoryButton.isHidden = !isFinished
+        bottomButtonView.isHidden  = isFinished
+
+        if !isFinished {
+            bottomButtonView.configure(
+                status: status,
+                data:   data,
+                primaryAction: { [weak self] in
+                    guard let self else { return }
+                    self.delegate?.workMainContentViewDidTapPrimaryAction(self)
+                },
+                vacationAction: { [weak self] in
+                    guard let self else { return }
+                    self.delegate?.workMainContentViewDidTapVacation(self)
                 }
-            },
-            vacationAction: { [weak self] in
-                guard let self else { return }
-                delegate?.workMainContentViewDidTapVacation(self)
-            }
-        )
+            )
+        }
     }
 
-    // MARK: - Helpers
+    // MARK: - Actions
 
-    private func autoWorkText(for display: HomeDisplayData) -> String? {
-        guard display.scheduleStatus == .beforeWork else { return nil }
-        return "\(display.scheduledClockIn.displayString)에 자동 출근 예정이에요"
+    @objc private func didTapWorkHistory() {
+        delegate?.workMainContentViewDidTapWorkHistory(self)
     }
 }
 
@@ -100,6 +113,8 @@ final class WorkMainContentView: UIView {
 
 extension WorkMainContentView: WorkMainHeaderViewDelegate {
     func workMainHeaderViewDidTapTimeRow(_ view: WorkMainHeaderView) {
+        // 최종완료(finished) 상태에서는 WorkMainSummaryView의 finishedTimeRowView.onTap = nil
+        // 이므로 이 콜백은 idle 상태에서만 실질적으로 호출됨
         delegate?.workMainContentViewDidRequestTimeSelection(self)
     }
 }

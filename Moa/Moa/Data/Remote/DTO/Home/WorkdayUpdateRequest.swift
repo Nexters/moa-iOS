@@ -9,6 +9,6 @@ import Foundation
 
 struct WorkdayUpdateRequest: Encodable {
     let type: String
-    let clockInTime: String
-    let clockOutTime: String
+    let clockInTime: String?
+    let clockOutTime: String?
 }

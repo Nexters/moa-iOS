@@ -9,15 +9,6 @@
 import UIKit
 import SnapKit
 
-// MARK: - Model
-
-struct CalendarWorkInfo {
-    var workedHours: String
-    var totalHours: String
-    var earnedSalary: String
-    var totalSalary: String
-}
-
 // MARK: - CalendarInfoCard
 
 final class CalendarInfoCard: UIView {
@@ -87,9 +78,21 @@ final class CalendarInfoCard: UIView {
 
     // MARK: - Update
 
-    func update(with info: CalendarWorkInfo) {
-        workHoursValueView.configure(current: info.workedHours, total: info.totalHours, unit: "시간")
-        salaryValueView.configure(current: info.earnedSalary, total: info.totalSalary, unit: "원")
+    func update(with info: EarningsEntity) {
+        workHoursValueView.configure(
+            current: Int(Double(info.workedMinutes) / 60),
+            total: Int(Double(info.standardMinutes) / 60),
+            unit: "시간"
+        )
+        
+        let currentManWon = info.workedEarnings / 10_000
+        let totalManWon   = info.standardSalary / 10_000
+
+        salaryValueView.configure(
+            current: currentManWon,
+            total: totalManWon,
+            unit: "만원"
+        )
     }
 
     // MARK: - Factory
@@ -134,8 +137,8 @@ final class SlashValueView: UIView {
 
     // MARK: - Configure
     
-    func configure(current: String, total: String, unit: String) {
-        currentLabel.setText(current, style: .init(
+    func configure(current: Int, total: Int, unit: String) {
+        currentLabel.setText(current.description, style: .init(
             typography: AppTypography.b1_600,
             color: AppColor.IconAndText.green
         ))

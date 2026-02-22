@@ -57,7 +57,7 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
     }()
     
     private lazy var dismissBtn: UnderlineTextButton = {
-        let button = UnderlineTextButton(title: "다음에 할게요")
+        let button = UnderlineTextButton(title: "다음에 할게요", style: .bottomSheetStyle)
         return button
     }()
     
@@ -73,7 +73,7 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
     private let btnStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 24, right: 0)
+        stack.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         stack.isLayoutMarginsRelativeArrangement = true
         stack.spacing = 16
         return stack
@@ -106,7 +106,23 @@ final class WorkAlarmBottomSheet: UIViewController, BottomSheetPresentable {
         btnStackView.snp.makeConstraints { make in
             make.top.equalTo(contentStackView.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.bottom.equalToSuperview().offset(-24)
+            make.bottom.equalToSuperview()
+        }
+        
+        titleLabel.snp.makeConstraints { make in
+            make.height.equalTo(34)
+        }
+        
+        descriptionLabel.snp.makeConstraints { make in
+            make.height.equalTo(48)
+        }
+        
+        notificationControlBtn.snp.makeConstraints { make in
+            make.height.equalTo(64)
+        }
+        
+        dismissBtn.snp.makeConstraints { make in
+            make.height.equalTo(24)
         }
 
         notificationControlBtn.addTarget(self, action: #selector(didTapAlarmButton), for: .touchUpInside)

@@ -2,8 +2,6 @@
 //  WorkingContentView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/18/26.
-//
 
 import UIKit
 import SnapKit
@@ -12,6 +10,9 @@ import SnapKit
 
 protocol WorkingContentViewDelegate: AnyObject {
     func workingContentViewDidTapScheduleAdjust(_ view: WorkingContentView)
+    func workingContentViewDidTapExtendWork(_ view: WorkingContentView)
+    func workingContentViewDidTapTimeRow(_ view: WorkingContentView)
+    func workingContentViewDidTapConfirm(_ view: WorkingContentView)
 }
 
 // MARK: - WorkingContentView
@@ -34,9 +35,18 @@ final class WorkingContentView: UIView {
         return view
     }()
 
+    private lazy var workEndIndicator: WorkEndBottomIndicator = {
+        let view = WorkEndBottomIndicator()
+        view.delegate = self
+        view.isHidden = true
+        return view
+    }()
+
     // MARK: - State
 
-    private var hourlyWage: Int = 0
+    private var dailyPay: Int         = 0
+    private var totalWorkSeconds: Int = 0
+    private var isFinished: Bool      = false
 
     // MARK: - Init
 
@@ -51,7 +61,7 @@ final class WorkingContentView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
-        addSubViews([earningsStackView, workingStatusView])
+        addSubViews([earningsStackView, workingStatusView, workEndIndicator])
 
         earningsStackView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
@@ -61,44 +71,84 @@ final class WorkingContentView: UIView {
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.bottom.equalTo(safeAreaLayoutGuide)
         }
+        workEndIndicator.snp.makeConstraints {
+            $0.leading.trailing.bottom.equalToSuperview()
+            $0.top.equalTo(snp.centerY)
+        }
     }
 
     // MARK: - Configure
 
     func configure(
-        todayAmount: Int,
-        hourlyWage: Int,
-        startTime: TimeIndicatorEntity,
-        endTime: TimeIndicatorEntity,
-        startedAt: Date,
-        workingType: WorkingType
+        dailyPay:    Int,
+        startTime:   TimeIndicatorEntity,
+        endTime:     TimeIndicatorEntity,
+        startedAt:   Date,
+        workingType: WorkingType,
+        status:      WorkStatus,
+        data:        HomeEntity
     ) {
-        self.hourlyWage = hourlyWage
+        let newIsFinished = (status == .finished)
+        self.isFinished       = newIsFinished
+        self.dailyPay         = dailyPay
+        self.totalWorkSeconds = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
 
         if self.workingType != workingType {
             self.workingType = workingType
             applyWorkingType(workingType)
         }
 
-        earningsStackView.configure(amount: todayAmount)
-        workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
+        let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
+
+        if newIsFinished {
+            // 근무완료 1: dailyPay 전액 고정 + 최대 높이 + 버블 숨김
+            earningsStackView.configure(amount: dailyPay, startedAt: startedAt)
+            earningsStackView.snapToMaxHeight()
+            earningsStackView.stopAnimations()
+
+            // WorkingStatusView 숨김 — 오로지 WorkEndBottomIndicator만 노출
+            workingStatusView.isHidden = true
+        } else {
+            workingStatusView.isHidden = false
+            let earnedSoFar = earnedAmount(elapsed: elapsed)
+            earningsStackView.configure(amount: earnedSoFar, startedAt: startedAt)
+            workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
+        }
+
+        workEndIndicator.isHidden = !newIsFinished
+        if newIsFinished {
+            workEndIndicator.configure(status: status, data: data)
+        }
     }
 
-    // MARK: - Tick (1초마다 WorkViewController Timer에서 호출)
+    // MARK: - Tick
 
     func tick() {
+        // finished: 타이머 멈춤, 금액 고정
+        if isFinished { return }
         let elapsed = workingStatusView.elapsedSeconds()
-        let earned  = Int(Double(hourlyWage) * Double(elapsed) / 3600.0)
+        let earned  = earnedAmount(elapsed: elapsed)
         earningsStackView.updateAmount(earned)
         workingStatusView.tick()
     }
 
     // MARK: - Public API
 
-    func startAnimations() { earningsStackView.startAnimations() }
-    func stopAnimations()   { earningsStackView.stopAnimations() }
+    func startAnimations() {
+        guard !isFinished else { return }
+        earningsStackView.startAnimations()
+    }
+
+    func stopAnimations() {
+        earningsStackView.stopAnimations()
+    }
 
     // MARK: - Private
+
+    private func earnedAmount(elapsed: Int) -> Int {
+        guard totalWorkSeconds > 0 else { return 0 }
+        return Int(Double(dailyPay) * Double(elapsed) / Double(totalWorkSeconds))
+    }
 
     private func applyWorkingType(_ type: WorkingType) {
         earningsStackView.updateWorkingType(type)
@@ -111,5 +161,19 @@ final class WorkingContentView: UIView {
 extension WorkingContentView: WorkingStatusViewDelegate {
     func workingStatusViewDidTapScheduleAdjust(_ view: WorkingStatusView) {
         delegate?.workingContentViewDidTapScheduleAdjust(self)
+    }
+}
+
+// MARK: - WorkEndBottomIndicatorDelegate
+
+extension WorkingContentView: WorkEndBottomIndicatorDelegate {
+    func workEndBottomIndicatorDidTapExtendWork(_ view: WorkEndBottomIndicator) {
+        delegate?.workingContentViewDidTapExtendWork(self)
+    }
+    func workEndBottomIndicatorDidTapTimeRow(_ view: WorkEndBottomIndicator) {
+        delegate?.workingContentViewDidTapTimeRow(self)
+    }
+    func workEndBottomIndicatorDidTapConfirm(_ view: WorkEndBottomIndicator) {
+        delegate?.workingContentViewDidTapConfirm(self)
     }
 }

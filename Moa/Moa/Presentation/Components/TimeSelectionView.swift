@@ -22,6 +22,13 @@ protocol TimeSelectionViewDelegate: AnyObject {
         didConfirmStartTime startTime: TimeIndicatorEntity,
         endTime: TimeIndicatorEntity
     )
+    /// optionButton 탭 (예: "오늘 휴가") — 필요 없는 케이스는 구현 불필요
+    func timeSelectionViewDidTapOption(_ view: TimeSelectionView)
+}
+
+// default 구현: option 탭은 선택사항
+extension TimeSelectionViewDelegate {
+    func timeSelectionViewDidTapOption(_ view: TimeSelectionView) {}
 }
 
 // MARK: - TimeSelectionView
@@ -31,8 +38,13 @@ final class TimeSelectionView: UIView {
     weak var delegate: TimeSelectionViewDelegate?
     
     private var selectedStartTime: TimeIndicatorEntity
-    private var selectedEndTime: TimeIndicatorEntity
+    private var selectedEndTime:   TimeIndicatorEntity
     private var selectionMode: TimeSelectionMode = .selectingStart
+    
+    /// true이면 출근 버튼 탭 불가 (퇴근 시간만 수정 모드)
+    private let isEndTimeOnly: Bool
+    
+    // MARK: - UI
     
     private lazy var startTimeButton: TimeDisplayView = {
         let button = TimeDisplayView(timeCase: .start)
@@ -41,10 +53,10 @@ final class TimeSelectionView: UIView {
     }()
     
     private let arrowImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(resource: .Icon.iconArrowRight)
-        return imageView
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.image = UIImage(resource: .Icon.iconArrowRight)
+        return iv
     }()
     
     private lazy var endTimeButton: TimeDisplayView = {
@@ -55,14 +67,12 @@ final class TimeSelectionView: UIView {
     
     private lazy var timeDisplayStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [startTimeButton, arrowImageView, endTimeButton])
-        stack.axis = .horizontal
-        stack.alignment = .center
+        stack.axis         = .horizontal
+        stack.alignment    = .center
         stack.distribution = .fill
-        
         return stack
     }()
     
-    // Wheel Picker
     private var wheelPicker: TimeWheelPickerView!
     
     private lazy var confirmButton: AppButton = {
@@ -73,143 +83,165 @@ final class TimeSelectionView: UIView {
         return button
     }()
     
+    /// 옵션 버튼 (예: "오늘 휴가") — optionTitle이 nil이면 숨김
+    private lazy var optionButton: AppButton = {
+        let button = AppButton()
+        button.applyStyle(.secondary())
+        button.addTarget(self, action: #selector(optionButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    /// confirmButton만 쓸 때: 단독 / optionButton도 있을 때: 가로 배치
+    private lazy var buttonStack: UIStackView = {
+        let sv = UIStackView(arrangedSubviews: [optionButton, confirmButton])
+        sv.axis         = .horizontal
+        sv.spacing      = 12
+        sv.distribution = .fillEqually
+        return sv
+    }()
+    
     // MARK: - Initialization
+
+    /// - Parameters:
+    ///   - startTime: 초기 출근 시각
+    ///   - endTime: 초기 퇴근 시각
+    ///   - selectionMode: 초기 선택 모드
+    ///   - isEndTimeOnly: true → 출근 버튼 탭 불가 (퇴근 시간만 수정 모드)
+    ///   - optionTitle: 옵션 버튼 타이틀. nil이면 버튼 숨김, 확인 버튼 단독 표시
     init(
-        startTime: TimeIndicatorEntity,
-        endTime: TimeIndicatorEntity
+        startTime:    TimeIndicatorEntity,
+        endTime:      TimeIndicatorEntity,
+        selectionMode: TimeSelectionMode = .selectingStart,
+        isEndTimeOnly: Bool = false,
+        optionTitle:  String? = nil
     ) {
         self.selectedStartTime = startTime
-        self.selectedEndTime = endTime
+        self.selectedEndTime   = endTime
+        self.selectionMode     = isEndTimeOnly ? .selectingEnd : selectionMode
+        self.isEndTimeOnly     = isEndTimeOnly
         
         super.init(frame: .zero)
         
+        // 퇴근 시간만 수정 모드: 출근 버튼 탭 불가
+        startTimeButton.isUserInteractionEnabled = !isEndTimeOnly
+        startTimeButton.setActive(!isEndTimeOnly)
+        
+        // 옵션 버튼
+        if let title = optionTitle {
+            optionButton.setTitle(title, for: .normal)
+            optionButton.isHidden = false
+        } else {
+            optionButton.isHidden = true
+        }
+        
         wheelPicker = TimeWheelPickerView(
-            initialHour: startTime.hour,
-            initialMinute: startTime.minute
+            initialHour:   isEndTimeOnly ? endTime.hour   : startTime.hour,
+            initialMinute: isEndTimeOnly ? endTime.minute : startTime.minute
         )
         wheelPicker.delegate = self
         
-        setupViews()
+        setupViews(hasOption: optionTitle != nil)
         updateTimeDisplay()
         updateSelectionState()
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { fatalError() }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        
-        wheelPicker.setTime(
-            hour: selectedStartTime.hour,
-            minute: selectedStartTime.minute,
-            animated: true
-        )
+        let time = selectionMode == .selectingEnd ? selectedEndTime : selectedStartTime
+        wheelPicker.setTime(hour: time.hour, minute: time.minute, animated: true)
     }
     
     // MARK: - Setup
-    private func setupViews() {
-        
+
+    private func setupViews(hasOption: Bool) {
         backgroundColor = AppColor.Container.primary
         
-        // Time Display Container
         addSubview(timeDisplayStackView)
-        timeDisplayStackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
-            make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.height.equalTo(55)
+        timeDisplayStackView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            $0.height.equalTo(55)
         }
+        arrowImageView.snp.makeConstraints { $0.width.height.equalTo(24) }
+        startTimeButton.snp.makeConstraints { $0.width.equalTo(endTimeButton) }
         
-        arrowImageView.snp.makeConstraints { make in
-            make.width.height.equalTo(24)
-        }
-        
-        startTimeButton.snp.makeConstraints {
-            $0.width.equalTo(endTimeButton)
-        }
-        
-        // Wheel Picker
         addSubview(wheelPicker)
-        wheelPicker.snp.makeConstraints { make in
-            make.top.equalTo(timeDisplayStackView.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+        wheelPicker.snp.makeConstraints {
+            $0.top.equalTo(timeDisplayStackView.snp.bottom).offset(16)
+            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         
-        // Confirm Button
-        addSubview(confirmButton)
-        confirmButton.snp.makeConstraints { make in
-            make.top.equalTo(wheelPicker.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.height.equalTo(64)
-            make.bottom.lessThanOrEqualToSuperview().inset(24)
+        if hasOption {
+            // 옵션 + 확인 가로 배치
+            addSubview(buttonStack)
+            buttonStack.snp.makeConstraints {
+                $0.top.equalTo(wheelPicker.snp.bottom).offset(20)
+                $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+                $0.height.equalTo(64)
+                $0.bottom.lessThanOrEqualToSuperview().inset(24)
+            }
+        } else {
+            // 확인 단독
+            addSubview(confirmButton)
+            confirmButton.snp.makeConstraints {
+                $0.top.equalTo(wheelPicker.snp.bottom).offset(20)
+                $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+                $0.height.equalTo(64)
+                $0.bottom.lessThanOrEqualToSuperview().inset(24)
+            }
         }
     }
     
     // MARK: - Actions
+
     @objc private func startTimeButtonTapped() {
-        
+        guard !isEndTimeOnly else { return }
         selectionMode = .selectingStart
         updateSelectionState()
-        
-        wheelPicker.setTime(
-            hour: selectedStartTime.hour,
-            minute: selectedStartTime.minute,
-            animated: true
-        )
+        wheelPicker.setTime(hour: selectedStartTime.hour, minute: selectedStartTime.minute, animated: true)
     }
     
     @objc private func endTimeButtonTapped() {
         selectionMode = .selectingEnd
         updateSelectionState()
-        
-        wheelPicker.setTime(
-            hour: selectedEndTime.hour,
-            minute: selectedEndTime.minute,
-            animated: true
-        )
+        wheelPicker.setTime(hour: selectedEndTime.hour, minute: selectedEndTime.minute, animated: true)
     }
     
     @objc private func confirmButtonTapped() {
         switch selectionMode {
         case .selectingStart:
+            // 출근 선택 완료 → 퇴근 선택으로 넘어감
             selectionMode = .selectingEnd
             updateSelectionState()
+            wheelPicker.setTime(hour: selectedEndTime.hour, minute: selectedEndTime.minute, animated: true)
             
-            wheelPicker.setTime(
-                hour: selectedEndTime.hour,
-                minute: selectedEndTime.minute,
-                animated: true
-            )
-            
-        case .selectingEnd:            
-            // 완료 상태
+        case .selectingEnd, .completed:
             selectionMode = .completed
             updateSelectionState()
-            
-            // Delegate 호출
-            delegate?.timeSelectionView(self, didConfirmStartTime: selectedStartTime, endTime: selectedEndTime)
-            
-        case .completed:
             delegate?.timeSelectionView(self, didConfirmStartTime: selectedStartTime, endTime: selectedEndTime)
         }
     }
     
-    // MARK: - Private Methods
+    @objc private func optionButtonTapped() {
+        delegate?.timeSelectionViewDidTapOption(self)
+    }
+    
+    // MARK: - Private Helpers
+
     private func updateTimeDisplay() {
         startTimeButton.setTime(selectedStartTime)
         endTimeButton.setTime(selectedEndTime)
     }
     
     private func updateSelectionState() {
-        // 선택 모드에 따라 활성화 상태 변경
         switch selectionMode {
         case .selectingStart:
             startTimeButton.setActive(true)
             endTimeButton.setActive(false)
-            
         case .selectingEnd, .completed:
-            startTimeButton.setActive(false)
+            startTimeButton.setActive(isEndTimeOnly ? false : false)
             endTimeButton.setActive(true)
         }
     }
@@ -224,29 +256,20 @@ extension TimeSelectionView: TimeWheelPickerViewDelegate {
                 selectedStartTime = time
                 startTimeButton.setTime(time)
             }
-            
-            if selectedStartTime.hour > selectedEndTime.hour ||
-                (selectedStartTime.hour == selectedEndTime.hour && selectedStartTime.minute > selectedEndTime.minute) {
-                confirmButton.isEnabled = false
-            } else {
-                confirmButton.isEnabled = true
-            }
-            
         case .selectingEnd:
             if selectedEndTime != time {
                 selectedEndTime = time
                 endTimeButton.setTime(time)
             }
-            
-            if selectedStartTime.hour > selectedEndTime.hour ||
-                (selectedStartTime.hour == selectedEndTime.hour && selectedStartTime.minute > selectedEndTime.minute) {
-                confirmButton.isEnabled = false
-            } else {
-                confirmButton.isEnabled = true
-            }
-            
         case .completed:
             break
+        }
+        
+        // 출근 > 퇴근이면 확인 버튼 비활성화
+        let invalid = selectedStartTime.totalMinutes >= selectedEndTime.totalMinutes
+        confirmButton.isEnabled = !invalid
+        if !optionButton.isHidden {
+            // buttonStack 내 confirmButton도 동일하게 적용됨 (같은 인스턴스)
         }
     }
 }

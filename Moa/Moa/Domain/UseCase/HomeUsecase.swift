@@ -1,5 +1,5 @@
 //
-//  HistoryUseCase.swift
+//  HomeUsecase.swift
 //  Moa
 //
 //  Created by 정도현 on 2/22/26.
@@ -7,20 +7,25 @@
 
 import Foundation
 
-final class HistoryUseCase {
+final class HomeUsecase {
     
+    private let homeRepository: HomeRepository
     private let workdayRepository: WorkdayRepository
     
     init(
+        homeRepository: HomeRepository,
         workdayRepository: WorkdayRepository
     ) {
+        self.homeRepository = homeRepository
         self.workdayRepository = workdayRepository
     }
     
-    func getWorkdayList(year: Int, month: Int) async throws -> [History] {
-        try await workdayRepository.fetchHistory(year: year, month: month)
+    // 홈 데이터 가져옴
+    func getHomeData() async throws -> HomeEntity {
+        try await homeRepository.fetchData()
     }
-
+    
+    // Type, 출퇴근 시간 업데이트
     func updateWorkday(
         date: String,
         type: WorkdayType,
@@ -37,7 +42,16 @@ final class HistoryUseCase {
         )
     }
     
-    func getEarningsInfo(year: Int, month: Int) async throws -> EarningsEntity {
-        try await workdayRepository.fetchEarnings(year: year, month: month)
+    // 퇴근시간 업데이트
+    func updateClockOutTime(
+        date: String,
+        clockOutTime: TimeIndicatorEntity
+    ) async throws -> WorkdayEntity {
+        try await workdayRepository.updateClockOut(
+            date: date,
+            request: ClockEndRequest(
+                clockOutTime: clockOutTime.displayString
+            )
+        )
     }
 }

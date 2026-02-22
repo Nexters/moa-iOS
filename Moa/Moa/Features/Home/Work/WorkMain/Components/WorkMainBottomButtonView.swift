@@ -2,18 +2,18 @@
 //  WorkMainBottomButtonView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/20/26.
+//  idle 상태 전용 하단 버튼 영역
+//  finished 상태의 버튼은 WorkEndBottomIndicator에서 처리
 //
 
 import UIKit
 import SnapKit
 
-/// 근무 메인 화면 하단 액션 영역
 final class WorkMainBottomButtonView: UIView {
 
     // MARK: - Callbacks
 
-    private var primaryAction: (() -> Void)?
+    private var primaryAction:  (() -> Void)?
     private var vacationAction: (() -> Void)?
 
     // MARK: - UI
@@ -28,7 +28,7 @@ final class WorkMainBottomButtonView: UIView {
     }()
 
     private lazy var vacationButton: UnderlineTextButton = {
-        let button = UnderlineTextButton(title: "")
+        let button = UnderlineTextButton(title: "오늘 휴가예요")
         button.addTarget(self, action: #selector(didTapVacation), for: .touchUpInside)
         return button
     }()
@@ -64,27 +64,31 @@ final class WorkMainBottomButtonView: UIView {
         }
     }
 
-    // MARK: - Configure
+    // MARK: - Configure (idle 상태 전용)
 
     func configure(
-        status: HomeScheduleStatus,
-        autoWorkText: String? = nil,
-        primaryAction: (() -> Void)?,
+        status:         WorkStatus,
+        data:           HomeEntity,
+        primaryAction:  (() -> Void)?,
         vacationAction: (() -> Void)? = nil
     ) {
         self.primaryAction  = primaryAction
         self.vacationAction = vacationAction
 
-        primaryButton.setTitle(status.primaryButtonTitle, for: .normal)
+        autoWorkIndicator.isHidden = (status != .idle)
+        vacationButton.isHidden    = !(data.type == .work && status == .idle)
 
-        let isBeforeWork = status.showsVacationButton
+        primaryButton.setTitle(data.type.bottomButtonText, for: .normal)
+        primaryButton.applyStyle(data.type == .work ? .primary() : .tertiary())
 
-        autoWorkIndicator.isHidden = !isBeforeWork
-        vacationButton.isHidden    = !isBeforeWork
-
-        if isBeforeWork {
-            autoWorkIndicator.configure(text: autoWorkText ?? "")
-            vacationButton.updateTitle("오늘 휴가예요")
+        if status == .idle {
+            let bubbleText: String = {
+                guard data.type != .none, let clockIn = data.clockInTime else {
+                    return data.type.bubbleLabelText
+                }
+                return "\(clockIn.displayString) \(data.type.bubbleLabelText)"
+            }()
+            autoWorkIndicator.configure(text: bubbleText)
         }
     }
 

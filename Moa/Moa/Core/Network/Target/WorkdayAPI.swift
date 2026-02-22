@@ -14,6 +14,7 @@ enum WorkdayAPI {
     case updateWorkdayAll(date: String, body: WorkdayUpdateRequest)
     case updateWorkdayClockEnd(date: String, body: ClockEndRequest)
     case getWorkdayList(year: Int, month: Int)
+    case getTotalEarnings(year: Int, month: Int)
 }
 
 extension WorkdayAPI: TargetType {
@@ -32,6 +33,8 @@ extension WorkdayAPI: TargetType {
             return "/api/v1/workdays/\(date)"
         case .getWorkdayList:
             return "/api/v1/workdays"
+        case .getTotalEarnings:
+            return "/api/v1/workdays/earnings"
         }
     }
     
@@ -45,6 +48,8 @@ extension WorkdayAPI: TargetType {
             return .patch
         case .getWorkdayList:
             return .get
+        case .getTotalEarnings:
+            return .get
         }
     }
     
@@ -57,6 +62,14 @@ extension WorkdayAPI: TargetType {
         case let .updateWorkdayClockEnd(_, body):
             return .requestJSONEncodable(body)
         case let .getWorkdayList(year, month):
+            return .requestParameters(
+                parameters: [
+                    "year" : year,
+                    "month" : month
+                ],
+                encoding: URLEncoding.queryString
+            )
+        case let .getTotalEarnings(year, month):
             return .requestParameters(
                 parameters: [
                     "year" : year,
