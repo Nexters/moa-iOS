@@ -41,7 +41,6 @@ struct CalendarDay {
 
 final class HistoryViewController: BaseViewController {
 
-    override var prefersNavigationBarHidden: Bool { true }
     override var preferredStatusBarStyle:    UIStatusBarStyle { .lightContent }
 
     // MARK: - Delegate
@@ -67,6 +66,8 @@ final class HistoryViewController: BaseViewController {
     // MARK: - Setup
 
     private func setupCalendar() {
+        replaceSystemBackButtonWithAppBackButton()
+        
         view.backgroundColor = AppColor.Background.primary
         calendarView.delegate = self
 

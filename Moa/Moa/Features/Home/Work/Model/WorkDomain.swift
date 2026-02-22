@@ -245,41 +245,17 @@ enum HomeScheduleStatus: Equatable {
     }
 }
 
-// MARK: - HomeDisplayData
-//
-// ViewModel → View 단방향 데이터 전달 구조체.
-// 뷰는 이 타입만 알고, WorkSchedule / WorkSession은 알지 않습니다.
-
-struct HomeDisplayData: Equatable {
-    let formattedDate: String           // "2월 21일 (토)"
-    let workplace: String?
-    let scheduledClockIn: TimeIndicatorEntity
-    let scheduledClockOut: TimeIndicatorEntity
-    let dailyWage: Int                  // 오늘 예상 일급
-    let hourlyWage: Int                 // 시급 (근무 중 실시간 계산용)
-    let scheduleStatus: HomeScheduleStatus
-    let workStatus: WorkStatus          // 타이머·금액 계산용 런타임 상태
-}
-
 // MARK: - WorkStatus
 
 enum WorkStatus: Equatable {
     case idle                           // 출근 전 (버튼 대기)
-    case working(startedAt: Date)       // 근무 중
-    case onVacation(startedAt: Date)    // 휴가 중
-    case finished(finishedAt: Date)     // 퇴근 완료
+    case working
+    case finished
 
     var isActive: Bool {
         switch self {
-        case .working, .onVacation: return true
-        default:                    return false
-        }
-    }
-
-    var startedAt: Date? {
-        switch self {
-        case .working(let d), .onVacation(let d): return d
-        default:                                  return nil
+        case .working   : return true
+        default:          return false
         }
     }
 }
@@ -289,7 +265,7 @@ enum WorkStatus: Equatable {
 enum WorkViewState: Equatable {
     case idle
     case loading
-    case loaded(HomeDisplayData)
+    case loaded(status: WorkStatus, data: HomeEntity)
     case error(WorkViewError)
 }
 
