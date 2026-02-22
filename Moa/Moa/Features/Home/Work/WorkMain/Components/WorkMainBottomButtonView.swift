@@ -79,7 +79,7 @@ final class WorkMainBottomButtonView: UIView {
         vacationButton.isHidden    = !(data.type == .work && status == .idle)
 
         primaryButton.setTitle(data.type.bottomButtonText, for: .normal)
-        primaryButton.applyStyle(.primary())
+        primaryButton.applyStyle(data.type == .work ? .primary() : .tertiary())
 
         if status == .idle {
             let bubbleText: String = {

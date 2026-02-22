@@ -396,7 +396,7 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
         guard case let .loaded(status, _) = viewModel.state else { return }
         if status == .finished {
             // 근무완료 1: 출퇴근 수정 → finished 유지
-            viewModel.send(.editFinishedWorkTime(start: startTime, end: endTime))
+            viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         } else {
             // idle: setEstimateTime 확인
             // working: setEstimateTime(.changeSchedule) 또는 extendEndTime
