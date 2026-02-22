@@ -74,6 +74,8 @@ final class WorkScheduleChangeBottomSheet: UIViewController {
         sv.axis         = .horizontal
         sv.spacing      = 12
         sv.distribution = .fillEqually
+        sv.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        sv.isLayoutMarginsRelativeArrangement = true
         return sv
     }()
 
@@ -116,6 +118,7 @@ final class WorkScheduleChangeBottomSheet: UIViewController {
     private func setupConstraints() {
         titleLabel.snp.makeConstraints {
             $0.top.equalToSuperview()
+            $0.height.equalTo(34)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         cardStack.snp.makeConstraints {

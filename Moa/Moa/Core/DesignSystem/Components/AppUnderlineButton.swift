@@ -21,6 +21,12 @@ final class UnderlineTextButton: UIButton {
             color: AppColor.IconAndText.mediumEmphasis,
             pressedAlpha: 0.6
         )
+        
+        static let bottomSheetStyle = Style(
+            font: AppTypography.b1_600.font(),
+            color: AppColor.IconAndText.mediumEmphasis,
+            pressedAlpha: 0.6
+        )
     }
     
     // MARK: - Properties

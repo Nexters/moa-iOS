@@ -28,7 +28,6 @@ final class WorkViewController: BaseViewController {
     // MARK: - Properties
 
     private let viewModel: WorkViewModel
-    private var hasShownWorkAlarmSheet = false
     private var workingTimer: Timer?
 
     override var prefersNavigationBarHidden: Bool { true }
@@ -258,12 +257,27 @@ private extension WorkViewController {
 
 private extension WorkViewController {
 
-    func showWorkAlarmBottomSheetIfNeeded() {
-        guard !hasShownWorkAlarmSheet,
-              !UserDefaults.standard.bool(forKey: "HasDismissedWorkAlarmSheet")
-        else { return }
-        hasShownWorkAlarmSheet = true
-        DispatchQueue.main.async { [weak self] in self?.showWorkAlarmBottomSheet() }
+    private func showWorkAlarmBottomSheetIfNeeded() {
+
+        NotificationManager.shared.checkAuthorizationStatus { [weak self] status in
+            guard let self else { return }
+
+            switch status {
+
+            case .notDetermined, .denied:
+                // 최초 진입 → 바텀시트 노출
+                if !UserDefaults.standard.bool(forKey: "HasShownWorkAlarmSheet") {
+                    UserDefaults.standard.set(true, forKey: "HasShownWorkAlarmSheet")
+                    self.showWorkAlarmBottomSheet()
+                }
+
+            case .authorized, .provisional, .ephemeral:
+                break
+
+            @unknown default:
+                break
+            }
+        }
     }
 
     func showWorkAlarmBottomSheet() {
@@ -418,7 +432,7 @@ extension WorkViewController: WorkMainContentViewDelegate {
     }
 
     func workMainContentViewDidTapVacation(_ view: WorkMainContentView) {
-        showVacationConfirmAlert()
+        viewModel.send(.requestVacation)
     }
 
     func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView) {

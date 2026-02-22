@@ -29,15 +29,15 @@ final class HomeUsecase {
     func updateWorkday(
         date: String,
         type: WorkdayType,
-        clockInTime: TimeIndicatorEntity,
-        clockOutTime: TimeIndicatorEntity
+        clockInTime: TimeIndicatorEntity?,
+        clockOutTime: TimeIndicatorEntity?
     ) async throws -> WorkdayEntity {
         try await workdayRepository.updateWorkdayAll(
             date: date,
             request: WorkdayUpdateRequest(
                 type: type.rawValue,
-                clockInTime: clockInTime.displayString,
-                clockOutTime: clockOutTime.displayString
+                clockInTime: clockInTime?.displayString,
+                clockOutTime: clockOutTime?.displayString
             )
         )
     }

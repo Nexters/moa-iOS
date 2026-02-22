@@ -255,9 +255,7 @@ private extension WorkViewModel {
         guard var entity = homeEntity else { return }
 
         let clockIn  = entity.clockInTime
-            ?? TimeIndicatorEntity(hour: 0, minute: 0)
         let clockOut = entity.clockOutTime
-            ?? TimeIndicatorEntity(hour: 0, minute: 0)
 
         Task { @MainActor in
             do {
