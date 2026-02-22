@@ -10,9 +10,6 @@ final class WorkMainSummaryView: UIView {
 
     // MARK: - Action
 
-    /// idle/working 근무일: 시간 선택 시트
-    /// 근무완료 1 (finished, 근무일): 시간 수정 시트
-    /// 최종완료 / 휴가: nil → 탭 불가
     var onTapTimeRow: (() -> Void)?
 
     // MARK: - UI
@@ -40,10 +37,9 @@ final class WorkMainSummaryView: UIView {
         return row
     }()
 
-    /// 근무완료 1 (finished, 근무일): chevron X, 탭 → 시간 수정
-    /// 최종완료에서는 onTap을 nil로 덮어써서 탭 불가 처리
+    /// 근무완료 1 / 최종완료 (근무일): chevron O or X, tappable 여부 동적 결정
     private lazy var finishedTimeRowView: KeyValueRowView = {
-        let row = KeyValueRowView(type: .timeRow(startTime: "", endTime: ""), showsChevron: false)
+        let row = KeyValueRowView(type: .timeRow(startTime: "", endTime: ""), showsChevron: true)
         return row
     }()
 
@@ -69,14 +65,16 @@ final class WorkMainSummaryView: UIView {
 
     // MARK: - Configure
 
+    /// 일반 상태별 렌더링
+    /// - idle / working: 탭 가능
+    /// - finished (최종완료): 탭 불가
     func configure(status: WorkStatus, data: HomeEntity) {
         switch (data.type, status) {
 
-        // 최종완료 — 휴가일: dailyPay, "휴가" 표기, 탭 불가
-        case (.none, .finished):
+        case (.none, .finished), (.vacation, .finished):
             renderVacationRow(dailyPay: data.dailyPay)
 
-        // 최종완료 — 근무일: dailyPay, chevron X, 탭 불가 (onTap nil)
+        // 최종완료 — 근무일: chevron O, 탭 불가
         case (.work, .finished):
             let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
             let clockOutStr = data.clockOutTime?.displayString ?? "--:--"
@@ -86,19 +84,9 @@ final class WorkMainSummaryView: UIView {
                 tappable: false
             )
 
-        // 근무완료 1 — 근무일: dailyPay, chevron X, 탭 → 시간 수정 시트
-        // (WorkEndBottomIndicator 내부에서 onTapTimeRow가 설정되어 있음)
-        // 실제로 finished + data.type == .work 케이스는 위에서 처리되므로
-        // 이 케이스는 WorkEndBottomIndicator에서 직접 finishedRow를 사용하는 경우
-        case (.vacation, .finished):
-            // vacation 타입이지만 finished인 경우 (엣지 케이스)
-            renderVacationRow(dailyPay: data.dailyPay)
-
-        // idle / working — 휴가일: dailyPay, "휴가" 표기, 탭 불가
         case (.none, _), (.vacation, _):
             renderVacationRow(dailyPay: data.dailyPay)
 
-        // idle / working — 근무일: chevron O, 탭 가능
         default:
             let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
             let clockOutStr = data.clockOutTime?.displayString ?? "--:--"
@@ -109,9 +97,28 @@ final class WorkMainSummaryView: UIView {
         }
     }
 
+    /// 근무완료 1 전용 — WorkEndBottomIndicator 내부에서 호출
+    /// 항상 tappable: true (탭 → 실제 근무 시간 수정 시트)
+    /// containerView alpha 0.6 적용
+    func configureForEndIndicator(data: HomeEntity) {
+        containerView.backgroundColor = AppColor.Container.primary.withAlphaComponent(0.6)
+
+        switch data.type {
+        case .none, .vacation:
+            renderVacationRow(dailyPay: data.dailyPay)
+        case .work:
+            let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
+            let clockOutStr = data.clockOutTime?.displayString ?? "--:--"
+            renderFinishedRow(
+                dailyWage: data.dailyPay,
+                timeValue: "\(clockInStr) - \(clockOutStr)",
+                tappable: true
+            )
+        }
+    }
+
     // MARK: - Render
 
-    /// idle / working — 근무일: chevron O
     private func renderTwoRow(dailyWage: Int, timeValue: String) {
         wageRowView.isHidden         = false
         dividerView.isHidden         = false
@@ -127,8 +134,6 @@ final class WorkMainSummaryView: UIView {
         applyBottomRowConstraints(bottomRow: timeRowView)
     }
 
-    /// 근무완료 1 / 최종완료 — 근무일: chevron X
-    /// - tappable: false → 최종완료(탭 불가) / true → 근무완료 1(탭 → 시간 수정)
     private func renderFinishedRow(dailyWage: Int, timeValue: String, tappable: Bool) {
         wageRowView.isHidden         = false
         dividerView.isHidden         = false
@@ -147,7 +152,6 @@ final class WorkMainSummaryView: UIView {
         applyBottomRowConstraints(bottomRow: finishedTimeRowView)
     }
 
-    /// 휴가 (idle/working/finished): dailyPay, "휴가", 탭 불가
     private func renderVacationRow(dailyPay: Int) {
         wageRowView.isHidden         = false
         dividerView.isHidden         = false

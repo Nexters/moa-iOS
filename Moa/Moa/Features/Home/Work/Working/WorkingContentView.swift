@@ -9,13 +9,9 @@ import SnapKit
 // MARK: - WorkingContentViewDelegate
 
 protocol WorkingContentViewDelegate: AnyObject {
-    /// working: "일정 조정" 탭
     func workingContentViewDidTapScheduleAdjust(_ view: WorkingContentView)
-    /// finished: "더 일할게요" 탭
     func workingContentViewDidTapExtendWork(_ view: WorkingContentView)
-    /// finished: 근무시간 행 탭 → 출퇴근 수정 시트
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView)
-    /// finished: "완료" 탭 → 최종 완료 페이지
     func workingContentViewDidTapConfirm(_ view: WorkingContentView)
 }
 
@@ -39,7 +35,6 @@ final class WorkingContentView: UIView {
         return view
     }()
 
-    /// finished 상태 오버레이
     private lazy var workEndIndicator: WorkEndBottomIndicator = {
         let view = WorkEndBottomIndicator()
         view.delegate = self
@@ -51,9 +46,7 @@ final class WorkingContentView: UIView {
 
     private var dailyPay: Int         = 0
     private var totalWorkSeconds: Int = 0
-
-    /// finished: true → tick()에서 금액 업데이트 중단, 스택 애니메이션 중지
-    private var isFinished: Bool = false
+    private var isFinished: Bool      = false
 
     // MARK: - Init
 
@@ -108,15 +101,19 @@ final class WorkingContentView: UIView {
         let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
 
         if newIsFinished {
-            // finished: dailyPay 전액 고정 표시, 애니메이션 중지
+            // 근무완료 1: dailyPay 전액 고정 + 최대 높이 + 버블 숨김
             earningsStackView.configure(amount: dailyPay, startedAt: startedAt)
+            earningsStackView.snapToMaxHeight()
             earningsStackView.stopAnimations()
+
+            // WorkingStatusView 숨김 — 오로지 WorkEndBottomIndicator만 노출
+            workingStatusView.isHidden = true
         } else {
+            workingStatusView.isHidden = false
             let earnedSoFar = earnedAmount(elapsed: elapsed)
             earningsStackView.configure(amount: earnedSoFar, startedAt: startedAt)
+            workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
         }
-
-        workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
 
         workEndIndicator.isHidden = !newIsFinished
         if newIsFinished {
@@ -124,14 +121,11 @@ final class WorkingContentView: UIView {
         }
     }
 
-    // MARK: - Tick (1초마다 WorkViewController Timer에서 호출)
+    // MARK: - Tick
 
     func tick() {
-        // finished: 금액 고정 — 타이머 경과 시간만 업데이트
-        if isFinished {
-            workingStatusView.tick()
-            return
-        }
+        // finished: 타이머 멈춤, 금액 고정
+        if isFinished { return }
         let elapsed = workingStatusView.elapsedSeconds()
         let earned  = earnedAmount(elapsed: elapsed)
         earningsStackView.updateAmount(earned)

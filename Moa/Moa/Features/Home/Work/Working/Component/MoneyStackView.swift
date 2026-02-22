@@ -15,7 +15,7 @@ final class EarningsStackView: UIView {
     private enum Constants {
         static let minHeightRatio: CGFloat      = 0.30
         static let maxHeightRatio: CGFloat      = 0.70
-        static let growthDuration: TimeInterval = 30 * 60   // 30분 1사이클
+        static let growthDuration: TimeInterval = 30 * 60
         static let tooltipInterval: TimeInterval = 5.0
         static let tooltipDisplay:  TimeInterval = 3.0
         static let solidMaskHeight: CGFloat     = 90
@@ -237,13 +237,52 @@ final class EarningsStackView: UIView {
         scheduleTooltip()
     }
 
-    /// finished 상태 진입 시 호출 — 성장 애니메이션 + 툴팁 모두 중지 및 숨김
+    /// 근무 완료 1 진입 시 호출 — 성장 애니메이션 + 툴팁 중지 및 완전 숨김
     func stopAnimations() {
+
+        // 1. 성장 완전 중지
         stopStackGrowth()
+
+        // 2. 툴팁 완전 정지
         stopTooltip()
-        // BubbleView(tooltipView) 즉시 숨김 — finished 상태에서 보이면 안 됨
-        tooltipView.alpha    = 0
+        tooltipView.layer.removeAllAnimations()
+
+        // 3. alpha와 hidden을 함께 정리
+        tooltipView.alpha = 0
         tooltipView.isHidden = true
+
+        // 4. 스택을 확실히 70%로 고정
+        forceSnapToMaxHeight()
+    }
+    
+    private func forceSnapToMaxHeight() {
+
+        layoutIfNeeded() // 현재 레이아웃 확정
+
+        let h = stackContainer.frame.height
+        guard h > 0 else { return }
+
+        let maxRatio = Constants.maxHeightRatio
+
+        stackBottomConstraint?.update(offset: h * (1 - maxRatio))
+        updateFloatingContainerPosition(ratio: maxRatio)
+
+        UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseOut) {
+            self.layoutIfNeeded()
+        }
+    }
+
+    /// 근무완료 1: money stack을 최대 높이(maxHeightRatio)로 즉시 고정
+    /// DisplayLink를 중지하고 constraints를 최대값으로 업데이트
+    func snapToMaxHeight() {
+        stopStackGrowth()
+        let h = stackContainer.bounds.height
+        guard h > 0 else {
+            // layoutSubviews가 아직 안 된 경우 → 레이아웃 완료 후 처리
+            DispatchQueue.main.async { [weak self] in self?.snapToMaxHeightInternal() }
+            return
+        }
+        snapToMaxHeightInternal()
     }
 
     // MARK: - Format
@@ -273,6 +312,19 @@ final class EarningsStackView: UIView {
         let eased    = easeOutQuad(progress)
         return Constants.minHeightRatio +
             (Constants.maxHeightRatio - Constants.minHeightRatio) * eased
+    }
+
+    // MARK: - Private Snap
+
+    private func snapToMaxHeightInternal() {
+        let h = stackContainer.bounds.height
+        guard h > 0 else { return }
+        let maxRatio = Constants.maxHeightRatio
+        stackBottomConstraint?.update(offset: h * (1 - maxRatio))
+        updateFloatingContainerPosition(ratio: maxRatio)
+        UIView.animate(withDuration: 0.4, delay: 0, options: .curveEaseOut) {
+            self.stackContainer.layoutIfNeeded()
+        }
     }
 
     // MARK: - Tooltip

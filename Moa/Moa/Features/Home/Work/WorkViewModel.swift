@@ -108,18 +108,12 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let today = todayDateString()
-                if entity.type == .none {
-                    let updated = try await AppContainer.shared.homeUseCase.updateWorkday(
-                        date: today, type: .work, clockInTime: start, clockOutTime: end
-                    )
-                    applyWorkdayUpdate(updated, to: &entity)
-                } else {
-                    let updated = try await AppContainer.shared.homeUseCase.updateClockOutTime(
-                        date: today, clockOutTime: end
-                    )
-                    applyWorkdayUpdate(updated, to: &entity)
-                }
+                let updated = try await AppContainer.shared.homeUseCase.updateWorkday(
+                    date: today, type: .work, clockInTime: start, clockOutTime: end
+                )
+                applyWorkdayUpdate(updated, to: &entity)
                 homeEntity = entity
+                apply(entity)
                 publish()
             } catch { state = .error(.network) }
         }
@@ -138,7 +132,7 @@ private extension WorkViewModel {
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
-                currentStatus = .working
+                apply(entity)
                 publish()
             } catch { state = .error(.network) }
         }
@@ -160,7 +154,7 @@ private extension WorkViewModel {
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
-                currentStatus = .finished
+                apply(entity)
                 publish()
             } catch { state = .error(.network) }
         }

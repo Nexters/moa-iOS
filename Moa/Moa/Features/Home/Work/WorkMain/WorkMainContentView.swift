@@ -39,7 +39,7 @@ final class WorkMainContentView: UIView {
     private lazy var workHistoryButton: AppButton = {
         let button = AppButton()
         button.setTitle("이번달 근무 기록 확인하기", for: .normal)
-        button.applyStyle(.secondary())
+        button.applyStyle(.primary())
         button.addTarget(self, action: #selector(didTapWorkHistory), for: .touchUpInside)
         return button
     }()
@@ -71,7 +71,7 @@ final class WorkMainContentView: UIView {
         workHistoryButton.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.bottom.equalTo(safeAreaLayoutGuide).inset(24)
-            $0.height.equalTo(52)
+            $0.height.equalTo(64)
         }
     }
 
