@@ -2,8 +2,6 @@
 //  MoneyStackView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/18/26.
-//
 
 import UIKit
 import SnapKit
@@ -60,7 +58,6 @@ final class EarningsStackView: UIView {
         return label
     }()
 
-    // 슬롯머신 롤링 금액 레이블
     private let rollingLabel = RollingAmountLabel()
 
     private let unitLabel: StyledLabel = {
@@ -95,7 +92,7 @@ final class EarningsStackView: UIView {
     private var stackBottomConstraint: Constraint?
     private var floatingContainerBottomConstraint: Constraint?
 
-    private var growthStartTime: Date?
+    private var growthCycleStart: Date?
     private var growthDisplayLink: CADisplayLink?
     private var hasAppliedInitialPosition = false
 
@@ -127,9 +124,10 @@ final class EarningsStackView: UIView {
     }
 
     private func applyInitialPosition() {
+        let ratio = currentCycleRatio()
         let h = stackContainer.bounds.height
-        stackBottomConstraint?.update(offset: h * (1 - Constants.minHeightRatio))
-        updateFloatingContainerPosition(ratio: Constants.minHeightRatio)
+        stackBottomConstraint?.update(offset: h * (1 - ratio))
+        updateFloatingContainerPosition(ratio: ratio)
         layoutIfNeeded()
     }
 
@@ -200,24 +198,24 @@ final class EarningsStackView: UIView {
 
     // MARK: - Configure
 
-    func configure(amount: Int) {
-        currentAmount   = amount
-        growthStartTime = Date()
-        rollingLabel.setText(formatted(amount))   // 초기값 = 롤링 없이 즉시
+    func configure(amount: Int, startedAt: Date) {
+        currentAmount    = amount
+        growthCycleStart = resolveCycleStart(from: startedAt)
+
+        rollingLabel.setText(formatted(amount))
         layoutIfNeeded()
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.startAnimations()
         }
     }
 
-    /// 1초마다 WorkingContentView에서 호출 — 롤링 애니메이션으로 금액 갱신
     func updateAmount(_ amount: Int) {
         guard amount != currentAmount else { return }
         let old = formatted(currentAmount)
         let new = formatted(amount)
         currentAmount = amount
 
-        // 자릿수 동일: 롤링 / 자릿수 변경(쉼표 추가 등): 즉시 교체
         if old.count == new.count {
             rollingLabel.rollTo(new)
         } else {
@@ -239,15 +237,42 @@ final class EarningsStackView: UIView {
         scheduleTooltip()
     }
 
+    /// finished 상태 진입 시 호출 — 성장 애니메이션 + 툴팁 모두 중지 및 숨김
     func stopAnimations() {
         stopStackGrowth()
         stopTooltip()
+        // BubbleView(tooltipView) 즉시 숨김 — finished 상태에서 보이면 안 됨
+        tooltipView.alpha    = 0
+        tooltipView.isHidden = true
     }
 
     // MARK: - Format
 
     private func formatted(_ amount: Int) -> String {
         AppNumberFormatter.decimalString(from: amount)
+    }
+
+    // MARK: - 30분 사이클 역산
+
+    private func resolveCycleStart(from startedAt: Date) -> Date {
+        let now            = Date()
+        let totalElapsed   = max(0, now.timeIntervalSince(startedAt))
+        let cycleCount     = Int(totalElapsed / Constants.growthDuration)
+        let cycleStartDate = startedAt.addingTimeInterval(
+            Double(cycleCount) * Constants.growthDuration
+        )
+        return cycleStartDate
+    }
+
+    private func currentCycleRatio() -> CGFloat {
+        guard let cycleStart = growthCycleStart else {
+            return Constants.minHeightRatio
+        }
+        let elapsed  = max(0, Date().timeIntervalSince(cycleStart))
+        let progress = min(CGFloat(elapsed) / CGFloat(Constants.growthDuration), 1.0)
+        let eased    = easeOutQuad(progress)
+        return Constants.minHeightRatio +
+            (Constants.maxHeightRatio - Constants.minHeightRatio) * eased
     }
 
     // MARK: - Tooltip
@@ -257,7 +282,7 @@ final class EarningsStackView: UIView {
         guard message != lastTooltipMessage else { return }
         lastTooltipMessage = message
         guard let msg = message else { return }
-        showTooltip(msg)   // 구간 변경 시 즉시 교체
+        showTooltip(msg)
     }
 
     private func scheduleTooltip() {
@@ -273,6 +298,7 @@ final class EarningsStackView: UIView {
 
     private func showTooltip(_ message: String) {
         stopTooltip()
+        tooltipView.isHidden = false
         tooltipView.configure(text: message)
         UIView.animate(withDuration: 0.3) { self.tooltipView.alpha = 1 } completion: { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.Constants.tooltipDisplay) { [weak self] in
@@ -292,7 +318,6 @@ final class EarningsStackView: UIView {
 
     private func startStackGrowth() {
         stopStackGrowth()
-        growthStartTime   = Date()
         growthDisplayLink = CADisplayLink(target: self, selector: #selector(updateStackPosition))
         growthDisplayLink?.add(to: .main, forMode: .common)
     }
@@ -303,15 +328,15 @@ final class EarningsStackView: UIView {
     }
 
     @objc private func updateStackPosition() {
-        guard let startTime = growthStartTime else { return }
+        guard let cycleStart = growthCycleStart else { return }
 
-        let elapsed      = Date().timeIntervalSince(startTime)
-        let cycleElapsed = elapsed.truncatingRemainder(dividingBy: Constants.growthDuration)
-        let progress     = cycleElapsed / Constants.growthDuration
-        let eased        = easeOutQuad(CGFloat(progress))
-        let ratio        = Constants.minHeightRatio +
-            (Constants.maxHeightRatio - Constants.minHeightRatio) * eased
+        let elapsed = Date().timeIntervalSince(cycleStart)
 
+        if elapsed >= Constants.growthDuration {
+            growthCycleStart = Date()
+        }
+
+        let ratio = currentCycleRatio()
         let h = stackContainer.bounds.height
         guard h > 0 else { return }
 

@@ -2,21 +2,15 @@
 //  MonthlySalaryView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/1/26.
-//
 
 import UIKit
 import SnapKit
 
-// MARK: - MonthlySalaryViewConfig
-// HomeDisplayData에서 필요한 정보만 추출해 뷰로 전달하는 DTO
-
-struct MonthlySalaryViewConfig {
-    let month: Int
-    let amount: Int
-    let baseAmount: Int
-    let scheduleType: HomeScheduleStatus    // HomeWorkScheduleType → HomeScheduleStatus로 변경
-    let shouldAnimate: Bool
+struct MonthlySalaryEntity {
+    let workedEarnings: Int
+    let standardSalary: Int
+    let type: WorkdayType
+    let workStatus: WorkStatus
 }
 
 // MARK: - MonthlySalaryView
@@ -26,13 +20,17 @@ final class MonthlySalaryView: UIView {
     // MARK: - UI
 
     private let moneyImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        return imageView
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        return iv
     }()
 
     private let titleLabel: StyledLabel = {
         let label = StyledLabel()
+        label.setText(
+            "\(Date().month)월 누적 월급",
+            style: .init(typography: AppTypography.t3_500, color: AppColor.IconAndText.highEmphasis)
+        )
         label.textAlignment = .center
         return label
     }()
@@ -84,7 +82,7 @@ final class MonthlySalaryView: UIView {
 
     // MARK: - State
 
-    private var config: MonthlySalaryViewConfig?
+    private var config: MonthlySalaryEntity?
 
     // MARK: - Animation
 
@@ -100,7 +98,6 @@ final class MonthlySalaryView: UIView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
-
     deinit { displayLink?.invalidate() }
 
     // MARK: - Layout
@@ -113,26 +110,29 @@ final class MonthlySalaryView: UIView {
 
     // MARK: - Configure
 
-    func configure(_ config: MonthlySalaryViewConfig) {
+    func configure(_ config: MonthlySalaryEntity) {
         self.config = config
 
-        moneyImageView.image = config.scheduleType.moneyImage
+        moneyImageView.image = config.workStatus == .finished
+            ? UIImage(resource: .Image.imgFullMoney)
+            : config.type.moneyImg
 
-        titleLabel.setText(
-            "\(config.month)월 누적 월급",
-            style: .init(typography: AppTypography.t3_500, color: AppColor.IconAndText.highEmphasis)
-        )
         amountLabel.setStyle(.init(
             typography: AppTypography.h1_700,
-            color: config.scheduleType.accentColor
+            color: config.workStatus == .finished
+                ? AppColor.IconAndText.green
+                : config.type.amountLabelColor
         ))
 
-        subtitleLabel.isHidden = !config.scheduleType.showsWageDescription
-        if config.scheduleType.showsWageDescription {
-            configureSubtitle(amount: config.amount, baseAmount: config.baseAmount)
+        // subtitle: 기본 월급보다 더 일한 경우에만 표시 (finished 상태에서는 숨김)
+        let overworked = config.workedEarnings > config.standardSalary
+            && config.workStatus != .finished
+        subtitleLabel.isHidden = !overworked
+        if overworked {
+            configureSubtitle(amount: config.workedEarnings, baseAmount: config.standardSalary)
         }
 
-        configureAmount(amount: config.amount, shouldAnimate: config.shouldAnimate)
+        configureAmount(amount: config.workedEarnings, shouldAnimate: true)
     }
 
     // MARK: - Private
@@ -145,7 +145,6 @@ final class MonthlySalaryView: UIView {
             startCounterAnimation(targetAmount: amount)
         } else {
             amountLabel.setText(formattedAmount(amount))
-            if config?.scheduleType.showsWageDescription == true { subtitleLabel.alpha = 1 }
         }
     }
 
@@ -171,9 +170,14 @@ final class MonthlySalaryView: UIView {
         subtitleLabel.attributedText = attributed
     }
 
+    /// finished 상태: + 접두사 없음
+    /// 그 외: "+ " 접두사 붙임
     private func formattedAmount(_ amount: Int) -> String {
         let base = AppNumberFormatter.decimalString(from: amount)
-        return config?.scheduleType == .afterWork ? "+ \(base)" : base
+        guard let cfg = config, cfg.workStatus != .finished else {
+            return base
+        }
+        return "+ \(base)"
     }
 }
 
@@ -183,8 +187,6 @@ private extension MonthlySalaryView {
 
     func startCounterAnimation(targetAmount: Int) {
         amountLabel.setText(formattedAmount(0))
-        if config?.scheduleType.showsWageDescription == true { subtitleLabel.alpha = 0 }
-
         animationStartTime = CACurrentMediaTime()
         displayLink = CADisplayLink(target: self, selector: #selector(updateCounter))
         displayLink?.add(to: .main, forMode: .common)
@@ -196,17 +198,33 @@ private extension MonthlySalaryView {
         let elapsed  = CACurrentMediaTime() - animationStartTime
         let progress = min(CGFloat(elapsed) / animationDuration, 1.0)
         let eased    = progress * (2 - progress)
-        let current  = Int(CGFloat(config.amount) * eased)
+        let current  = Int(CGFloat(config.workedEarnings) * eased)
 
         amountLabel.setText(formattedAmount(current))
 
         guard progress >= 1.0 else { return }
         displayLink?.invalidate()
         displayLink = nil
-        amountLabel.setText(formattedAmount(config.amount))
+        amountLabel.setText(formattedAmount(config.workedEarnings))
+    }
+}
 
-        if config.scheduleType.showsWageDescription {
-            UIView.animate(withDuration: 0.4, delay: 0.2) { self.subtitleLabel.alpha = 1 }
-        }
+extension Calendar {
+    
+    static var korea: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        return calendar
+    }
+}
+
+extension Date {
+    
+    var year: Int {
+        Calendar.korea.component(.year, from: self)
+    }
+    
+    var month: Int {
+        Calendar.korea.component(.month, from: self)
     }
 }

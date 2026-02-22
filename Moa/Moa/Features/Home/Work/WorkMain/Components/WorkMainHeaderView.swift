@@ -2,8 +2,6 @@
 //  WorkMainHeaderView.swift
 //  Moa
 //
-//  Created by 정도현 on 2/20/26.
-//
 
 import UIKit
 import SnapKit
@@ -63,19 +61,18 @@ final class WorkMainHeaderView: UIView {
 
     // MARK: - Configure
 
-    func configure(with display: HomeDisplayData) {
-        let month = Calendar.current.component(.month, from: Date())
+    func configure(data: HomeEntity, status: WorkStatus) {
+        badgeView.configure(workplace: data.workplace)
 
-        badgeView.configure(workplace: display.workplace)
+        salaryView.configure(
+            .init(
+                workedEarnings: data.workedEarnings,
+                standardSalary: data.standardSalary,
+                type:           data.type,
+                workStatus:     status
+            )
+        )
 
-        salaryView.configure(.init(
-            month:         month,
-            amount:        display.dailyWage,
-            baseAmount:    display.dailyWage,    // TODO: 기본 월급 API 연동 후 교체
-            scheduleType:  display.scheduleStatus,
-            shouldAnimate: false
-        ))
-
-        summaryView.configure(with: display)
+        summaryView.configure(status: status, data: data)
     }
 }
