@@ -34,7 +34,7 @@ private extension HomeCoordinator {
     // MARK: Work
 
     func makeWorkViewController() -> WorkViewController {
-        let vm = WorkViewModel()
+        let vm = WorkViewModel(homeUseCase: container.homeUseCase)
         let vc = WorkViewController(viewModel: vm)
         vc.coordinatorDelegate = self
         return vc
