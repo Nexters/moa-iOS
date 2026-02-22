@@ -174,10 +174,7 @@ final class MonthlySalaryView: UIView {
     /// 그 외: "+ " 접두사 붙임
     private func formattedAmount(_ amount: Int) -> String {
         let base = AppNumberFormatter.decimalString(from: amount)
-        guard let cfg = config, cfg.workStatus != .finished else {
-            return base
-        }
-        return "+ \(base)"
+        return "\(base)"
     }
 }
 
