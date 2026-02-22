@@ -58,4 +58,15 @@ extension WorkdayRepositoryImpl {
         
         return response.content.map { $0.toDomain() }
     }
+    
+    func fetchEarnings(
+        year: Int,
+        month: Int
+    ) async throws -> EarningsEntity {
+        let response: EarningsResponse = try await apiClient.request(
+            WorkdayAPI.getTotalEarnings(year: year, month: month)
+        )
+        
+        return response.toDomain()
+    }
 }

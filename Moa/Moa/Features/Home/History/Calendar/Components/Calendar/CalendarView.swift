@@ -156,7 +156,7 @@ final class CalendarView: UIView {
         reloadGrid()
     }
     
-    func updateWorkInfo(_ info: CalendarWorkInfo) {
+    func updateWorkInfo(_ info: EarningsEntity) {
         infoCard.update(with: info)
     }
     

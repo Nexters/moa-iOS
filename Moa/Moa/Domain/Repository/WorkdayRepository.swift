@@ -23,4 +23,9 @@ protocol WorkdayRepository {
         year: Int,
         month: Int
     ) async throws -> [History]
+    
+    func fetchEarnings(
+        year: Int,
+        month: Int
+    ) async throws -> EarningsEntity
 }

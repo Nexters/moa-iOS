@@ -33,6 +33,7 @@ final class HistoryViewModel {
     private var currentYear: Int?
     private var currentMonth: Int?
     private var histories: [History] = []
+    private var earningsInfo: EarningsEntity?
 
     // MARK: - Init
 
@@ -80,7 +81,30 @@ private extension HistoryViewModel {
         currentYear = year
         currentMonth = month
 
-        fetchHistory(year: year, month: month)
+        fetchAll(year: year, month: month)
+    }
+    
+    func fetchAll(year: Int, month: Int) {
+        Task { @MainActor in
+            do {
+                async let historyTask = historyUseCase
+                    .getWorkdayList(year: year, month: month)
+
+                async let earningsTask = historyUseCase
+                    .getEarningsInfo(year: year, month: month)
+
+                let (histories, earnings) = try await (historyTask,
+                                                       earningsTask)
+
+                self.histories = histories
+                self.earningsInfo = earnings
+
+                publish()
+
+            } catch {
+                state = .error(.network)
+            }
+        }
     }
 
     func fetchHistory(year: Int, month: Int) {
@@ -109,7 +133,9 @@ private extension HistoryViewModel {
 
     func publish() {
         guard let year = currentYear,
-              let month = currentMonth else {
+              let month = currentMonth,
+              let earnings = earningsInfo
+        else {
             state = .error(.dataCorrupted)
             return
         }
@@ -120,7 +146,8 @@ private extension HistoryViewModel {
             month: month
         )
 
-        state = .loaded(days)
+        state = .loaded(days: days,
+                        earnings: earnings)
     }
 }
 
@@ -175,7 +202,8 @@ private extension HistoryViewModel {
 enum HistoryViewState: Equatable {
     case idle
     case loading
-    case loaded([CalendarDay])
+    case loaded(days: [CalendarDay],
+                earnings: EarningsEntity)
     case error(HistoryError)
 }
 

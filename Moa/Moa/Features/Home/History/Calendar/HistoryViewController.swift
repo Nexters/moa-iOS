@@ -40,37 +40,37 @@ struct CalendarDay: Equatable {
 
 
 final class HistoryViewController: BaseViewController {
-
+    
     // MARK: - Properties
-
+    
     private let viewModel: HistoryViewModel
     
     /// CalendarView에서 마지막으로 선택된 날짜
     private var selectedDate: Date?
-
+    
     // MARK: - UI
-
+    
     private let calendarView = CalendarView()
-
+    
     // MARK: - Init
-
+    
     init(viewModel: HistoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         .lightContent
     }
     
     weak var coordinatorDelegate: HistoryViewControllerCoordinatorDelegate?
-
+    
     // MARK: - Lifecycle
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -81,12 +81,12 @@ final class HistoryViewController: BaseViewController {
     
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
-
+        
         view.backgroundColor = AppColor.Background.primary
         calendarView.delegate = self
-
+        
         view.addSubview(calendarView)
-
+        
         calendarView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.leading.trailing.bottom.equalToSuperview()
@@ -106,40 +106,45 @@ final class HistoryViewController: BaseViewController {
 // MARK: - Bind
 
 private extension HistoryViewController {
-
-
+    
+    
     func render(_ state: HistoryViewState) {
         switch state {
-
+            
         case .idle:
             break
-
+            
         case .loading:
             showLoading()
-
-        case .loaded(let days):
+            
+        case .loaded(let days, let earnings):
             hideLoading()
             
-        case .error(let error):
+            // calendarView.updateCalendarDays(days)
+            
+            calendarView.updateWorkInfo(
+               earnings
+            )
+            
+        case .error:
             hideLoading()
-            handleError(error)
         }
     }
 }
 
 private extension HistoryViewController {
-
+    
     func showLoading() {
         // 필요하면 ActivityIndicator 추가
     }
-
+    
     func hideLoading() {
         // 필요하면 로딩 제거
     }
-
+    
     func handleError(_ error: HistoryError) {
         let message: String
-
+        
         switch error {
         case .network:
             message = "네트워크 오류가 발생했습니다."
@@ -153,16 +158,16 @@ private extension HistoryViewController {
 // MARK: - CalendarViewDelegate
 
 extension HistoryViewController: CalendarViewDelegate {
-
+    
     func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay) {
         selectedDate = day.date
     }
-
+    
     func calendarView(_ view: CalendarView, didChangeToDate date: Date) {
         selectedDate = nil
         viewModel.send(.changeMonth(date))
     }
-
+    
     func calendarViewDidTapAdd(_ view: CalendarView) {
         // Coordinator 연결 시 여기서 처리
     }

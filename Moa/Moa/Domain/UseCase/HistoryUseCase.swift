@@ -36,4 +36,8 @@ final class HistoryUseCase {
             )
         )
     }
+    
+    func getEarningsInfo(year: Int, month: Int) async throws -> EarningsEntity {
+        try await workdayRepository.fetchEarnings(year: year, month: month)
+    }
 }
