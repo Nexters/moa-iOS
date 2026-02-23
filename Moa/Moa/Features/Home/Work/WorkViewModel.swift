@@ -251,9 +251,57 @@ private extension WorkViewModel {
 
     /// 일정 있는 날 idle → working (버튼 탭)
     func handleStartWork() {
-        guard currentStatus == .idle else { return }
-        currentStatus = .working
-        publish()
+        guard currentStatus == .idle,
+              var entity = homeEntity,
+              let originalIn  = entity.clockInTime,
+              let originalOut = entity.clockOutTime
+        else { return }
+
+        let nowMinutes = nowInMinutes()
+        let originalInMinutes  = originalIn.totalMinutes
+        let originalOutMinutes = originalOut.totalMinutes
+
+        // 이미 예정 출근시간 이후라면 시간 조정 없이 working만
+        guard nowMinutes < originalInMinutes else {
+            currentStatus = .working
+            publish()
+            return
+        }
+
+        // 얼마나 일찍 출근했는지 차이 계산
+        let diff = originalInMinutes - nowMinutes
+
+        // 퇴근시간도 동일하게 당김
+        let newOutMinutes = max(originalOutMinutes - diff, nowMinutes)
+
+        let newClockIn = TimeIndicatorEntity(
+            hour: nowMinutes / 60,
+            minute: nowMinutes % 60
+        )
+
+        let newClockOut = TimeIndicatorEntity(
+            hour: newOutMinutes / 60,
+            minute: newOutMinutes % 60
+        )
+
+        Task { @MainActor in
+            do {
+                let updated = try await homeUseCase.updateWorkday(
+                    date: todayDateString(),
+                    type: entity.type,
+                    clockInTime: newClockIn,
+                    clockOutTime: newClockOut
+                )
+
+                applyWorkdayUpdate(updated, to: &entity)
+                homeEntity    = entity
+                currentStatus = .working
+                publish()
+
+            } catch {
+                state = .error(.network)
+            }
+        }
     }
 
     /// 일정 없는 날(NONE) 쉬는날 출근하기
@@ -320,22 +368,53 @@ private extension WorkViewModel {
     }
 
     func handleRequestVacation() {
-        guard var entity = homeEntity else { return }
-        let clockIn  = entity.clockInTime
-        let clockOut = entity.clockOutTime
+        guard currentStatus == .idle,
+              var entity = homeEntity,
+              let originalIn  = entity.clockInTime,
+              let originalOut = entity.clockOutTime
+        else { return }
+
+        let nowMinutes = nowInMinutes()
+        let originalInMinutes  = originalIn.totalMinutes
+        let originalOutMinutes = originalOut.totalMinutes
+
+        // 이미 예정 출근시간 이후라면 시간 조정 없이 working만
+        guard nowMinutes < originalInMinutes else {
+            currentStatus = .working
+            publish()
+            return
+        }
+
+        // 얼마나 일찍 출근했는지 차이 계산
+        let diff = originalInMinutes - nowMinutes
+
+        // 퇴근시간도 동일하게 당김
+        let newOutMinutes = max(originalOutMinutes - diff, nowMinutes)
+
+        let newClockIn = TimeIndicatorEntity(
+            hour: nowMinutes / 60,
+            minute: nowMinutes % 60
+        )
+
+        let newClockOut = TimeIndicatorEntity(
+            hour: newOutMinutes / 60,
+            minute: newOutMinutes % 60
+        )
 
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
                     date: todayDateString(),
                     type: .vacation,
-                    clockInTime:  clockIn  ?? TimeIndicatorEntity(hour: 9,  minute: 0),
-                    clockOutTime: clockOut ?? TimeIndicatorEntity(hour: 18, minute: 0)
+                    clockInTime: newClockIn,
+                    clockOutTime: newClockOut
                 )
+
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
-                currentStatus = .idle
+                currentStatus = .working
                 publish()
+
             } catch {
                 state = .error(.network)
             }
