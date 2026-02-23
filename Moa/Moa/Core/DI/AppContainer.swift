@@ -91,7 +91,8 @@ final class AppContainer {
             workPolicyRepository: workPolicyRepository,
             onboardingRepository: onboardingRepository,
             notificationSettingRepository: notificationSettingRepository,
-            versionRepository: versionRepository
+            versionRepository: versionRepository,
+            authRepository: authRepository
         )
     }()
 }

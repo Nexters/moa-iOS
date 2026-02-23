@@ -12,6 +12,7 @@ import Alamofire
 enum AuthAPI {
     case kakaoAuth(SocialLoginRequest)
     case appleAuth(SocialLoginRequest)
+    case logout(LogoutRequest)
 }
 
 extension AuthAPI: TargetType {
@@ -27,6 +28,9 @@ extension AuthAPI: TargetType {
             
         case .appleAuth:
             return "/api/v1/auth/apple"
+            
+        case .logout:
+            return "/api/v1/auth/logout"
         }
     }
 
@@ -37,6 +41,9 @@ extension AuthAPI: TargetType {
             
         case .appleAuth:
             return .post
+            
+        case .logout:
+            return .post
         }
     }
 
@@ -46,6 +53,9 @@ extension AuthAPI: TargetType {
             return .requestJSONEncodable(body)
             
         case let .appleAuth(body):
+            return .requestJSONEncodable(body)
+            
+        case let .logout(body):
             return .requestJSONEncodable(body)
         }
     }

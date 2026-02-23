@@ -39,6 +39,10 @@ final class AuthUsecase {
         )
     }
     
+    func logout(fcmDeviceToken: String) async throws {
+        try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+    }
+    
     func updateFcmToken(to fcmToken: String) async {
         await fcmRepository.updateFcmToken(to: fcmToken)
     }

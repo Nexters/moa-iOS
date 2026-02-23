@@ -8,73 +8,47 @@
 import UIKit
 import SnapKit
 
-// MARK: - AlertAction
-
-struct AlertAction {
-    let title: String
-    let style: Style
-    let handler: (() -> Void)?
-    
-    enum Style {
-        case primary, destructive, cancel
-        
-        var titleColor: UIColor {
-            switch self {
-            case .primary:     return .systemBlue
-            case .destructive: return .systemRed
-            case .cancel:      return .secondaryLabel
-            }
-        }
-        
-        var font: UIFont {
-            switch self {
-            case .primary:     return .systemFont(ofSize: 16, weight: .bold)
-            case .destructive: return .systemFont(ofSize: 16, weight: .medium)
-            case .cancel:      return .systemFont(ofSize: 16, weight: .regular)
-            }
-        }
-    }
-}
-
-// MARK: - CustomAlertViewController
-
 final class CustomAlertViewController: UIViewController {
     
     // MARK: - UI Components
     
     private let dimView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
         return view
     }()
     
     private let alertContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = AppColor.Container.secondary
         view.layer.cornerRadius = 16
         view.clipsToBounds = true
         return view
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .bold)
-        label.textColor = .label
+    private let titleLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(.init(
+            typography: AppTypography.t3_700,
+            color: AppColor.IconAndText.highEmphasis
+        ))
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
     }()
     
-    private let messageLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .secondaryLabel
+    private let subtitleLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(.init(
+            typography: AppTypography.b2_400,
+            color: AppColor.IconAndText.mediumEmphasis
+        ))
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
     }()
     
-    private let labelStackView: UIStackView = {
+    private let labelStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 8
@@ -82,37 +56,46 @@ final class CustomAlertViewController: UIViewController {
         return stack
     }()
     
-    private let dividerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .separator
-        return view
-    }()
-    
-    private let buttonStackView: UIStackView = {
+    private let buttonStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
+        stack.spacing = 8
         stack.distribution = .fillEqually
         return stack
     }()
     
-    private let contentStackView: UIStackView = {
+    private let contentStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
+        stack.spacing = 20
         return stack
     }()
     
     // MARK: - Properties
     
-    private let alertTitle: String?
-    private let alertMessage: String?
-    private let actions: [AlertAction]
+    private let alertTitle: String
+    private let alertSubtitle: String?
+    private let leftButtonTitle: String?
+    private let rightButtonTitle: String
+    private let onLeftButtonTapped: (() -> Void)?
+    private let onRightButtonTapped: (() -> Void)?
     
     // MARK: - Init
     
-    init(title: String?, message: String?, actions: [AlertAction]) {
+    init(
+        title: String,
+        subtitle: String? = nil,
+        leftButtonTitle: String? = nil,
+        rightButtonTitle: String,
+        onLeftButtonTapped: (() -> Void)? = nil,
+        onRightButtonTapped: (() -> Void)? = nil
+    ) {
         self.alertTitle = title
-        self.alertMessage = message
-        self.actions = actions
+        self.alertSubtitle = subtitle
+        self.leftButtonTitle = leftButtonTitle
+        self.rightButtonTitle = rightButtonTitle
+        self.onLeftButtonTapped = onLeftButtonTapped
+        self.onRightButtonTapped = onRightButtonTapped
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
@@ -127,7 +110,6 @@ final class CustomAlertViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupActions()
     }
     
     // MARK: - Setup
@@ -135,73 +117,139 @@ final class CustomAlertViewController: UIViewController {
     private func setupUI() {
         view.addSubview(dimView)
         view.addSubview(alertContainerView)
-        alertContainerView.addSubview(contentStackView)
+        alertContainerView.addSubview(contentStack)
         
-        // 레이블 구성
-        if let title = alertTitle { titleLabel.text = title }
-        if let message = alertMessage { messageLabel.text = message }
-        labelStackView.addArrangedSubview(titleLabel)
-        if alertMessage != nil { labelStackView.addArrangedSubview(messageLabel) }
+        // 타이틀
+        titleLabel.setText(alertTitle)
+        labelStack.addArrangedSubview(titleLabel)
         
-        // 레이블 래퍼
-        let labelWrapper = UIView()
-        labelWrapper.addSubview(labelStackView)
-        labelStackView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview().inset(24)
-            make.leading.trailing.equalToSuperview().inset(16)
+        // 서브타이틀 (옵셔널)
+        if let subtitle = alertSubtitle {
+            subtitleLabel.setText(subtitle)
+            labelStack.addArrangedSubview(subtitleLabel)
         }
         
-        contentStackView.addArrangedSubview(labelWrapper)
-        contentStackView.addArrangedSubview(dividerView)
-        contentStackView.addArrangedSubview(buttonStackView)
+        // 버튼
+        if let leftTitle = leftButtonTitle {
+            buttonStack.addArrangedSubview(makeButton(title: leftTitle, style: .cancel))
+        }
+        buttonStack.addArrangedSubview(makeButton(title: rightButtonTitle, style: .confirm))
         
-        // 제약
+        contentStack.addArrangedSubViews([labelStack, buttonStack])
+        
         dimView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
         alertContainerView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.equalTo(280)
+            make.leading.trailing.equalToSuperview().inset(38)
         }
         
-        contentStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        contentStack.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(24)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().inset(18)
         }
         
-        dividerView.snp.makeConstraints { make in
-            make.height.equalTo(0.5)
-        }
-        
-        buttonStackView.snp.makeConstraints { make in
-            make.height.equalTo(52)
+        buttonStack.snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(56)
         }
     }
     
-    private func setupActions() {
-        actions.enumerated().forEach { index, action in
-            if index > 0 {
-                let verticalDivider = UIView()
-                verticalDivider.backgroundColor = .separator
-                buttonStackView.addArrangedSubview(verticalDivider)
-                verticalDivider.snp.makeConstraints { make in
-                    make.width.equalTo(0.5)
-                }
+    private enum ButtonStyle {
+        case cancel, confirm
+        
+        var backgroundColor: UIColor {
+            switch self {
+            case .cancel:  return AppColor.Btn.Tertiary.enable
+            case .confirm: return AppColor.Btn.Primary.enable
             }
-            
-            let button = UIButton(type: .system)
-            button.setTitle(action.title, for: .normal)
-            button.setTitleColor(action.style.titleColor, for: .normal)
-            button.titleLabel?.font = action.style.font
-            button.tag = index
-            button.addTarget(self, action: #selector(actionButtonTapped(_:)), for: .touchUpInside)
-            buttonStackView.addArrangedSubview(button)
+        }
+        
+        var titleColor: UIColor {
+            switch self {
+            case .cancel:  return AppColor.IconAndText.highEmphasisReverse
+            case .confirm: return AppColor.IconAndText.highEmphasisReverse
+            }
         }
     }
     
-    @objc private func actionButtonTapped(_ sender: UIButton) {
-        dismiss(animated: true) { [weak self] in
-            self?.actions[sender.tag].handler?()
+    private func makeButton(title: String, style: ButtonStyle) -> UIButton {
+        let button = UIButton(type: .system)
+        button.backgroundColor = style.backgroundColor
+        button.layer.cornerRadius = 28
+        button.clipsToBounds = true
+        
+        var config = UIButton.Configuration.plain()
+        var attributedTitle = AttributedString(title)
+        attributedTitle.font = AppTypography.b1_600.font()
+        attributedTitle.foregroundColor = style.titleColor
+        config.attributedTitle = attributedTitle
+        button.configuration = config
+        
+        switch style {
+        case .cancel:
+            button.addTarget(self, action: #selector(leftButtonTapped), for: .touchUpInside)
+        case .confirm:
+            button.addTarget(self, action: #selector(rightButtonTapped), for: .touchUpInside)
         }
+        
+        return button
+    }
+    
+    // MARK: - Actions
+    
+    @objc private func leftButtonTapped() {
+        dismiss(animated: true) { [weak self] in
+            self?.onLeftButtonTapped?()
+        }
+    }
+    
+    @objc private func rightButtonTapped() {
+        dismiss(animated: true) { [weak self] in
+            self?.onRightButtonTapped?()
+        }
+    }
+}
+
+// MARK: - AlertManager
+
+final class AlertManager {
+    
+    static func show(
+        title: String,
+        subtitle: String? = nil,
+        leftButtonTitle: String? = nil,
+        rightButtonTitle: String,
+        onLeftButtonTapped: (() -> Void)? = nil,
+        onRightButtonTapped: (() -> Void)? = nil
+    ) {
+        guard let topVC = topViewController() else { return }
+        
+        let alert = CustomAlertViewController(
+            title: title,
+            subtitle: subtitle,
+            leftButtonTitle: leftButtonTitle,
+            rightButtonTitle: rightButtonTitle,
+            onLeftButtonTapped: onLeftButtonTapped,
+            onRightButtonTapped: onRightButtonTapped
+        )
+        
+        topVC.present(alert, animated: true)
+    }
+    
+    private static func topViewController() -> UIViewController? {
+        guard let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }),
+              let window = windowScene.windows.first(where: { $0.isKeyWindow })
+        else { return nil }
+        
+        var topVC = window.rootViewController
+        while let presented = topVC?.presentedViewController {
+            topVC = presented
+        }
+        return topVC
     }
 }
