@@ -14,38 +14,42 @@ final class RollingAmountLabel: UIView {
 
     private let font: UIFont
     private let textColor: UIColor
-    private let animationDuration: TimeInterval = 0.20
-    private let digitDelay: TimeInterval        = 0.008   // 자릿수마다 살짝 딜레이
+    private let animationDuration: TimeInterval = 0.2
+    private let digitDelay: TimeInterval = 0.008
 
     // MARK: - State
 
-    private var digitContainers: [UIView]  = []
-    private var currentLabels: [UILabel]   = []
-    private var currentText: String        = ""
+    private var digitContainers: [UIView] = []
+    private var currentLabels: [UILabel] = []
+    private var currentText: String = ""
 
     // MARK: - Layout
 
     private lazy var stackView: UIStackView = {
         let sv = UIStackView()
-        sv.axis      = .horizontal
+        sv.axis = .horizontal
         sv.alignment = .center
-        sv.spacing   = 0
+        sv.spacing = 0
         return sv
     }()
 
     // MARK: - Init
 
     init(
-        font: UIFont       = AppTypography.h1_700.font(),
+        font: UIFont = AppTypography.h1_700.font(),
         textColor: UIColor = AppColor.IconAndText.highEmphasis
     ) {
-        self.font      = font
+        // 숫자 흔들림 방지 (추천)
+        self.font = UIFont.monospacedDigitSystemFont(
+            ofSize: font.pointSize,
+            weight: .bold
+        )
         self.textColor = textColor
         super.init(frame: .zero)
-        
+
         addSubview(stackView)
-        
         stackView.snp.makeConstraints { $0.edges.equalToSuperview() }
+
         clipsToBounds = true
     }
 
@@ -53,101 +57,115 @@ final class RollingAmountLabel: UIView {
 
     // MARK: - Public
 
-    /// 애니메이션 없이 즉시 세팅 (초기값·자릿수 변경 시)
     func setText(_ text: String) {
         currentText = text
-        buildColumns(text, animated: false)
+        rebuildColumns(text, animated: false)
     }
 
-    /// 롤링 애니메이션으로 교체
-    /// - 자릿수(글자수) 동일: 변경된 칸만 롤링
-    /// - 자릿수 다름: 전체 리빌드 (천 단위 쉼표 구조 변경)
     func rollTo(_ text: String) {
         guard text != currentText else { return }
+
         let old = currentText
         currentText = text
 
         if old.count != text.count {
-            buildColumns(text, animated: true)
+            rebuildColumns(text, animated: true)
         } else {
             rollChangedDigits(from: old, to: text)
         }
     }
 
-    // MARK: - Private
+    // MARK: - Build
 
-    private func charSize(_ str: String) -> CGSize {
-        let attrs: [NSAttributedString.Key: Any] = [.font: font]
-        let s = (str as NSString).size(withAttributes: attrs)
-        return CGSize(width: ceil(s.width) + 1, height: ceil(s.height))
-    }
+    private func rebuildColumns(_ text: String, animated: Bool) {
 
-    private func makeLabel(_ text: String) -> UILabel {
-        let l = UILabel()
-        l.font          = font
-        l.textColor     = textColor
-        l.text          = text
-        l.textAlignment = .center
-        l.setContentHuggingPriority(.required, for: .horizontal)
-        l.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return l
-    }
-
-    // MARK: Build
-
-    /// 전체 컬럼 리빌드 (글자 수 변경 / 초기 세팅)
-    private func buildColumns(_ text: String, animated: Bool) {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         digitContainers.removeAll()
         currentLabels.removeAll()
 
-        for (i, ch) in text.enumerated() {
-            let str  = String(ch)
-            let sz   = charSize(str)
-            let lbl  = makeLabel(str)
+        for (index, char) in text.enumerated() {
 
-            let box = UIView()
-            box.clipsToBounds = true
-            box.snp.makeConstraints { $0.size.equalTo(sz) }
-            box.addSubview(lbl)
-            lbl.snp.makeConstraints { $0.center.equalToSuperview() }
+            let label = makeLabel(String(char))
+            let box = makeContainer(for: label)
 
             stackView.addArrangedSubview(box)
             digitContainers.append(box)
-            currentLabels.append(lbl)
+            currentLabels.append(label)
 
             if animated {
-                lbl.transform = CGAffineTransform(translationX: 0, y: sz.height)
+                label.transform = CGAffineTransform(
+                    translationX: 0,
+                    y: font.lineHeight
+                )
+
                 UIView.animate(
                     withDuration: animationDuration,
-                    delay: Double(i) * digitDelay,
+                    delay: Double(index) * digitDelay,
                     options: .curveEaseOut,
-                    animations: { lbl.transform = .identity },
-                    completion: nil
+                    animations: {
+                        label.transform = .identity
+                    }
                 )
             }
         }
     }
 
-    // MARK: Roll
+    private func makeContainer(for label: UILabel) -> UIView {
+        let box = UIView()
+        box.clipsToBounds = true
 
-    /// 변경된 자릿수만 롤링 (글자 수 동일할 때)
+        box.addSubview(label)
+        label.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        let size = label.intrinsicContentSize
+
+        box.snp.makeConstraints {
+            $0.width.equalTo(size.width)
+            $0.height.equalTo(font.lineHeight)
+        }
+
+        return box
+    }
+
+    private func makeLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.font = font
+        label.textColor = textColor
+        label.text = text
+        label.textAlignment = .center
+        return label
+    }
+
+    // MARK: - Roll
+
     private func rollChangedDigits(from old: String, to new: String) {
+
         let oldArr = Array(old)
         let newArr = Array(new)
 
         for i in 0..<min(oldArr.count, newArr.count) {
-            guard oldArr[i] != newArr[i], i < digitContainers.count else { continue }
 
-            let box      = digitContainers[i]
+            guard oldArr[i] != newArr[i],
+                  i < digitContainers.count else { continue }
+
+            let box = digitContainers[i]
             let oldLabel = currentLabels[i]
-            let newStr   = String(newArr[i])
-            let newLabel = makeLabel(newStr)
-            let h        = box.bounds.height > 0 ? box.bounds.height : charSize(newStr).height
+            let newLabel = makeLabel(String(newArr[i]))
 
             box.addSubview(newLabel)
-            newLabel.snp.makeConstraints { $0.center.equalToSuperview() }
-            newLabel.transform = CGAffineTransform(translationX: 0, y: h) // 아래에서 시작
+
+            newLabel.snp.makeConstraints {
+                $0.edges.equalToSuperview()
+            }
+
+            let offset = font.lineHeight
+
+            newLabel.transform = CGAffineTransform(
+                translationX: 0,
+                y: offset
+            )
 
             UIView.animate(
                 withDuration: animationDuration,
@@ -155,12 +173,14 @@ final class RollingAmountLabel: UIView {
                 options: .curveEaseOut,
                 animations: {
                     newLabel.transform = .identity
-                    oldLabel.transform = CGAffineTransform(translationX: 0, y: -h) // 위로 사라짐
+                    oldLabel.transform = CGAffineTransform(
+                        translationX: 0,
+                        y: -offset
+                    )
                 },
                 completion: { [weak self] _ in
                     oldLabel.removeFromSuperview()
-                    guard let self, i < self.currentLabels.count else { return }
-                    self.currentLabels[i] = newLabel
+                    self?.currentLabels[i] = newLabel
                 }
             )
         }
