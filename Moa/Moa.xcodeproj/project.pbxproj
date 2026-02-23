@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 8D1A50692F38EAB6002A78C4 /* KakaoSDK */; };
 		8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8D3FA17F2F23DF9A00EAE229 /* SnapKit */; };
+		8DB775362F4CCB150014BCE0 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8DB775352F4CCB150014BCE0 /* FirebaseMessaging */; };
 		8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */; };
 		CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE8182F279DA800CC8D17 /* CombineMoya */; };
 		CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE81A2F279DA800CC8D17 /* Moya */; };
@@ -49,6 +50,7 @@
 			files = (
 				CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */,
 				8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */,
+				8DB775362F4CCB150014BCE0 /* FirebaseMessaging in Frameworks */,
 				8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */,
 				8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */,
 				CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */,
@@ -64,6 +66,7 @@
 			children = (
 				CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */,
 				8DAC508F2F20FF7100FAA818 /* Moa */,
+				8DB775342F4CCB150014BCE0 /* Frameworks */,
 				8DAC508E2F20FF7100FAA818 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -74,6 +77,13 @@
 				8DAC508D2F20FF7100FAA818 /* Moa.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8DB775342F4CCB150014BCE0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -103,6 +113,7 @@
 				8D1A50692F38EAB6002A78C4 /* KakaoSDK */,
 				8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */,
 				CDCDC1662F4C861E000F2D8F /* Lottie */,
+				8DB775352F4CCB150014BCE0 /* FirebaseMessaging */,
 			);
 			productName = Moa;
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
@@ -480,6 +491,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		8DB775352F4CCB150014BCE0 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 		8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
