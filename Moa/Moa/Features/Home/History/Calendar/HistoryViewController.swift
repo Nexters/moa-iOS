@@ -98,9 +98,15 @@ final class HistoryViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         setupUI()
         bind()
         viewModel.send(.viewDidLoad)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.send(.refresh)
     }
 
     // MARK: - Setup
