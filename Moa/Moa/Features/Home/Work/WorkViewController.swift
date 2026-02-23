@@ -13,7 +13,6 @@ import UserNotifications
 protocol WorkViewControllerCoordinatorDelegate: AnyObject {
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController)
     func workViewControllerDidTapSetting(_ viewController: WorkViewController)
-    /// 근무완료 1에서 "완료" 탭 → 최종 완료 페이지
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController)
 }
 
@@ -44,7 +43,7 @@ final class WorkViewController: BaseViewController {
         return view
     }()
 
-    /// working / 근무완료1(finished+오버레이) 상태 화면
+    /// working / 근무완료1(workFinished) 상태 화면
     private lazy var workingContentView: WorkingContentView = {
         let view = WorkingContentView(workingType: .work)
         view.delegate = self
@@ -81,7 +80,7 @@ final class WorkViewController: BaseViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if case let .loaded(status, _) = viewModel.state,
-           status == .working || status == .finished {
+           status == .working || status == .workFinished {
             startWorkingTimer()
         }
     }
@@ -170,23 +169,30 @@ private extension WorkViewController {
 
     func renderLoaded(status: WorkStatus, data: HomeEntity) {
         loadingIndicator.stopAnimating()
+
         switch status {
+
         case .idle:
+            // 근무 전 / 공휴일(NONE) / 휴가(시간 전)
             hasConfirmedWork = false
             renderIdleView(data: data)
+
         case .working:
+            // 근무 중
             hasConfirmedWork = false
             renderActiveWork(status: status, data: data)
+
+        case .workFinished:
+            // 근무완료 1 — WorkingContentView + WorkEndBottomIndicator 오버레이
+            renderActiveWork(status: status, data: data)
+
         case .finished:
-            if hasConfirmedWork {
-                // 최종 완료 페이지 (WorkMainContentView, status: .finished)
-                renderFinalComplete(data: data)
-            } else {
-                // 근무완료 1 — WorkingContentView + WorkEndBottomIndicator 오버레이
-                renderActiveWork(status: status, data: data)
-            }
+            // 최종완료 — WorkMainContentView (status: .finished)
+            renderFinalComplete(data: data)
         }
     }
+
+    // MARK: idle (근무 전 / 공휴일)
 
     func renderIdleView(data: HomeEntity) {
         stopWorkingTimer()
@@ -195,6 +201,8 @@ private extension WorkViewController {
         workingContentView.isHidden = true
         workMainView.configure(data: data, status: .idle)
     }
+
+    // MARK: working / workFinished
 
     func renderActiveWork(status: WorkStatus, data: HomeEntity) {
         workMainView.isHidden       = true
@@ -217,7 +225,9 @@ private extension WorkViewController {
         startWorkingTimer()
     }
 
-    /// 최종 완료 페이지 — WorkMainContentView (status: .finished)
+    // MARK: 최종완료
+
+    /// "완료" 탭 후 → WorkMainContentView (status: .finished)
     /// - MonthlySalaryView: imgFullMoney, 금액 녹색
     /// - WorkMainSummaryView: dailyPay, 탭 불가, 휴가 시 "휴가"
     /// - 하단 버튼: "이번달 근무 기록 확인하기"
@@ -258,22 +268,16 @@ private extension WorkViewController {
 private extension WorkViewController {
 
     private func showWorkAlarmBottomSheetIfNeeded() {
-
         NotificationManager.shared.checkAuthorizationStatus { [weak self] status in
             guard let self else { return }
-
             switch status {
-
             case .notDetermined, .denied:
-                // 최초 진입 → 바텀시트 노출
                 if !UserDefaults.standard.bool(forKey: "HasShownWorkAlarmSheet") {
                     UserDefaults.standard.set(true, forKey: "HasShownWorkAlarmSheet")
                     self.showWorkAlarmBottomSheet()
                 }
-
             case .authorized, .provisional, .ephemeral:
                 break
-
             @unknown default:
                 break
             }
@@ -286,7 +290,7 @@ private extension WorkViewController {
         presentBottomSheet(vc)
     }
 
-    /// idle: 출퇴근 시간 설정 (.setEstimateTime: "예상 출퇴근 시간을 알려주세요")
+    /// idle: 출퇴근 시간 설정 (.setEstimateTime)
     func presentTimeSelectionBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -294,7 +298,7 @@ private extension WorkViewController {
         presentTimeSheet(type: .setEstimateTime, startTime: startTime, endTime: endTime)
     }
 
-    /// 근무완료 1 → "더 일할게요": 퇴근 시간 연장 (.extendEndTime)
+    /// 근무완료 1 → "더 일할게요": 퇴근 시간 연장
     func presentExtendTimeBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -310,8 +314,7 @@ private extension WorkViewController {
         presentTimeSheet(type: .changeWorkTime, startTime: startTime, endTime: endTime)
     }
 
-    /// 근무 중 "근무 일정에 변동이 있어요" → 예상 출퇴근 시간 변경
-    /// (.setEstimateTime: "예상 출퇴근 시간을 알려주세요" + [확인] 버튼)
+    /// 근무 중 일정 변동 → 예상 출퇴근 시간 변경
     func presentWorkingScheduleAdjustBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -384,7 +387,7 @@ private extension WorkViewController {
 
 extension WorkViewController: WorkAlarmBottomSheetDelegate {
     func didTapAlarm() { requestNotificationPermission() }
-    func didTapLater() {}
+    func didTapLater()  {}
 
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(
@@ -408,12 +411,16 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
         endTime: TimeIndicatorEntity
     ) {
         guard case let .loaded(status, _) = viewModel.state else { return }
-        if status == .finished {
-            // 근무완료 1: 출퇴근 수정 → finished 유지
+
+        switch status {
+        case .workFinished:
+            // 근무완료 1에서 시간 수정
+            viewModel.send(.editFinishedWorkTime(start: startTime, end: endTime))
+        case .working:
+            // 근무 중 일정 변경 / extendEndTime
             viewModel.send(.updateWorkTime(start: startTime, end: endTime))
-        } else {
-            // idle: setEstimateTime 확인
-            // working: setEstimateTime(.changeSchedule) 또는 extendEndTime
+        default:
+            // idle: 예상 출퇴근 시간 설정
             viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         }
     }
@@ -428,7 +435,14 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
 extension WorkViewController: WorkMainContentViewDelegate {
 
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
-        viewModel.send(.startWork)
+        guard case let .loaded(_, data) = viewModel.state else { return }
+        if data.type == .none {
+            // 일정 없는 날(NONE) → 쉬는날 출근하기
+            viewModel.send(.startWorkOnHoliday)
+        } else {
+            // 일정 있는 날 → 출근하기
+            viewModel.send(.startWork)
+        }
     }
 
     func workMainContentViewDidTapVacation(_ view: WorkMainContentView) {
@@ -439,7 +453,6 @@ extension WorkViewController: WorkMainContentViewDelegate {
         presentTimeSelectionBottomSheet()
     }
 
-    /// 최종완료: "이번달 근무 기록 확인하기" → 캘린더(History) 화면
     func workMainContentViewDidTapWorkHistory(_ view: WorkMainContentView) {
         coordinatorDelegate?.workViewControllerDidTapCalendar(self)
     }
@@ -449,25 +462,24 @@ extension WorkViewController: WorkMainContentViewDelegate {
 
 extension WorkViewController: WorkingContentViewDelegate {
 
-    /// working: "일정 조정" 탭 → WorkScheduleChangeBottomSheet
     func workingContentViewDidTapScheduleAdjust(_ view: WorkingContentView) {
         presentScheduleChangeBottomSheet()
     }
 
-    /// 근무완료 1: "더 일할게요" → extendEndTime 시트
     func workingContentViewDidTapExtendWork(_ view: WorkingContentView) {
         presentExtendTimeBottomSheet()
     }
 
-    /// 근무완료 1: 근무시간 탭 → changeWorkTime 시트
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView) {
         presentFinishedTimeEditBottomSheet()
     }
 
-    /// 근무완료 1: "완료" → 최종 완료 페이지
+    /// 근무완료 1 → "완료" 탭 → 최종완료 페이지
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
         hasConfirmedWork = true
         guard case let .loaded(_, data) = viewModel.state else { return }
+        // ViewModel status를 .finished로 전환
+        // (현재는 .workFinished → hasConfirmedWork=true로 렌더 분기)
         renderFinalComplete(data: data)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
     }
@@ -484,13 +496,9 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
         switch type {
         case .vacation:
             dismiss(animated: true) { [weak self] in self?.viewModel.send(.requestVacation) }
-
         case .endWork:
-            // 오늘 근무를 마칠게요 → updateWorkday API (타입+시작+끝)
             dismiss(animated: true) { [weak self] in self?.viewModel.send(.endWork) }
-
         case .changeSchedule:
-            // 근무 일정에 변동이 있어요 → "예상 출퇴근 시간을 알려주세요" (.setEstimateTime)
             dismiss(animated: true) { [weak self] in
                 self?.presentWorkingScheduleAdjustBottomSheet()
             }

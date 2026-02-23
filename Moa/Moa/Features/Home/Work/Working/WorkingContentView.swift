@@ -88,7 +88,8 @@ final class WorkingContentView: UIView {
         status:      WorkStatus,
         data:        HomeEntity
     ) {
-        let newIsFinished = (status == .finished)
+        // .workFinished = 근무완료1
+        let newIsFinished = (status == .workFinished)
         self.isFinished       = newIsFinished
         self.dailyPay         = dailyPay
         self.totalWorkSeconds = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
@@ -98,20 +99,17 @@ final class WorkingContentView: UIView {
             applyWorkingType(workingType)
         }
 
-        let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
-
         if newIsFinished {
-            // 근무완료 1: dailyPay 전액 고정 + 최대 높이 + 버블 숨김
-            earningsStackView.configure(amount: dailyPay, startedAt: startedAt)
-            earningsStackView.snapToMaxHeight()
-            earningsStackView.stopAnimations()
-
-            // WorkingStatusView 숨김 — 오로지 WorkEndBottomIndicator만 노출
+            // 근무완료 1:
+            // - configure에 isFinished: true 전달 → asyncAfter startAnimations 예약 차단
+            // - EarningsStackView 내부에서 즉시 isStopped=true, 말풍선 숨김, 최대 높이
+            earningsStackView.configure(amount: dailyPay, startedAt: startedAt, isFinished: true)
             workingStatusView.isHidden = true
         } else {
             workingStatusView.isHidden = false
+            let elapsed     = max(0, Int(Date().timeIntervalSince(startedAt)))
             let earnedSoFar = earnedAmount(elapsed: elapsed)
-            earningsStackView.configure(amount: earnedSoFar, startedAt: startedAt)
+            earningsStackView.configure(amount: earnedSoFar, startedAt: startedAt, isFinished: false)
             workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
         }
 
@@ -124,11 +122,9 @@ final class WorkingContentView: UIView {
     // MARK: - Tick
 
     func tick() {
-        // finished: 타이머 멈춤, 금액 고정
-        if isFinished { return }
+        guard !isFinished else { return }
         let elapsed = workingStatusView.elapsedSeconds()
-        let earned  = earnedAmount(elapsed: elapsed)
-        earningsStackView.updateAmount(earned)
+        earningsStackView.updateAmount(earnedAmount(elapsed: elapsed))
         workingStatusView.tick()
     }
 
