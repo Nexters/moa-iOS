@@ -21,6 +21,10 @@ final class HistoryViewModel {
     enum Input {
         case viewDidLoad
         case changeMonth(Date)
+        /// 날짜 탭 → 해당 날짜 상세 fetch
+        case selectDay(Date)
+        /// 상세 패널 닫기
+        case deselectDay
     }
 
     // MARK: - Dependencies
@@ -29,10 +33,10 @@ final class HistoryViewModel {
 
     // MARK: - Private State
 
-    private var cancellables = Set<AnyCancellable>()
-    private var currentYear: Int?
+    private var cancellables     = Set<AnyCancellable>()
+    private var currentYear:  Int?
     private var currentMonth: Int?
-    private var histories: [History] = []
+    private var histories:    [History]       = []
     private var earningsInfo: EarningsEntity?
 
     // MARK: - Init
@@ -50,80 +54,66 @@ extension HistoryViewModel {
 
     func send(_ input: Input) {
         switch input {
-
-        case .viewDidLoad:
-            loadCurrentMonth()
-
-        case let .changeMonth(date):
-            loadMonth(from: date)
+        case .viewDidLoad:        loadCurrentMonth()
+        case .changeMonth(let d): loadMonth(from: d)
+        case .selectDay(let d):   fetchDayDetail(date: d)
+        case .deselectDay:        publishCalendar()
         }
     }
 }
 
-// MARK: - Data Loading
+// MARK: - Month Loading
 
 private extension HistoryViewModel {
 
     func loadCurrentMonth() {
-        let now = Date()
-        loadMonth(from: now)
+        loadMonth(from: Date())
     }
 
     func loadMonth(from date: Date) {
         guard state != .loading else { return }
-
         state = .loading
 
-        let calendar = Calendar.korea
-        let year = calendar.component(.year, from: date)
-        let month = calendar.component(.month, from: date)
+        let cal   = Calendar.korea
+        let year  = cal.component(.year,  from: date)
+        let month = cal.component(.month, from: date)
 
-        currentYear = year
+        currentYear  = year
         currentMonth = month
 
-        fetchAll(year: year, month: month)
-    }
-    
-    func fetchAll(year: Int, month: Int) {
         Task { @MainActor in
             do {
-                async let historyTask = historyUseCase
-                    .getWorkdayList(year: year, month: month)
-
-                async let earningsTask = historyUseCase
-                    .getEarningsInfo(year: year, month: month)
-
-                let (histories, earnings) = try await (historyTask,
-                                                       earningsTask)
-
-                self.histories = histories
+                async let historyTask  = historyUseCase.getWorkdayList(year: year, month: month)
+                async let earningsTask = historyUseCase.getEarningsInfo(year: year, month: month)
+                let (histories, earnings) = try await (historyTask, earningsTask)
+                self.histories    = histories
                 self.earningsInfo = earnings
-
-                publish()
-
+                publishCalendar()
             } catch {
                 state = .error(.network)
             }
         }
     }
+}
 
-    func fetchHistory(year: Int, month: Int) {
+// MARK: - Day Detail
+
+private extension HistoryViewModel {
+
+    func fetchDayDetail(date: Date) {
+        let formatter        = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
+        let dateString       = formatter.string(from: date)
+
         Task { @MainActor in
             do {
-                let result = try await historyUseCase
-                    .getWorkdayList(year: year, month: month)
-
-                apply(result)
-
+                let workday = try await historyUseCase.fetchWorkday(date: dateString)
+                state = .dayDetail(date: date, workday: workday)
             } catch {
                 state = .error(.network)
             }
         }
-    }
-
-    func apply(_ histories: [History]) {
-        self.histories = histories
-        publish()
     }
 }
 
@@ -131,23 +121,16 @@ private extension HistoryViewModel {
 
 private extension HistoryViewModel {
 
-    func publish() {
-        guard let year = currentYear,
-              let month = currentMonth,
+    func publishCalendar() {
+        guard let year     = currentYear,
+              let month    = currentMonth,
               let earnings = earningsInfo
         else {
             state = .error(.dataCorrupted)
             return
         }
-
-        let days = mapToCalendarDays(
-            histories,
-            year: year,
-            month: month
-        )
-
-        state = .loaded(days: days,
-                        earnings: earnings)
+        let days = mapToCalendarDays(histories, year: year, month: month)
+        state = .loaded(days: days, earnings: earnings)
     }
 }
 
@@ -161,29 +144,25 @@ private extension HistoryViewModel {
         month: Int
     ) -> [CalendarDay] {
 
-        let formatter = DateFormatter()
+        let formatter        = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
 
         let calendar = Calendar.korea
-        let today = Date()
+        let today    = Date()
 
         return histories.compactMap { history in
-
-            guard let date = formatter.date(from: history.date)
-            else { return nil }
+            guard let date = formatter.date(from: history.date) else { return nil }
 
             let isToday = calendar.isDate(date, inSameDayAs: today)
 
             let type: CalendarDayType
-
             switch history.type {
             case .work:
-                type = .worked
-
+                let isPastOrToday = calendar.compare(date, to: today, toGranularity: .day) != .orderedDescending
+                type = isPastOrToday ? .worked : .scheduled
             case .vacation:
                 type = .singleLabel(.vacation)
-
             case .none:
                 type = .none
             }
@@ -199,11 +178,14 @@ private extension HistoryViewModel {
     }
 }
 
+// MARK: - State / Error
+
 enum HistoryViewState: Equatable {
     case idle
     case loading
-    case loaded(days: [CalendarDay],
-                earnings: EarningsEntity)
+    case loaded(days: [CalendarDay], earnings: EarningsEntity)
+    /// 날짜 탭 후 상세 표시
+    case dayDetail(date: Date, workday: WorkdayEntity)
     case error(HistoryError)
 }
 

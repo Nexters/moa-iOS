@@ -20,13 +20,11 @@ protocol FixScheduleViewControllerDelegate: AnyObject {
 enum ScheduleTypeOptionViewType {
     case add
     case fix
-    
+
     var title: String {
         switch self {
-        case .add:
-            return "추가"
-        case .fix:
-            return "수정"
+        case .add: return "추가"
+        case .fix: return "수정"
         }
     }
 }
@@ -117,14 +115,14 @@ final class FixScheduleViewController: BaseViewController {
     private lazy var cancelButton: AppButton = {
         let btn = AppButton()
         btn.setTitle("취소", for: .normal)
-        btn.applyStyle(.secondary())
+        btn.applyStyle(.tertiary())
         btn.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
         return btn
     }()
 
     private lazy var confirmButton: AppButton = {
         let btn = AppButton()
-        btn.setTitle(viewModel.viewType.title, for: .normal)
+        btn.setTitle("확인", for: .normal)
         btn.applyStyle(.primary())
         btn.isEnabled = false
         btn.addTarget(self, action: #selector(didTapConfirm), for: .touchUpInside)
@@ -152,18 +150,18 @@ final class FixScheduleViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+        bind()
     }
 
     // MARK: - Setup
 
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
-
         replaceSystemBackButtonWithAppBackButton()
         setupHierarchy()
         setupConstraints()
 
-        // 초기 시간 표시
         let s = viewModel.state
         workingTimeRangeRowView.configure(
             start: s.startTime.displayString,
@@ -175,6 +173,12 @@ final class FixScheduleViewController: BaseViewController {
         viewModel.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
+            .store(in: &cancellables)
+
+        viewModel.$submitState
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.handleSubmitState($0) }
             .store(in: &cancellables)
     }
 }
@@ -195,13 +199,10 @@ private extension FixScheduleViewController {
     }
 
     func setupConstraints() {
-        // 타이틀
         titleLabel.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
-
-        // ── 날짜 구간 ──────────────────────────
         dateSectionLabel.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(32)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
@@ -211,20 +212,14 @@ private extension FixScheduleViewController {
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.height.equalTo(60)
         }
-
-        // ── 일정 타입 ──────────────────────────
         scheduleTypeOptionView.snp.makeConstraints {
             $0.top.equalTo(dateRangeCardView.snp.bottom).offset(32)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
-
-        // ── 근무 시간 ──────────────────────────
         workingHourSection.snp.makeConstraints {
             $0.top.equalTo(scheduleTypeOptionView.snp.bottom).offset(32)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
-
-        // ── 하단 버튼 ──────────────────────────
         bottomButtonStack.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
@@ -233,25 +228,60 @@ private extension FixScheduleViewController {
     }
 }
 
-// MARK: - Render
+// MARK: - Render (폼 상태)
 
 private extension FixScheduleViewController {
 
     func render(_ state: FixScheduleViewState) {
-        // 날짜 카드
         dateRangeCardView.configure(dateRange: state.dateRange)
-
-        // 일정 타입 (notify: false → 무한루프 방지)
         scheduleTypeOptionView.setSelected(state.scheduleType)
-
-        // 근무 시간 — TimeRangeRowView.configure(start:end:)
         workingTimeRangeRowView.configure(
             start: state.startTime.displayString,
             end:   state.endTime.displayString
         )
 
-        // 확인 버튼 활성 여부
-        confirmButton.isEnabled = state.isConfirmEnabled
+        // submitting 중이 아닐 때만 버튼 활성 여부 갱신
+        if viewModel.submitState != .submitting {
+            confirmButton.isEnabled = state.isConfirmEnabled
+        }
+
+        // 휴가 선택 시 근무 시간 섹션 숨김
+        workingHourSection.isHidden = (state.scheduleType == .vacation)
+    }
+}
+
+// MARK: - Submit State
+
+private extension FixScheduleViewController {
+
+    func handleSubmitState(_ submitState: FixScheduleSubmitState) {
+        switch submitState {
+
+        case .idle:
+            break
+
+        case .submitting:
+            confirmButton.isEnabled = false
+            cancelButton.isEnabled  = false
+
+        case .success:
+            coordinatorDelegate?.fixScheduleViewControllerDidConfirm(self, state: viewModel.state)
+
+        case .failure(let message):
+            confirmButton.isEnabled = viewModel.state.isConfirmEnabled
+            cancelButton.isEnabled  = true
+            showErrorAlert(message: message)
+        }
+    }
+
+    func showErrorAlert(message: String) {
+        let alert = UIAlertController(
+            title: "저장 실패",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
     }
 }
 
@@ -280,7 +310,6 @@ private extension FixScheduleViewController {
 
 extension FixScheduleViewController {
 
-    /// BaseViewController의 replaceSystemBackButtonWithAppBackButton이 호출하는 타겟
     @objc func didTapBack() {
         coordinatorDelegate?.fixScheduleViewControllerDidCancel(self)
     }
@@ -291,7 +320,6 @@ extension FixScheduleViewController {
 
     @objc private func didTapConfirm() {
         viewModel.send(.confirmTapped)
-        coordinatorDelegate?.fixScheduleViewControllerDidConfirm(self, state: viewModel.state)
     }
 
     @objc private func didTapTimeRange() {

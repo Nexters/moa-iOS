@@ -41,35 +41,43 @@ final class CalendarInfoCard: UIView {
     // MARK: - Setup
 
     private func setup() {
-        backgroundColor    = AppColor.Container.secondary
+        backgroundColor    = AppColor.Container.primary
         layer.cornerRadius = 16
         clipsToBounds      = true
 
-        addSubViews([workHoursTitleLabel, workHoursValueView, divider, salaryTitleLabel, salaryValueView])
+        addSubViews([
+            workHoursTitleLabel,
+            workHoursValueView,
+            divider,
+            salaryTitleLabel,
+            salaryValueView
+        ])
 
-        // ── 상단 섹션
+        // ───── 상단 (근무시간)
         workHoursTitleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.centerY.equalToSuperview().multipliedBy(0.5)
+            $0.leading.equalToSuperview().inset(20)
+            $0.top.equalToSuperview().inset(12)
         }
+
         workHoursValueView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(20)
             $0.centerY.equalTo(workHoursTitleLabel)
         }
 
-        // ── 구분선
+        // ───── Divider
         divider.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.trailing.equalToSuperview().inset(20)
+            $0.top.equalTo(workHoursTitleLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(1)
-            $0.centerY.equalToSuperview()
         }
 
-        // ── 하단 섹션
+        // ───── 하단 (월급)
         salaryTitleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.centerY.equalToSuperview().multipliedBy(1.5)
+            $0.leading.equalToSuperview().inset(20)
+            $0.top.equalTo(divider.snp.bottom).offset(8)
+            $0.bottom.equalToSuperview().inset(12)
         }
+
         salaryValueView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(20)
             $0.centerY.equalTo(salaryTitleLabel)

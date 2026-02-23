@@ -11,10 +11,10 @@ import Combine
 // MARK: - FixScheduleViewState
 
 struct FixScheduleViewState: Equatable {
-    var scheduleType: ScheduleTypeOptionType       = .workday
-    var dateRange:    ScheduleDateRange? = nil     // nil = 미선택
-    var startTime:    TimeIndicatorEntity = .from(hour: 9,  minute: 0)
-    var endTime:      TimeIndicatorEntity = .from(hour: 18, minute: 0)
+    var scheduleType: ScheduleTypeOptionType = .workday
+    var dateRange:    ScheduleDateRange?     = nil
+    var startTime:    TimeIndicatorEntity    = .from(hour: 9,  minute: 0)
+    var endTime:      TimeIndicatorEntity    = .from(hour: 18, minute: 0)
 
     var isConfirmEnabled: Bool { dateRange != nil }
 }
@@ -31,11 +31,15 @@ struct ScheduleDateRange: Equatable {
         return f
     }()
 
-    func formatted(_ date: Date) -> String {
-        Self.formatter.string(from: date)
-    }
+    private static let serverFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone   = TimeZone(identifier: "Asia/Seoul")
+        return f
+    }()
 
-    /// 단일 날짜면 "2026.02.21", 범위면 "2026.02.21 ~ 2026.02.25"
+    func formatted(_ date: Date) -> String { Self.formatter.string(from: date) }
+
     var displayString: String {
         if Calendar.current.isDate(start, inSameDayAs: end) {
             return formatted(start)
@@ -43,19 +47,32 @@ struct ScheduleDateRange: Equatable {
         return "\(formatted(start)) ~ \(formatted(end))"
     }
 
-    init(single date: Date) { self.start = date; self.end = date }
+    /// API 전송용 "yyyy-MM-dd" 문자열
+    var startDateString: String { Self.serverFormatter.string(from: start) }
+
+    init(single date: Date)      { self.start = date; self.end = date }
     init(start: Date, end: Date) { self.start = start; self.end = end }
+}
+
+// MARK: - SubmitState
+
+enum FixScheduleSubmitState: Equatable {
+    case idle
+    case submitting
+    case success
+    case failure(String)
 }
 
 // MARK: - FixScheduleViewModel
 
 final class FixScheduleViewModel {
 
-    // MARK: Output
+    // MARK: - Output
 
-    @Published private(set) var state = FixScheduleViewState()
+    @Published private(set) var state       = FixScheduleViewState()
+    @Published private(set) var submitState = FixScheduleSubmitState.idle
 
-    // MARK: Input
+    // MARK: - Input
 
     enum Input {
         case selectDate(Date)
@@ -65,24 +82,23 @@ final class FixScheduleViewModel {
         case confirmTapped
     }
 
-    // MARK: Properties
+    // MARK: - Properties
 
-    /// 화면 타입 (.add / .fix)
     let viewType: ScheduleTypeOptionViewType
+    private let historyUseCase: HistoryUseCase
     private var cancellables = Set<AnyCancellable>()
 
-    // MARK: Init
+    // MARK: - Init
 
-    /// - Parameters:
-    ///   - viewType: 추가(.add) / 수정(.fix)
-    ///   - preselectedDate: 캘린더에서 이미 선택된 날짜 (추가 플로우)
-    ///   - existingSchedule: 수정 플로우에서 기존 데이터 주입
     init(
         viewType: ScheduleTypeOptionViewType,
+        historyUseCase: HistoryUseCase,
         preselectedDate: Date? = nil,
         existingSchedule: FixScheduleViewState? = nil
     ) {
-        self.viewType = viewType
+        self.viewType       = viewType
+        self.historyUseCase = historyUseCase
+
         if let existing = existingSchedule {
             state = existing
         } else if let date = preselectedDate {
@@ -112,30 +128,72 @@ extension FixScheduleViewModel {
             state.endTime = t
 
         case .confirmTapped:
-            guard state.isConfirmEnabled else { return }
+            guard state.isConfirmEnabled,
+                  submitState != .submitting
+            else { return }
             submitSchedule()
         }
     }
 }
 
-// MARK: - API (private)
+// MARK: - Submit
 
 private extension FixScheduleViewModel {
 
     func submitSchedule() {
-        // TODO: Repository 연동
-        // POST /schedules  (add)
-        // PUT  /schedules/{id} (fix)
-        //
-        // ScheduleRepository.shared
-        //     .saveSchedule(
-        //         type:      state.scheduleType,
-        //         date:      state.dateRange?.start,
-        //         clockIn:   state.startTime.displayString,
-        //         clockOut:  state.endTime.displayString
-        //     )
-        //     .receive(on: DispatchQueue.main)
-        //     .sink { completion in ... } receiveValue: { _ in }
-        //     .store(in: &cancellables)
+        guard let dateRange = state.dateRange else { return }
+
+        submitState = .submitting
+
+        let dateString  = dateRange.startDateString
+        let workdayType = workdayType(from: state.scheduleType)
+        let startTime   = state.startTime
+        let endTime     = state.endTime
+
+        Task { @MainActor in
+            do {
+                try await historyUseCase.updateWorkday(
+                    date: dateString,
+                    type: workdayType,
+                    clockInTime: workdayType == .vacation ? nil : startTime,
+                    clockOutTime: workdayType == .vacation ? nil : endTime
+                )
+                submitState = .success
+
+            } catch {
+                let message = (error as? LocalizedError)?.errorDescription
+                    ?? "일정을 저장하지 못했습니다. 다시 시도해주세요."
+                submitState = .failure(message)
+            }
+        }
+    }
+
+    /// ScheduleTypeOptionType → WorkdayType 변환
+    func workdayType(from type: ScheduleTypeOptionType) -> WorkdayType {
+        switch type {
+        case .vacation: return .vacation
+        case .workday:  return .work
+        }
+    }
+}
+
+// MARK: - WorkdayEntity → FixScheduleViewState 변환 헬퍼
+
+extension FixScheduleViewModel {
+
+    static func makeState(from workday: WorkdayEntity, date: Date) -> FixScheduleViewState {
+        var state = FixScheduleViewState()
+
+        state.dateRange = ScheduleDateRange(single: date)
+
+        switch workday.type {
+        case .vacation: state.scheduleType = .vacation
+        case .work, .none: state.scheduleType = .workday
+        }
+
+        if let clockIn  = workday.clockInTime  { state.startTime = clockIn  }
+        if let clockOut = workday.clockOutTime { state.endTime   = clockOut }
+
+        return state
     }
 }

@@ -7,10 +7,6 @@
 
 import Foundation
 
-struct HistoryListResponse: Decodable {
-    let content: [HistoryResponse]
-}
-
 struct HistoryResponse: Decodable {
     let date: String
     let type: String

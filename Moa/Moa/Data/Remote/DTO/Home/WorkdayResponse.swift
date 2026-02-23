@@ -18,7 +18,7 @@ extension WorkdayResponse {
     func toDomain() -> WorkdayEntity {
         WorkdayEntity(
             date: date,
-            type: type,
+            type: WorkdayType.init(serverValue: type),
             clockInTime: TimeIndicatorEntity(from: clockInTime),
             clockOutTime: TimeIndicatorEntity(from: clockOutTime)
         )

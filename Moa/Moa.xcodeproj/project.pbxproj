@@ -12,6 +12,7 @@
 		8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */; };
 		CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE8182F279DA800CC8D17 /* CombineMoya */; };
 		CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE81A2F279DA800CC8D17 /* Moya */; };
+		CDCDC1672F4C861E000F2D8F /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = CDCDC1662F4C861E000F2D8F /* Lottie */; };
 		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 				8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */,
 				8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */,
 				CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */,
+				CDCDC1672F4C861E000F2D8F /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +102,7 @@
 				CD2DE81A2F279DA800CC8D17 /* Moya */,
 				8D1A50692F38EAB6002A78C4 /* KakaoSDK */,
 				8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */,
+				CDCDC1662F4C861E000F2D8F /* Lottie */,
 			);
 			productName = Moa;
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
@@ -135,6 +138,7 @@
 				CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */,
 				8D1A50682F38EAB6002A78C4 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				CDCDC1652F4C861E000F2D8F /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DAC508E2F20FF7100FAA818 /* Products */;
@@ -456,6 +460,14 @@
 				minimumVersion = 15.0.3;
 			};
 		};
+		CDCDC1652F4C861E000F2D8F /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -483,6 +495,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CD2DE8172F279DA800CC8D17 /* XCRemoteSwiftPackageReference "Moya" */;
 			productName = Moya;
+		};
+		CDCDC1662F4C861E000F2D8F /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CDCDC1652F4C861E000F2D8F /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

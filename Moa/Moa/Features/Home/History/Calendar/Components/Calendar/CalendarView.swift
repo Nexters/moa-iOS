@@ -27,6 +27,13 @@ final class CalendarView: UIView {
             reloadGrid()
         }
     }
+
+    /// gridView 높이 제약 — 월별 실제 행 수에 맞게 업데이트
+    private var gridHeightConstraint: Constraint?
+    private let cellHeight: CGFloat = 66
+
+    /// 슬라이드 애니메이션 진행 중 여부 — 이 중에는 높이 레이아웃 갱신 스킵
+    private var isSliding = false
     
     // MARK: - Subviews
     
@@ -66,7 +73,6 @@ final class CalendarView: UIView {
         infoCard.snp.makeConstraints {
             $0.top.equalTo(navBar.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.height.equalTo(88)
         }
         weekHeader.snp.makeConstraints {
             $0.top.equalTo(infoCard.snp.bottom).offset(32)
@@ -76,7 +82,8 @@ final class CalendarView: UIView {
         gridView.snp.makeConstraints {
             $0.top.equalTo(weekHeader.snp.bottom).offset(4)
             $0.leading.trailing.equalToSuperview().inset(8)
-            $0.height.equalTo(66 * 6)
+            gridHeightConstraint = $0.height.equalTo(cellHeight * 5).constraint
+            $0.bottom.equalToSuperview()
         }
         
         navBar.delegate   = self
@@ -94,17 +101,29 @@ final class CalendarView: UIView {
     
     // MARK: - Reload
     
-    /// 헤더 타이틀 + 그리드 모두 갱신
     private func reloadAll() {
         navBar.setTitle(dataSource.monthTitle(for: dataSource.currentDate))
         navBar.setNextEnabled(dataSource.canMoveToNextMonth())
         reloadGrid()
     }
     
-    /// 그리드만 갱신 (selectedDate 변경 시 사용)
-    private func reloadGrid() {
+    func reloadGrid() {
         let days = dataSource.days(for: dataSource.currentDate, selectedDate: selectedDate)
         gridView.reload(with: days)
+
+        // 슬라이드 중에는 높이 레이아웃 갱신을 스킵
+        // (슬라이드 완료 후 slide() 내부에서 적용됨)
+        guard !isSliding else { return }
+        applyGridHeight()
+    }
+
+    /// dataSource.rowCount 기반으로 gridView 높이를 즉시 반영
+    private func applyGridHeight() {
+        let rows = dataSource.rowCount(for: dataSource.currentDate)
+        gridHeightConstraint?.update(offset: cellHeight * CGFloat(rows))
+        // 외부(superview)로 레이아웃 전파 — 애니메이션 없이 즉시
+        layoutIfNeeded()
+        superview?.layoutIfNeeded()
     }
     
     // MARK: - Swipe / Slide
@@ -114,7 +133,6 @@ final class CalendarView: UIView {
             guard dataSource.canMoveToNextMonth() else { return }
             dataSource.moveToNextMonth()
             slide(.left)
-            
         } else {
             dataSource.moveToPreviousMonth()
             slide(.right)
@@ -124,17 +142,23 @@ final class CalendarView: UIView {
     private enum SlideDir { case left, right }
     
     private func slide(_ dir: SlideDir) {
+        guard !isSliding else { return }
+        isSliding = true
+
         let dx: CGFloat = dir == .left ? -bounds.width : bounds.width
         
-        // 현재 그리드 스냅샷
+        // 현재 grid 스냅샷 (슬라이드 아웃용)
         let snap = gridView.snapshotView(afterScreenUpdates: false)
         snap.map {
             addSubview($0)
             $0.frame = gridView.frame
         }
         
-        // 데이터 업데이트 후 그리드를 화면 밖에서 슬라이드인
+        // 새 달 데이터 로드 + 높이 즉시 반영 (애니메이션 전에 적용)
         reloadAll()
+        applyGridHeight()
+
+        // 새 grid: 반대편에서 슬라이드 인
         gridView.transform = CGAffineTransform(translationX: -dx, y: 0)
         
         UIView.animate(withDuration: 0.28, delay: 0, options: .curveEaseInOut) {
@@ -143,6 +167,7 @@ final class CalendarView: UIView {
             snap?.alpha = 0
         } completion: { _ in
             snap?.removeFromSuperview()
+            self.isSliding = false
             self.delegate?.calendarView(self, didChangeToDate: self.dataSource.currentDate)
         }
     }
@@ -156,6 +181,12 @@ final class CalendarView: UIView {
         reloadGrid()
     }
     
+    /// API 데이터 업데이트 — 슬라이드 중이 아닐 때만 높이 갱신
+    func updateCalendarDays(_ days: [CalendarDay]) {
+        dataSource.resetAndApply(days)
+        reloadGrid()
+    }
+    
     func updateWorkInfo(_ info: EarningsEntity) {
         infoCard.update(with: info)
     }
@@ -164,14 +195,14 @@ final class CalendarView: UIView {
     
     private func isSameDay(_ a: Date?, _ b: Date?) -> Bool {
         switch (a, b) {
-        case (nil, nil):            return true
-        case (let x?, let y?):     return Calendar.current.isDate(x, inSameDayAs: y)
-        default:                    return false
+        case (nil, nil):        return true
+        case (let x?, let y?): return Calendar.current.isDate(x, inSameDayAs: y)
+        default:               return false
         }
     }
 }
 
-// MARK: CalendarNavigationBarDelegate
+// MARK: - CalendarNavigationBarDelegate
 
 extension CalendarView: CalendarNavigationBarDelegate {
     func navigationBarDidTapPrev() {
@@ -184,28 +215,27 @@ extension CalendarView: CalendarNavigationBarDelegate {
         slide(.left)
     }
     
-    func navigationBarDidTapAdd()  {
+    func navigationBarDidTapAdd() {
         delegate?.calendarViewDidTapAdd(self)
     }
 }
 
-// MARK: CalendarGridViewDelegate
+// MARK: - CalendarGridViewDelegate
 
 extension CalendarView: CalendarGridViewDelegate {
     
     func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDay) {
-        
         selectedDate = day.date
         
         let contentType = dataSource.rawType(for: day.date)
-        let isToday = Calendar.current.isDateInToday(day.date)
+        let isToday     = Calendar.current.isDateInToday(day.date)
         
         let rawDay = CalendarDay(
             date: day.date,
             contentType: contentType,
             isToday: isToday,
             isSelected: selectedDate != nil &&
-            Calendar.current.isDate(selectedDate!, inSameDayAs: day.date),
+                Calendar.current.isDate(selectedDate!, inSameDayAs: day.date),
             isCurrentMonth: day.isCurrentMonth
         )
         
