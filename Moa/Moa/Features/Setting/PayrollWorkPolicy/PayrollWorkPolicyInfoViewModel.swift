@@ -33,6 +33,7 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private(set) var payday: String = ""
     private(set) var salaryType: SalaryType = .annual
     private(set) var salaryAmount: Int?
+    private(set) var paydayRaw: Int?
     
     // 근무 정보
     private(set) var currentWorkplace: String?
@@ -110,6 +111,7 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
                 self.payday = Constants.unregistered
             }
             
+            paydayRaw = profile.paydayDay
             currentWorkplace = profile.workplace
             
             if let workplace = profile.workplace {

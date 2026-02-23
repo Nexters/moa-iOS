@@ -12,7 +12,7 @@ import Alamofire
 enum ProfileAPI {
     case getProfile
     case updateNickname(ProfileUpsertRequest)
-    case updatePayday
+    case updatePayday(PaydayUpdateRequest)
     case updateWorkplace(WorkplaceUpdateRequest)
 }
 
@@ -50,8 +50,8 @@ extension ProfileAPI: TargetType {
             return .requestPlain
         case let .updateNickname(body):
             return .requestJSONEncodable(body)
-        case .updatePayday:
-            return .requestPlain
+        case let .updatePayday(body):
+            return .requestJSONEncodable(body)
         case let .updateWorkplace(body):
             return .requestJSONEncodable(body)
         }

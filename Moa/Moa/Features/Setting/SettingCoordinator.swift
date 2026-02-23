@@ -54,6 +54,13 @@ final class SettingCoordinator {
         nav?.pushViewController(vc, animated: true)
     }
     
+    func moveToPaydayEdit(currentPayday: Int) {
+        let vm = PaydayEditViewModel(settingUsecase: container.settingUsecase, currentPayday: currentPayday)
+        let vc = PaydayEditViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
+    
     func moveToWorkplaceEdit(currentWorkplace: String?) {
         let vm = WorkPlaceEditViewModel(
             settingUsecase: container.settingUsecase,

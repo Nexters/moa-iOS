@@ -58,7 +58,6 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
     
     private var sections: [(title: String, rows: [SettingItemRowView])] = []
     
-    // Row references for updates
     private var payrollRow: SettingItemRowView?
     private var paydayRow: SettingItemRowView?
     private var companyRow: SettingItemRowView?
@@ -105,16 +104,12 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         buildSections()
     }
     
-    override func setupActions() {
-        
-    }
-    
     @objc private func payrollButtonTapped() {
         coordinator?.moveToPayrollEdit(salaryType: viewModel.salaryType, amount: viewModel.salaryAmount)
     }
     
     @objc private func paydayButtonTapped() {
-        
+        coordinator?.moveToPaydayEdit(currentPayday: viewModel.paydayRaw ?? 25)
     }
     
     @objc private func companyNameButtonTapped() {

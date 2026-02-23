@@ -186,7 +186,7 @@ final class PayrollEditViewController: BaseViewController {
         amountTextField.delegate = self
         amountTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
         
-        completeButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+        completeButton.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
         
         salaryTypeView.setSelected(viewModel.selectedSalaryType, notify: false)
         commaFormatter.updateMaxDigits(viewModel.selectedSalaryType.maxDigits)
@@ -223,7 +223,7 @@ final class PayrollEditViewController: BaseViewController {
         viewModel.updateAmount(fromTextFieldText: amountTextField.text)
     }
     
-    @objc private func nextButtonTapped() {
+    @objc private func completeButtonTapped() {
         Task { @MainActor in
             do {
                 try await viewModel.updatePayroll()

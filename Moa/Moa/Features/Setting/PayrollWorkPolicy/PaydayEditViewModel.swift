@@ -9,4 +9,35 @@ import Foundation
 
 final class PaydayEditViewModel {
     
+    // MARK: - Dependencies
+    
+    private let settingUsecase: SettingUsecase
+    
+    // MARK: - State
+    
+    private(set) var selectedPayday: Int
+    
+    // MARK: - Init
+    
+    init(
+        settingUsecase: SettingUsecase,
+        currentPayday: Int
+    ) {
+        self.settingUsecase = settingUsecase
+        self.selectedPayday = currentPayday
+    }
+    
+    // MARK: - Actions
+    
+    func selectedPaydayChanged(to payday: Int) {
+        selectedPayday = payday
+    }
+    
+    func updatePayday() async throws {
+        do {
+            _ = try await settingUsecase.updatePayday(to: selectedPayday)
+        } catch {
+            // TODO: 에러처리
+        }
+    }
 }

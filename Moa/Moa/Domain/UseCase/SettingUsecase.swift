@@ -67,4 +67,8 @@ final class SettingUsecase {
     func getTerms() async throws -> [TermsEntity] {
         try await onboardingRepository.fetchTerms()
     }
+    
+    func updatePayday(to payday: Int) async throws {
+        try await profileRepository.updatePayday(to: payday)
+    }
 }
