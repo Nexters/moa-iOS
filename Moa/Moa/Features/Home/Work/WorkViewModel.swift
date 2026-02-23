@@ -120,8 +120,20 @@ private extension WorkViewModel {
 
         case .vacation:
             // 휴가: 퇴근 시간 이후 진입 → 최종완료
-            guard let clockOut = entity.clockOutTime else { return .idle }
-            return nowInMinutes() >= clockOut.totalMinutes ? .finished : .idle
+            guard let clockIn  = entity.clockInTime,
+                  let clockOut = entity.clockOutTime else { return .idle }
+            
+            let now    = nowInMinutes()
+            let inMin  = clockIn.totalMinutes
+            let outMin = clockOut.totalMinutes
+            
+            if now < inMin {
+                return .idle
+            } else if now < outMin {
+                return .working
+            } else {
+                return .finished
+            }
 
         case .work:
             guard let clockIn  = entity.clockInTime,

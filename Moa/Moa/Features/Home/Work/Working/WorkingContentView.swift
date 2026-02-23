@@ -19,8 +19,6 @@ protocol WorkingContentViewDelegate: AnyObject {
 
 final class WorkingContentView: UIView {
 
-    // MARK: - Delegate
-
     weak var delegate: WorkingContentViewDelegate?
 
     // MARK: - UI
@@ -44,9 +42,11 @@ final class WorkingContentView: UIView {
 
     // MARK: - State
 
-    private var dailyPay: Int         = 0
-    private var totalWorkSeconds: Int = 0
-    private var isFinished: Bool      = false
+    private var dailyPay: Int                    = 0
+    private var totalWorkSeconds: Int            = 0
+    private var isFinished: Bool                 = false
+    private var endTime: TimeIndicatorEntity     = .from(hour: 18, minute: 0)
+    private var workedEarnings: Int              = 0   // 이번달 누적 월급
 
     // MARK: - Init
 
@@ -88,11 +88,12 @@ final class WorkingContentView: UIView {
         status:      WorkStatus,
         data:        HomeEntity
     ) {
-        // .workFinished = 근무완료1
-        let newIsFinished = (status == .workFinished)
-        self.isFinished       = newIsFinished
-        self.dailyPay         = dailyPay
-        self.totalWorkSeconds = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
+        let newIsFinished         = (status == .workFinished)
+        self.isFinished           = newIsFinished
+        self.dailyPay             = dailyPay
+        self.totalWorkSeconds     = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
+        self.endTime              = endTime
+        self.workedEarnings       = data.workedEarnings
 
         if self.workingType != workingType {
             self.workingType = workingType
@@ -100,16 +101,23 @@ final class WorkingContentView: UIView {
         }
 
         if newIsFinished {
-            // 근무완료 1:
-            // - configure에 isFinished: true 전달 → asyncAfter startAnimations 예약 차단
-            // - EarningsStackView 내부에서 즉시 isStopped=true, 말풍선 숨김, 최대 높이
-            earningsStackView.configure(amount: dailyPay, startedAt: startedAt, isFinished: true)
+            // 근무완료 1: 말풍선·성장 완전 차단
+            earningsStackView.configure(
+                amount:     dailyPay,
+                startedAt:  startedAt,
+                isFinished: true,
+                context:    nil
+            )
             workingStatusView.isHidden = true
         } else {
             workingStatusView.isHidden = false
-            let elapsed     = max(0, Int(Date().timeIntervalSince(startedAt)))
-            let earnedSoFar = earnedAmount(elapsed: elapsed)
-            earningsStackView.configure(amount: earnedSoFar, startedAt: startedAt, isFinished: false)
+            let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
+            earningsStackView.configure(
+                amount:     earnedAmount(elapsed: elapsed),
+                startedAt:  startedAt,
+                isFinished: false,
+                context:    makeTooltipContext()
+            )
             workingStatusView.configure(startTime: startTime, endTime: endTime, startedAt: startedAt)
         }
 
@@ -125,6 +133,8 @@ final class WorkingContentView: UIView {
         guard !isFinished else { return }
         let elapsed = workingStatusView.elapsedSeconds()
         earningsStackView.updateAmount(earnedAmount(elapsed: elapsed))
+        // cheer 문구는 매 tick 남은 시간이 바뀌므로 context 갱신
+        earningsStackView.updateContext(makeTooltipContext())
         workingStatusView.tick()
     }
 
@@ -149,6 +159,14 @@ final class WorkingContentView: UIView {
     private func applyWorkingType(_ type: WorkingType) {
         earningsStackView.updateWorkingType(type)
         workingStatusView.updateWorkingType(type)
+    }
+
+    private func makeTooltipContext() -> TooltipContext {
+        TooltipContext(
+            workingType:    workingType,
+            workedEarnings: workedEarnings,
+            endTime:        endTime
+        )
     }
 }
 
