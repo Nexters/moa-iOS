@@ -96,7 +96,7 @@ private extension HomeCoordinator {
     func showFixSchedule(workday: WorkdayEntity, date: Date) {
         let existing = FixScheduleViewModel.makeState(from: workday, date: date)
         let vc = makeFixScheduleViewController(viewType: .fix, existingSchedule: existing)
-        pop()
+        nav?.pushViewController(vc, animated: true)
     }
 
     func pop() {
