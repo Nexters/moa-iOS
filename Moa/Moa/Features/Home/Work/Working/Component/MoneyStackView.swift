@@ -33,7 +33,7 @@ final class EarningsStackView: UIView {
         static let minHeightRatio: CGFloat         = 0.30
         static let maxHeightRatio: CGFloat         = 0.70
         static let endHeightRatio: CGFloat         = 0.84
-        static let growthDuration: TimeInterval    = 3
+        static let growthDuration: TimeInterval    = 30 * 60
         
         static let tooltipFadeIn:  TimeInterval    = 0.3
         static let tooltipDisplay: TimeInterval    = 5.0
