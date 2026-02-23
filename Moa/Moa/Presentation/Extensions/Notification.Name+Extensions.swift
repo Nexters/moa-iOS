@@ -9,5 +9,5 @@ import Foundation
 
 extension Notification.Name {
     static let fcmTokenRefreshed = Notification.Name("fcmTokenRefreshed")
-    static let didLogout = Notification.Name("didLogout")
+    static let didLogoutOrWithdrawal = Notification.Name("didLogoutOrWithdrawal")
 }

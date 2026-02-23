@@ -256,6 +256,7 @@ final class SettingHomeViewController: BaseViewController {
     override func setupActions() {
         nicknameEditButton.addTarget(self, action: #selector(nicknameEditButtonTapped), for: .touchUpInside)
         logoutButton.addTarget(self, action: #selector(logoutButtonTapped), for: .touchUpInside)
+        withdrawalButton.addTarget(self, action: #selector(withdrawalButtonTapped), for: .touchUpInside)
     }
     
     @objc private func nicknameEditButtonTapped() {
@@ -277,7 +278,7 @@ final class SettingHomeViewController: BaseViewController {
                 updateVersionRow()
                 
             case .logoutSucceed:
-                NotificationCenter.default.post(name: .didLogout, object: nil)
+                NotificationCenter.default.post(name: .didLogoutOrWithdrawal, object: nil)
             }
         }
     }
@@ -335,13 +336,14 @@ final class SettingHomeViewController: BaseViewController {
             subtitle: "로그아웃하면 로그인 화면으로 이동해요.",
             leftButtonTitle: "취소",
             rightButtonTitle: "확인",
-            onLeftButtonTapped: {
-                // 얼럿 dismiss
-            },
             onRightButtonTapped: { [weak self] in
                 self?.viewModel.logout()
             }
         )
+    }
+    
+    @objc private func withdrawalButtonTapped() {
+        coordinator.moveToWithdrawal()
     }
 }
 

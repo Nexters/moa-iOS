@@ -101,4 +101,11 @@ final class SettingCoordinator {
         
         nav?.pushViewController(vc, animated: true)
     }
+    
+    func moveToWithdrawal() {
+        let vm = WithdrawalViewModel(settingUsecase: container.settingUsecase)
+        let vc = WithdrawalViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
 }

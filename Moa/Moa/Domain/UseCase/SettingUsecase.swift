@@ -96,4 +96,8 @@ final class SettingUsecase {
     func logout(fcmDeviceToken: String) async throws {
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
     }
+    
+    func withdrawal(reason: [String]) async throws {
+        try await memberRepository.withdrawal(reason: reason)
+    }
 }

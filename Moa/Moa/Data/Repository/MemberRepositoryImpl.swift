@@ -19,4 +19,10 @@ final class MemberRepositoryImpl: MemberRepository {
         
         return response.toDomain()
     }
+    
+    func withdrawal(reason: [String]) async throws {
+        let request = WithdrawalRequest(reason: reason)
+        
+        let _ = try await apiClient.request(MemberAPI.withdrawal(request)) as EmptyResponse?
+    }
 }
