@@ -35,4 +35,9 @@ final class AuthRepositoryImpl: AuthRepository {
         
         return response.toDomain()
     }
+    
+    func logout(fcmDeviceToken: String) async throws {
+        let request = LogoutRequest(fcmDeviceToken: fcmDeviceToken)
+        let _ = try await apiClient.request(AuthAPI.logout(request)) as EmptyResponse?
+    }
 }

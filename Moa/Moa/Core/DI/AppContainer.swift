@@ -66,10 +66,13 @@ final class AppContainer {
     private lazy var versionRepository: VersionRepository = {
         VersionRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var fcmRepository: FcmRepository = {
+        FcmRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
-        AuthUsecase(repository: authRepository)
+        AuthUsecase(authRepository: authRepository, fcmRepository: fcmRepository)
     }()
     lazy var onboardingUseCase: OnboardingUsecase = {
         OnboardingUsecase(repository: onboardingRepository)
@@ -88,7 +91,8 @@ final class AppContainer {
             workPolicyRepository: workPolicyRepository,
             onboardingRepository: onboardingRepository,
             notificationSettingRepository: notificationSettingRepository,
-            versionRepository: versionRepository
+            versionRepository: versionRepository,
+            authRepository: authRepository
         )
     }()
 }

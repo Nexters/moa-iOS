@@ -26,6 +26,7 @@ final class AppRouter: AppRouting {
     ) {
         self.navigationController = navigationController
         self.container = container
+        observeLogoutOrWithdrawal()
     }
     
     func start() {
@@ -60,6 +61,17 @@ final class AppRouter: AppRouting {
 // MARK: - Private
 
 private extension AppRouter {
+
+    func observeLogoutOrWithdrawal() {
+        NotificationCenter.default.addObserver(
+            forName: .didLogoutOrWithdrawal,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.homeCoordinator = nil
+            self?.navigate(to: .login, animated: false)
+        }
+    }
 
     func routeToAppropriateDestination() {
         Task { @MainActor in

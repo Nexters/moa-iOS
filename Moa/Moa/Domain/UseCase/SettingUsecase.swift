@@ -15,6 +15,7 @@ final class SettingUsecase {
     private let onboardingRepository: OnboardingRepository
     private let notificationSettingRepository: NotificationSettingRepository
     private let versionRepository: VersionRepository
+    private let authRepository: AuthRepository
     
     init(
         profileRepository: ProfileRepository,
@@ -23,7 +24,8 @@ final class SettingUsecase {
         workPolicyRepository: WorkPolicyRepository,
         onboardingRepository: OnboardingRepository,
         notificationSettingRepository: NotificationSettingRepository,
-        versionRepository: VersionRepository
+        versionRepository: VersionRepository,
+        authRepository: AuthRepository
     ) {
         self.profileRepository = profileRepository
         self.memberRepository = memberRepository
@@ -32,6 +34,7 @@ final class SettingUsecase {
         self.onboardingRepository = onboardingRepository
         self.notificationSettingRepository = notificationSettingRepository
         self.versionRepository = versionRepository
+        self.authRepository = authRepository
     }
     
     func getProfile() async throws -> ProfileEntity {
@@ -88,5 +91,13 @@ final class SettingUsecase {
     
     func getVersionInfo() async throws -> VersionEntity {
         try await versionRepository.getVersionInfo()
+    }
+    
+    func logout(fcmDeviceToken: String) async throws {
+        try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+    }
+    
+    func withdrawal(reason: [String]) async throws {
+        try await memberRepository.withdrawal(reason: reason)
     }
 }

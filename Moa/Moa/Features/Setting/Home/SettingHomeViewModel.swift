@@ -11,6 +11,7 @@ enum SettingHomeOutput {
     case profileFetched
     case memberFetched
     case versionFetched
+    case logoutSucceed
 }
 
 final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
@@ -82,6 +83,22 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
             }
             
             self.send(.versionFetched)
+        }
+    }
+    
+    func logout() {
+        guard let fcmDeviceToken = UserDefaults.standard.string(forKey: "apnsDeviceToken") else {
+            // TODO: 에러처리
+            return
+        }
+        
+        Task {
+            do {
+                try await settingUsecase.logout(fcmDeviceToken: fcmDeviceToken)
+                self.send(.logoutSucceed)
+            } catch {
+                // TODO: 에러처리
+            }
         }
     }
 }

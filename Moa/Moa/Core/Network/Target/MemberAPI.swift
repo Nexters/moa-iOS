@@ -11,6 +11,7 @@ import Alamofire
 
 enum MemberAPI {
     case getMember
+    case withdrawal(WithdrawalRequest)
 }
 
 extension MemberAPI: TargetType {
@@ -22,6 +23,8 @@ extension MemberAPI: TargetType {
         switch self {
         case .getMember:
             return "/api/v1/member"
+        case .withdrawal:
+            return "/api/v1/member/withdrawal"
         }
     }
 
@@ -29,6 +32,8 @@ extension MemberAPI: TargetType {
         switch self {
         case .getMember:
             return .get
+        case .withdrawal:
+            return .post
         }
     }
 
@@ -36,6 +41,8 @@ extension MemberAPI: TargetType {
         switch self {
         case .getMember:
             return .requestPlain
+        case let .withdrawal(body):
+            return .requestJSONEncodable(body)
         }
     }
 

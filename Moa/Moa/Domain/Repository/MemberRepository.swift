@@ -9,4 +9,5 @@ import Foundation
 
 protocol MemberRepository {
     func getMember() async throws -> MemberEntity
+    func withdrawal(reason: [String]) async throws
 }

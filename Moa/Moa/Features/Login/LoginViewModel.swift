@@ -8,6 +8,7 @@
 import Foundation
 import KakaoSDKUser
 import KakaoSDKAuth
+import FirebaseMessaging
 
 enum LoginOutput {
     case loginSucceed
@@ -32,7 +33,6 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 guard let self,
                       let idToken = oauthToken?.idToken,
                       !idToken.isEmpty
-                      // TODO: 유저디폴트 추상화
                 else {
                     return
                 }
@@ -46,6 +46,8 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                         ).accessToken
                         
                         UserDefaults.standard.set(accessToken, forKey: "accessToken")
+                        
+                        await sendFcmTokenIfAvailable()
                         
                         await MainActor.run {
                             self.send(.loginSucceed)
@@ -71,11 +73,31 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 
                 UserDefaults.standard.set(accessToken, forKey: "accessToken")
                 
+                await sendFcmTokenIfAvailable()
+                
                 await MainActor.run {
                     self.send(.loginSucceed)
                 }
             } catch {
                 print("로그인 요청 실패: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func sendFcmTokenIfAvailable() async {
+        guard let fcmToken = await getFcmToken() else { return }
+        await authUsecase.updateFcmToken(to: fcmToken)
+    }
+
+    private func getFcmToken() async -> String? {
+        await withCheckedContinuation { continuation in
+            Messaging.messaging().token { token, error in
+                if let error {
+                    print("FCM 토큰 가져오기 실패: \(error)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: token)
             }
         }
     }

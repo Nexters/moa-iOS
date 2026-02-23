@@ -25,6 +25,8 @@ final class HomeCoordinator {
     func start(from parentNav: UINavigationController, animated: Bool) {
         self.nav = parentNav
         parentNav.setViewControllers([makeWorkViewController()], animated: animated)
+        sendFcmTokenIfNeeded() // 시작 시점에 전송
+        observeFcmTokenRefresh() // 이후 갱신 감지용은 유지
     }
 }
 
@@ -154,5 +156,31 @@ extension HomeCoordinator: FixScheduleViewControllerDelegate {
         state: FixScheduleViewState
     ) {
         pop()
+    }
+}
+
+//  MARK: - Fcm token
+private extension HomeCoordinator {
+    func sendFcmTokenIfNeeded() {
+        guard let fcmToken = UserDefaults.standard.string(forKey: "fcmToken") else { return }
+        Task {
+            await container.authUseCase.updateFcmToken(to: fcmToken)
+        }
+    }
+    
+    func observeFcmTokenRefresh() {
+        NotificationCenter.default.addObserver(
+            forName: .fcmTokenRefreshed,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let fcmToken = notification.userInfo?["fcmToken"] as? String
+            else { return }
+            
+            Task {
+                await self.container.authUseCase.updateFcmToken(to: fcmToken)
+            }
+        }
     }
 }
