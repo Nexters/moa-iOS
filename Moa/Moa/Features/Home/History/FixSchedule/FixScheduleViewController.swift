@@ -150,11 +150,11 @@ final class FixScheduleViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        bind()
     }
 
     // MARK: - Setup
+    // MARK: - Setup
+    // BaseViewController.viewDidLoad → setupUI() 자동 호출
 
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
@@ -169,6 +169,7 @@ final class FixScheduleViewController: BaseViewController {
         )
     }
 
+    // BaseViewController.viewDidLoad → bind() 자동 호출
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
@@ -265,6 +266,7 @@ private extension FixScheduleViewController {
             cancelButton.isEnabled  = false
 
         case .success:
+            // ✅ coordinator 호출은 여기서만 → pop 1번
             coordinatorDelegate?.fixScheduleViewControllerDidConfirm(self, state: viewModel.state)
 
         case .failure(let message):

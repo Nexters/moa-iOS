@@ -129,7 +129,6 @@ final class EarningsStackView: UIView {
     // MARK: - State
     
     private var isStopped = false
-    private var hasPlayedConfetti = false
     
     private var stackBottomConstraint: Constraint?
     private var floatingContainerBottomConstraint: Constraint?
@@ -465,21 +464,20 @@ final class EarningsStackView: UIView {
     
     @objc private func updateStackPosition() {
         guard !isStopped, let cycleStart = growthCycleStart else { return }
-        if Date().timeIntervalSince(cycleStart) >= Constants.growthDuration {
+
+        let elapsed = Date().timeIntervalSince(cycleStart)
+
+        if elapsed >= Constants.growthDuration {
+            playConfeti()
             growthCycleStart = Date()
-            hasPlayedConfetti = false
         }
+
         let ratio = currentCycleRatio()
         let h     = stackContainer.bounds.height
         guard h > 0 else { return }
+
         stackBottomConstraint?.update(offset: h * (1 - ratio))
         updateFloatingContainerPosition(ratio: ratio)
-        
-        // 최대 도달 감지
-        if ratio >= Constants.maxHeightRatio - 0.01, !hasPlayedConfetti {
-            hasPlayedConfetti = true
-            playConfeti()
-        }
     }
     
     private func updateFloatingContainerPosition(ratio: CGFloat) {

@@ -169,12 +169,17 @@ final class MonthlySalaryView: UIView {
         }
         subtitleLabel.attributedText = attributed
     }
-
-    /// finished 상태: + 접두사 없음
-    /// 그 외: "+ " 접두사 붙임
+    
     private func formattedAmount(_ amount: Int) -> String {
         let base = AppNumberFormatter.decimalString(from: amount)
-        return "\(base)"
+        
+        guard let config else { return base }
+        
+        if config.workStatus == .finished {
+            return "+\(base)"
+        } else {
+            return base
+        }
     }
 }
 

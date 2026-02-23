@@ -98,9 +98,15 @@ final class HistoryViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         setupUI()
         bind()
         viewModel.send(.viewDidLoad)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.send(.refresh)
     }
 
     // MARK: - Setup
@@ -144,6 +150,22 @@ final class HistoryViewController: BaseViewController {
         viewModel.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
+            .store(in: &cancellables)
+        
+        viewModel.$state
+            .map { state -> Bool in
+                if case .loading = state { return true }
+                return false
+            }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { isLoading in
+                if isLoading {
+                    LoadingManager.shared.show()
+                } else {
+                    LoadingManager.shared.hide()
+                }
+            }
             .store(in: &cancellables)
     }
 }

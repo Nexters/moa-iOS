@@ -20,6 +20,7 @@ final class WorkViewModel {
         case viewDidLoad
         case updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
         case requestVacation
+        case changeRequestVacation
         case startWork          // 일정 있는 날 출근하기 (idle → working)
         case startWorkOnHoliday // 일정 없는 날(NONE) 쉬는날 출근하기
         case endWork
@@ -58,6 +59,8 @@ extension WorkViewModel {
             handleUpdateWorkTime(start: start, end: end)
         case .requestVacation:
             handleRequestVacation()
+        case .changeRequestVacation:
+            changeRequestVacation()
         case .startWork:
             handleStartWork()
         case .startWorkOnHoliday:
@@ -353,14 +356,45 @@ private extension WorkViewModel {
             do {
                 let updated = try await homeUseCase.updateWorkday(
                     date: todayDateString(),
-                    type: .work,
+                    type: entity.type,
                     clockInTime: startTime,
                     clockOutTime: endTime
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
-                currentStatus = .workFinished
+                
+                currentStatus = entity.type == .vacation ? .finished : .workFinished
                 publish()
+            } catch {
+                state = .error(.network)
+            }
+        }
+    }
+    
+    func changeRequestVacation() {
+        guard currentStatus == .working,
+              var entity = homeEntity,
+              let originalIn  = entity.clockInTime,
+              let originalOut = entity.clockOutTime
+                else { return }
+
+        let originalInMinutes  = originalIn.totalMinutes
+        let originalOutMinutes = originalOut.totalMinutes
+
+        Task { @MainActor in
+            do {
+                let updated = try await homeUseCase.updateWorkday(
+                    date: todayDateString(),
+                    type: .vacation,
+                    clockInTime: originalIn,
+                    clockOutTime: originalOut
+                )
+
+                applyWorkdayUpdate(updated, to: &entity)
+                homeEntity    = entity
+                currentStatus = .working
+                publish()
+
             } catch {
                 state = .error(.network)
             }

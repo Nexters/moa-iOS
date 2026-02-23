@@ -146,11 +146,11 @@ final class SlashValueView: UIView {
     // MARK: - Configure
     
     func configure(current: Int, total: Int, unit: String) {
-        currentLabel.setText(current.description, style: .init(
+        currentLabel.setText(AppNumberFormatter.decimalString(from: current), style: .init(
             typography: AppTypography.b1_600,
             color: AppColor.IconAndText.green
         ))
-        totalLabel.setText("/ \(total)\(unit)", style: .init(
+        totalLabel.setText("/ \(AppNumberFormatter.decimalString(from: total))\(unit)", style: .init(
             typography: AppTypography.b1_400,
             color: AppColor.IconAndText.mediumEmphasis
         ))
