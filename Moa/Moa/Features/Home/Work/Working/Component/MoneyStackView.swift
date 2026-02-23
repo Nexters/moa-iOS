@@ -80,7 +80,11 @@ final class EarningsStackView: UIView {
         return label
     }()
 
-    private let rollingLabel = RollingAmountLabel()
+    private let rollingLabel: RollingAmountLabel = {
+        let label = RollingAmountLabel()
+        label.transform = CGAffineTransform(translationX: 0, y: -2)
+        return label
+    }()
 
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
@@ -94,7 +98,9 @@ final class EarningsStackView: UIView {
 
     private lazy var amountRow: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [rollingLabel, unitLabel])
-        sv.axis = .horizontal; sv.alignment = .center; sv.spacing = 2
+        sv.axis = .horizontal
+        sv.alignment = .center
+        sv.spacing = 2
         return sv
     }()
 
