@@ -238,7 +238,7 @@ final class SettingHomeViewController: BaseViewController {
                 title: Constants.appSetting,
                 rows: [notificationRow],
                 onRowTap: { [weak self] index in
-                    
+                    self?.coordinator.moveToNotificationSetting()
                 }
             ),
             SettingSectionView(

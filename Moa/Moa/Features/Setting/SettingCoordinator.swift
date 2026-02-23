@@ -94,4 +94,11 @@ final class SettingCoordinator {
         
         nav?.pushViewController(vc, animated: true)
     }
+    
+    func moveToNotificationSetting() {
+        let vm = NotificationSettingViewModel(settingUsecase: container.settingUsecase)
+        let vc = NotificationSettingViewController(viewModel: vm)
+        
+        nav?.pushViewController(vc, animated: true)
+    }
 }
