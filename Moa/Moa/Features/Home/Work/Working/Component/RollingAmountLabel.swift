@@ -117,7 +117,7 @@ final class RollingAmountLabel: UIView {
             currentLabels.append(lbl)
 
             if animated {
-                lbl.transform = CGAffineTransform(translationX: 0, y: -sz.height)
+                lbl.transform = CGAffineTransform(translationX: 0, y: sz.height)
                 UIView.animate(
                     withDuration: animationDuration,
                     delay: Double(i) * digitDelay,
@@ -147,15 +147,15 @@ final class RollingAmountLabel: UIView {
 
             box.addSubview(newLabel)
             newLabel.snp.makeConstraints { $0.center.equalToSuperview() }
-            newLabel.transform = CGAffineTransform(translationX: 0, y: -h) // 위에서 대기
+            newLabel.transform = CGAffineTransform(translationX: 0, y: h) // 아래에서 시작
 
             UIView.animate(
                 withDuration: animationDuration,
-                delay: Double(i) * digitDelay,           // 자릿수별 순차 딜레이
+                delay: Double(i) * digitDelay,
                 options: .curveEaseOut,
                 animations: {
                     newLabel.transform = .identity
-                    oldLabel.transform = CGAffineTransform(translationX: 0, y: h)
+                    oldLabel.transform = CGAffineTransform(translationX: 0, y: -h) // 위로 사라짐
                 },
                 completion: { [weak self] _ in
                     oldLabel.removeFromSuperview()
