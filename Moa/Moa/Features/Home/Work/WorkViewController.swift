@@ -369,9 +369,8 @@ private extension WorkViewController {
 private extension WorkViewController {
 
     func showErrorAlert(message: String) {
-        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        let vc = MoaAlertViewController(message: message)
+        present(vc, animated: true)
     }
 }
 

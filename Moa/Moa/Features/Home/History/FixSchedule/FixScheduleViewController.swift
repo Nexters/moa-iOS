@@ -277,13 +277,8 @@ private extension FixScheduleViewController {
     }
 
     func showErrorAlert(message: String) {
-        let alert = UIAlertController(
-            title: "저장 실패",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        let vc = MoaAlertViewController(message: "저장 실패")
+        present(vc, animated: true)
     }
 }
 

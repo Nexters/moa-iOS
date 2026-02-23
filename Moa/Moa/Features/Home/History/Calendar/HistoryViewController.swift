@@ -221,14 +221,16 @@ private extension HistoryViewController {
 private extension HistoryViewController {
 
     func handleError(_ error: HistoryError) {
+        guard presentedViewController == nil else { return }
+        
         let msg: String
         switch error {
         case .network:       msg = "네트워크 오류가 발생했습니다."
         case .dataCorrupted: msg = "데이터를 불러올 수 없습니다."
         }
-        let alert = UIAlertController(title: "오류", message: msg, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        
+        let vc = MoaAlertViewController(message: msg)
+        present(vc, animated: true)
     }
 }
 
