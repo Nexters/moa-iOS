@@ -373,19 +373,6 @@ private extension WorkViewController {
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
     }
-
-    func showVacationConfirmAlert() {
-        let alert = UIAlertController(
-            title: "휴가 신청",
-            message: "오늘 휴가를 신청하시겠어요?",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "신청", style: .default) { [weak self] _ in
-            self?.viewModel.send(.requestVacation)
-        })
-        present(alert, animated: true)
-    }
 }
 
 // MARK: - Helpers
@@ -511,7 +498,7 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
     ) {
         switch type {
         case .vacation:
-            dismiss(animated: true) { [weak self] in self?.viewModel.send(.requestVacation) }
+            dismiss(animated: true) { [weak self] in self?.viewModel.send(.changeRequestVacation) }
         case .endWork:
             dismiss(animated: true) { [weak self] in self?.viewModel.send(.endWork) }
         case .changeSchedule:
