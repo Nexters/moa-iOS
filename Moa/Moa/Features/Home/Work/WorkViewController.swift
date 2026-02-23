@@ -117,6 +117,22 @@ final class WorkViewController: BaseViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
+        
+        viewModel.$state
+            .map { state -> Bool in
+                if case .loading = state { return true }
+                return false
+            }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { isLoading in
+                if isLoading {
+                    LoadingManager.shared.show()
+                } else {
+                    LoadingManager.shared.hide()
+                }
+            }
+            .store(in: &cancellables)
     }
 }
 
