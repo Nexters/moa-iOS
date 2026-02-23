@@ -14,6 +14,7 @@ final class SettingUsecase {
     private let workPolicyRepository: WorkPolicyRepository
     private let onboardingRepository: OnboardingRepository
     private let notificationSettingRepository: NotificationSettingRepository
+    private let versionRepository: VersionRepository
     
     init(
         profileRepository: ProfileRepository,
@@ -21,7 +22,8 @@ final class SettingUsecase {
         payrollRepository: PayrollRepository,
         workPolicyRepository: WorkPolicyRepository,
         onboardingRepository: OnboardingRepository,
-        notificationSettingRepository: NotificationSettingRepository
+        notificationSettingRepository: NotificationSettingRepository,
+        versionRepository: VersionRepository
     ) {
         self.profileRepository = profileRepository
         self.memberRepository = memberRepository
@@ -29,6 +31,7 @@ final class SettingUsecase {
         self.workPolicyRepository = workPolicyRepository
         self.onboardingRepository = onboardingRepository
         self.notificationSettingRepository = notificationSettingRepository
+        self.versionRepository = versionRepository
     }
     
     func getProfile() async throws -> ProfileEntity {
@@ -81,5 +84,9 @@ final class SettingUsecase {
     
     func updateNotificationSettings(type: String, checked: Bool) async throws -> [NotificationSettingEntity] {
         try await notificationSettingRepository.updateNotificationSetting(type: type, checked: checked)
+    }
+    
+    func getVersionInfo() async throws -> VersionEntity {
+        try await versionRepository.getVersionInfo()
     }
 }

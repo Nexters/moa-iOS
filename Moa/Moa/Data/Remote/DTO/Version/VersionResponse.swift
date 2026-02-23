@@ -7,7 +7,14 @@
 
 import Foundation
 
-struct VersionResponse {
-    let latestVersion: String?
-    let minimumVersion: String?
+struct VersionResponse: Decodable {
+    let latestVersion: String
+    let minimumVersion: String
+    
+    func toDomain() -> VersionEntity {
+        .init(
+            latestVersion: latestVersion,
+            minimumVersion: minimumVersion
+        )
+    }
 }

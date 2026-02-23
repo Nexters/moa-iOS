@@ -31,6 +31,7 @@ final class SettingHomeViewController: BaseViewController {
         static let inquiry = "문의하기"
         static let logout = "로그아웃"
         static let withdrawal = "회원탈퇴"
+        static let appstoreId = "6758913984"
     }
     
     // MARK: - UI Components
@@ -138,6 +139,13 @@ final class SettingHomeViewController: BaseViewController {
         return stack
     }()
     
+    private lazy var versionInfoRow = SettingItemRowView(
+        title: Constants.versionInfo,
+        subtitle: "",
+        value: Constants.latestVersion,
+        showsChevron: false
+    )
+    
     // MARK: - Init
     
     init(
@@ -196,17 +204,7 @@ final class SettingHomeViewController: BaseViewController {
         let notificationRow = SettingItemRowView(
             title: Constants.notificationSetting
         )
-        notificationRow.onTap = { [weak self] in
-            guard let self else { return }
-//            self.coordinator.moveToNotificationSetting()
-        }
-        
-        let versionInfoRow = SettingItemRowView(
-            title: Constants.versionInfo,
-            subtitle: "v1.0.0",
-            value: Constants.latestVersion,
-            showsChevron: false
-        )
+        notificationRow.onTap = { }
         
         let termsAndPolicy = SettingItemRowView(
             title: Constants.termsAndPolicy
@@ -222,7 +220,7 @@ final class SettingHomeViewController: BaseViewController {
         )
         inquiry.onTap = { [weak self] in
             guard let self else { return }
-//            self.coordinator.moveToInquiry()
+            self.openInquiryMail()
         }
         
         contentStack.addArrangedSubViews([
@@ -237,7 +235,7 @@ final class SettingHomeViewController: BaseViewController {
             SettingSectionView(
                 title: Constants.appSetting,
                 rows: [notificationRow],
-                onRowTap: { [weak self] index in
+                onRowTap: { [weak self] _ in
                     self?.coordinator.moveToNotificationSetting()
                 }
             ),
@@ -273,8 +271,58 @@ final class SettingHomeViewController: BaseViewController {
                 
             case .profileFetched:
                 nicknameLabel.setText(viewModel.nickname)
+                
+            case .versionFetched:
+                updateVersionRow()
             }
         }
+    }
+    
+    func openAppStore() {
+        guard let url = URL(string: "https://apps.apple.com/app/id\(Constants.appstoreId)") else { return }
+        UIApplication.shared.open(url)
+    }
+    
+    private func updateVersionRow() {
+        versionInfoRow.updateSubtitle("v\(viewModel.currentVersion)")
+        
+        switch viewModel.versionStatus {
+        case .latest:
+            versionInfoRow.updateValue(Constants.latestVersion)
+            versionInfoRow.setChevronVisible(false)
+            versionInfoRow.onTap = nil
+        case .updateRequired:
+            versionInfoRow.updateValue(Constants.updatedRequired)
+            versionInfoRow.setChevronVisible(true)
+            versionInfoRow.onTap = { [weak self] in
+                self?.openAppStore()
+            }
+        }
+    }
+    
+    private func openInquiryMail() {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        
+        let subject = "[문의] 모아 서비스에 문의드립니다."
+        let body = """
+        - 문의 유형: (버그 신고 / 제휴·광고 / 계정·결제 / 신고 / 기능 제안 / 기타)
+        - 상세 설명:
+        - 스크린샷/영상(선택):
+        ------------------------------
+        - 앱 버전/빌드: v\(appVersion) (\(buildNumber))
+        - 계정/ID: \(viewModel.nickname)
+        """
+        
+        guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "mailto: moa.salary@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") else { return }
+        
+        guard UIApplication.shared.canOpenURL(url) else {
+            return
+        }
+        
+        UIApplication.shared.open(url)
     }
 }
 
