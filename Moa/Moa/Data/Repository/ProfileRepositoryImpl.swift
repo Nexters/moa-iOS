@@ -29,4 +29,14 @@ final class ProfileRepositoryImpl: ProfileRepository {
             ProfileAPI.updateNickname(request)
         )
     }
+    
+    func updateWorkplace(to workplace: String) async throws {
+        let request = WorkplaceUpdateRequest(workplace: workplace)
+        let _: ProfileResponse = try await apiClient.request(ProfileAPI.updateWorkplace(request))
+    }
+    
+    func updatePayday(to payday: Int) async throws {
+        let request = PaydayUpdateRequest(paydayDay: payday)
+        let _: ProfileResponse = try await apiClient.request(ProfileAPI.updatePayday(request))
+    }
 }

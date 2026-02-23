@@ -31,11 +31,18 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     // 월급 정보
     private(set) var salary: String = ""
     private(set) var payday: String = ""
+    private(set) var salaryType: SalaryType = .annual
+    private(set) var salaryAmount: Int?
+    private(set) var paydayRaw: Int?
     
     // 근무 정보
-    private(set) var workplace: String = ""
+    private(set) var currentWorkplace: String?
+    private(set) var workplaceDisplayText: String = ""
     private(set) var workingDays: String = ""
     private(set) var workingHours: String = ""
+    private(set) var clockInTime: TimeIndicatorEntity?
+    private(set) var clockOutTime: TimeIndicatorEntity?
+    private(set) var selectedWeekdays: Set<Weekday> = []
     
     // MARK: - Init
     
@@ -64,6 +71,8 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
             let salaryAmount = AppNumberFormatter.koreanCurrencyText(for: payroll.salaryAmount ?? 0)
             
             self.salary = salaryType + salaryAmount
+            self.salaryType = payroll.salaryInputType
+            self.salaryAmount = payroll.salaryAmount
             self.send(.payrollFetched)
         }
     }
@@ -71,16 +80,20 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
     private func getWorkPolicy() async throws {
         let workPolicy = try await settingUsecase.getWorkPolicy()
         await MainActor.run {
+            self.selectedWeekdays = Set(workPolicy.workdays)
+            self.clockInTime = workPolicy.clockInTime
+            self.clockOutTime = workPolicy.clockOutTime
+            
             let workingDays = workPolicy.workdays.map({ $0.displayName })
             if !workingDays.isEmpty {
-                self.workingDays = workingDays.joined(separator: ",")
+                self.workingDays = workingDays.joined(separator: ", ")
             } else {
                 self.workingDays = Constants.unregistered
             }
             
             if let clockInTime = workPolicy.clockInTime,
                let clockOutTime = workPolicy.clockOutTime {
-                self.workingHours = "\(clockInTime)~\(clockOutTime)"
+                self.workingHours = "\(clockInTime.displayString)~\(clockOutTime.displayString)"
             } else {
                 self.workingHours = Constants.unregistered
             }
@@ -98,10 +111,13 @@ final class PayrollWorkPolicyInfoViewModel: BaseViewModel<PayrollWorkPolicyOutpu
                 self.payday = Constants.unregistered
             }
             
+            paydayRaw = profile.paydayDay
+            currentWorkplace = profile.workplace
+            
             if let workplace = profile.workplace {
-                self.workplace = workplace
+                self.workplaceDisplayText = workplace
             } else {
-                self.workplace = Constants.unregistered
+                self.workplaceDisplayText = Constants.unregistered
             }
             
             self.send(.profileFetched)

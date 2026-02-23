@@ -20,9 +20,9 @@ final class PayrollRepositoryImpl: PayrollRepository {
         return response.toDomain()
     }
     
-    func updateWorkPolicy(salaryInputType: String, salaryAmount: Int) async throws -> PayrollEntity {
+    func updatePayroll(salaryInputType: SalaryType, salaryAmount: Int) async throws -> PayrollEntity {
         let request = PayrollUpsertRequest(
-            salaryInputType: salaryInputType,
+            salaryInputType: salaryInputType.apiValue,
             salaryAmount: salaryAmount
         )
         let response: PayrollResponse = try await apiClient.request(PayrollAPI.updatePayroll(request))
