@@ -201,7 +201,7 @@ private extension WorkViewModel {
             workedEarnings: entity.workedEarnings,
             standardSalary: entity.standardSalary,
             dailyPay:       entity.dailyPay,
-            type:           WorkdayType(serverValue: workday.type),
+            type:           workday.type,
             clockInTime:    workday.clockInTime,
             clockOutTime:   workday.clockOutTime
         )

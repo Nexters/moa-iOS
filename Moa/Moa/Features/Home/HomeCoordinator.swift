@@ -10,6 +10,7 @@ import UIKit
 final class HomeCoordinator {
 
     // MARK: - Properties
+
     private let container: AppContainer
     private weak var nav: UINavigationController?
 
@@ -53,11 +54,10 @@ private extension HomeCoordinator {
         nav?.pushViewController(makeHistoryViewController(), animated: true)
     }
 
+    // MARK: Setting
+
     func makeSettingViewController() -> SettingHomeViewController {
-        let coordinator = SettingCoordinator(
-            container: container,
-            nav: nav
-        )
+        let coordinator = SettingCoordinator(container: container, nav: nav)
         return SettingHomeViewController(
             coordinator: coordinator,
             viewModel: .init(settingUsecase: container.settingUsecase)
@@ -77,6 +77,7 @@ private extension HomeCoordinator {
     ) -> FixScheduleViewController {
         let vm = FixScheduleViewModel(
             viewType: viewType,
+            historyUseCase: container.historyUseCase,
             preselectedDate: preselectedDate,
             existingSchedule: existingSchedule
         )
@@ -85,12 +86,15 @@ private extension HomeCoordinator {
         return vc
     }
 
-    func showAddSchedule() {
-        let vc = makeFixScheduleViewController(viewType: .add)
+    /// 일정 추가
+    func showAddSchedule(preselectedDate: Date? = nil) {
+        let vc = makeFixScheduleViewController(viewType: .add, preselectedDate: preselectedDate)
         nav?.pushViewController(vc, animated: true)
     }
 
-    func showFixSchedule(existing: FixScheduleViewState) {
+    /// 일정 수정 — WorkdayEntity + 날짜로 기존 데이터 선입력
+    func showFixSchedule(workday: WorkdayEntity, date: Date) {
+        let existing = FixScheduleViewModel.makeState(from: workday, date: date)
         let vc = makeFixScheduleViewController(viewType: .fix, existingSchedule: existing)
         nav?.pushViewController(vc, animated: true)
     }
@@ -104,7 +108,6 @@ private extension HomeCoordinator {
 
 extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 
-    /// 네비게이션 바 캘린더 아이콘 탭 → 캘린더(History) 화면
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController) {
         showHistory()
     }
@@ -113,21 +116,8 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
         showSetting()
     }
 
-    /// 근무완료 1에서 "완료" 탭 → 최종 완료 페이지
-    ///
-    /// 최종 완료 페이지는 기존 WorkMainContentView를 status: .finished로 렌더링:
-    ///   - MonthlySalaryView: imgFullMoney 이미지, 금액 녹색, + 접두사 없음
-    ///   - WorkMainSummaryView: dailyPay 표기, 휴가 시 "휴가", chevron X, 수정 불가
-    ///   - 하단 버튼 영역: idle 전용이므로 숨겨짐
-    ///
-    /// WorkViewController.hasConfirmedWork = true 로 이미 설정되어 있으므로
-    /// render(.loaded(status: .finished, data:)) 시 renderFinalComplete() 분기로 진입.
-    /// → 별도 VC push 없이 WorkViewController 내에서 workMainView를 전환.
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController) {
-        // WorkViewController 내부에서 hasConfirmedWork = true 설정 후 delegate 호출.
-        // render()가 viewModel state를 구독 중이므로 최신 state로 re-render 트리거.
-        // (ViewModel state는 .finished 유지 — 별도 액션 불필요)
-        // WorkViewController가 직접 renderFinalComplete()를 처리하므로 Coordinator 추가 작업 없음.
+        // WorkViewController 내부에서 처리 — Coordinator 추가 작업 없음
     }
 }
 
@@ -135,8 +125,19 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 
 extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
 
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController) {
-        showAddSchedule()
+    func historyViewControllerDidTapAdd(
+        _ vc: HistoryViewController,
+        preselectedDate: Date?
+    ) {
+        showAddSchedule(preselectedDate: preselectedDate)
+    }
+
+    func historyViewControllerDidTapEdit(
+        _ vc: HistoryViewController,
+        workday: WorkdayEntity,
+        date: Date
+    ) {
+        showFixSchedule(workday: workday, date: date)
     }
 }
 

@@ -12,9 +12,14 @@ import Combine
 // MARK: - Coordinator Delegate
 
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
-    /// + 버튼 탭
     func historyViewControllerDidTapAdd(
-        _ vc: HistoryViewController
+        _ vc: HistoryViewController,
+        preselectedDate: Date?
+    )
+    func historyViewControllerDidTapEdit(
+        _ vc: HistoryViewController,
+        workday: WorkdayEntity,
+        date: Date
     )
 }
 
@@ -38,137 +43,203 @@ struct CalendarDay: Equatable {
     let isCurrentMonth: Bool
 }
 
-
+// MARK: - HistoryViewController
+//
 final class HistoryViewController: BaseViewController {
-    
+
     // MARK: - Properties
-    
+
     private let viewModel: HistoryViewModel
-    
-    /// CalendarView에서 마지막으로 선택된 날짜
     private var selectedDate: Date?
-    
+
     // MARK: - UI
-    
-    private let calendarView = CalendarView()
-    
+
+    private let calendarView: CalendarView = {
+        let v = CalendarView()
+        v.layer.backgroundColor = AppColor.Background.primary.cgColor
+        v.layer.cornerRadius  = 16
+        v.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        v.clipsToBounds       = true
+        return v
+    }()
+
+    private let scrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsVerticalScrollIndicator = false
+        sv.alwaysBounceVertical         = false
+        return sv
+    }()
+
+    private let detailContainer: UIView = {
+        let v = UIView()
+        v.isHidden = true
+        return v
+    }()
+
+    private lazy var detailView: WorkdayDetailView = {
+        let v = WorkdayDetailView()
+        v.delegate = self
+        return v
+    }()
+
     // MARK: - Init
-    
+
     init(viewModel: HistoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        .lightContent
-    }
-    
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     weak var coordinatorDelegate: HistoryViewControllerCoordinatorDelegate?
-    
+
     // MARK: - Lifecycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupUI()
         bind()
         viewModel.send(.viewDidLoad)
     }
-    
+
+    // MARK: - Setup
+
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
-        
-        view.backgroundColor = AppColor.Background.primary
+        view.backgroundColor  = AppColor.Background.primary
         calendarView.delegate = self
-        
-        view.addSubview(calendarView)
-        
+
+        // detailView → detailContainer (좌우/상하 패딩)
+        detailContainer.addSubview(detailView)
+        detailView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(28)
+            $0.leading.trailing.equalToSuperview().inset(16)
+            $0.bottom.equalToSuperview().inset(28)
+        }
+
+        // scrollView 안에 detailContainer만 배치
+        scrollView.addSubview(detailContainer)
+        detailContainer.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.width.equalTo(scrollView)
+        }
+
+        view.addSubViews([calendarView, scrollView])
+
+        // calendarView
         calendarView.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide)
-            $0.leading.trailing.bottom.equalToSuperview()
+            $0.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        // scrollView
+        scrollView.snp.makeConstraints {
+            $0.top.equalTo(calendarView.snp.bottom)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
-    
+
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                self?.render(state)
-            }
+            .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
     }
 }
 
-// MARK: - Bind
+// MARK: - Render
 
 private extension HistoryViewController {
-    
-    
+
     func render(_ state: HistoryViewState) {
         switch state {
-            
         case .idle:
             break
-            
         case .loading:
-            showLoading()
-            
+            break
         case .loaded(let days, let earnings):
-            hideLoading()
-            
-            // calendarView.updateCalendarDays(days)
-            
-            calendarView.updateWorkInfo(
-               earnings
-            )
-            
-        case .error:
-            hideLoading()
+            calendarView.updateCalendarDays(days)
+            calendarView.updateWorkInfo(earnings)
+            hideDetail()
+        case .dayDetail(let date, let workday):
+            detailView.configure(date: date, workday: workday)
+            showDetail()
+        case .error(let error):
+            handleError(error)
         }
     }
 }
+
+// MARK: - Detail Show / Hide
 
 private extension HistoryViewController {
-    
-    func showLoading() {
-        // 필요하면 ActivityIndicator 추가
+
+    func showDetail() {
+        guard detailContainer.isHidden else { return }
+        detailContainer.isHidden = false
+        detailContainer.alpha    = 0
+        UIView.animate(withDuration: 0.25) {
+            self.detailContainer.alpha = 1
+        }
     }
-    
-    func hideLoading() {
-        // 필요하면 로딩 제거
-    }
-    
-    func handleError(_ error: HistoryError) {
-        let message: String
-        
-        switch error {
-        case .network:
-            message = "네트워크 오류가 발생했습니다."
-        case .dataCorrupted:
-            message = "데이터를 불러올 수 없습니다."
+
+    func hideDetail() {
+        guard !detailContainer.isHidden else { return }
+        UIView.animate(withDuration: 0.2) {
+            self.detailContainer.alpha = 0
+        } completion: { _ in
+            self.detailContainer.isHidden = true
         }
     }
 }
 
+// MARK: - Error
+
+private extension HistoryViewController {
+
+    func handleError(_ error: HistoryError) {
+        let msg: String
+        switch error {
+        case .network:       msg = "네트워크 오류가 발생했습니다."
+        case .dataCorrupted: msg = "데이터를 불러올 수 없습니다."
+        }
+        let alert = UIAlertController(title: "오류", message: msg, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
+}
 
 // MARK: - CalendarViewDelegate
 
 extension HistoryViewController: CalendarViewDelegate {
-    
+
     func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay) {
         selectedDate = day.date
+        viewModel.send(.selectDay(day.date))
     }
-    
+
     func calendarView(_ view: CalendarView, didChangeToDate date: Date) {
         selectedDate = nil
+        viewModel.send(.deselectDay)
         viewModel.send(.changeMonth(date))
     }
-    
+
     func calendarViewDidTapAdd(_ view: CalendarView) {
-        // Coordinator 연결 시 여기서 처리
+        // + 버튼 → 날짜 전달 없이 일정 추가
+        coordinatorDelegate?.historyViewControllerDidTapAdd(self, preselectedDate: nil)
+    }
+}
+
+// MARK: - WorkdayDetailViewDelegate
+
+extension HistoryViewController: WorkdayDetailViewDelegate {
+
+    func workdayDetailView(
+        _ view: WorkdayDetailView,
+        didTapEdit workday: WorkdayEntity,
+        date: Date
+    ) {
+        coordinatorDelegate?.historyViewControllerDidTapEdit(self, workday: workday, date: date)
     }
 }

@@ -19,14 +19,10 @@ final class ScheduleDateRangeCardView: UIView {
     
     // MARK: - UI
     
-    private let dateLabel: StyledLabel = {
-        let label = StyledLabel()
-        label.setStyle(
-            .init(
-                typography: AppTypography.b1_400,
-                color: AppColor.IconAndText.lowEmphasis
-            )
-        )
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = AppTypography.b1_400.font()
+        label.textColor = AppColor.IconAndText.lowEmphasis
         label.numberOfLines = 1
         return label
     }()
@@ -53,6 +49,7 @@ final class ScheduleDateRangeCardView: UIView {
        
         dateLabel.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(16)
+            $0.height.equalTo(60)
             $0.centerY.equalToSuperview()
         }
     }
@@ -71,13 +68,9 @@ final class ScheduleDateRangeCardView: UIView {
         let font  = isSelected ? AppTypography.t2_700 : AppTypography.t2_400
         let textColor  = isSelected ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.lowEmphasis
         
-        dateLabel.setText(
-            dateRange?.displayString ?? "날짜를 선택해주세요",
-            style: .init(
-                typography: font,
-                color: textColor
-            )
-        )
+        dateLabel.text = dateRange?.displayString ?? "2026년 1월 20일"
+        dateLabel.font = font.font()
+        dateLabel.textColor = textColor
     }
     
     // MARK: - Action

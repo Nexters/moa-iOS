@@ -62,6 +62,7 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            make.height.equalTo(34)
         }
         
         calendarView.snp.makeConstraints { make in
