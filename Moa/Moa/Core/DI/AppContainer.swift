@@ -60,6 +60,9 @@ final class AppContainer {
     private lazy var homeRepository: HomeRepository = {
         HomeRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var notificationSettingRepository: NotificationSettingRepository = {
+        NotificationSettingRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
@@ -80,7 +83,8 @@ final class AppContainer {
             memberRepository: memberRepository,
             payrollRepository: payrollRepository,
             workPolicyRepository: workPolicyRepository,
-            onboardingRepository: onboardingRepository
+            onboardingRepository: onboardingRepository,
+            notificationSettingRepository: notificationSettingRepository
         )
     }()
 }
