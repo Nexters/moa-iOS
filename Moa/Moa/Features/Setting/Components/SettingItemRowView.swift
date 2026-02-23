@@ -114,6 +114,10 @@ final class SettingItemRowView: UIView {
         }
     }
     
+    func setChevronVisible(_ visible: Bool) {
+        chevronImage.isHidden = !visible
+    }
+    
     init(title: String, subtitle: String? = nil, value: String? = nil, showsChevron: Bool = true) {
         super.init(frame: .zero)
         

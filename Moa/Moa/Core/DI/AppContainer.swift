@@ -63,6 +63,9 @@ final class AppContainer {
     private lazy var notificationSettingRepository: NotificationSettingRepository = {
         NotificationSettingRepositoryImpl(apiClient: apiClient)
     }()
+    private lazy var versionRepository: VersionRepository = {
+        VersionRepositoryImpl(apiClient: apiClient)
+    }()
 
     // MARK: - UseCase
     lazy var authUseCase: AuthUsecase = {
@@ -84,7 +87,8 @@ final class AppContainer {
             payrollRepository: payrollRepository,
             workPolicyRepository: workPolicyRepository,
             onboardingRepository: onboardingRepository,
-            notificationSettingRepository: notificationSettingRepository
+            notificationSettingRepository: notificationSettingRepository,
+            versionRepository: versionRepository
         )
     }()
 }
