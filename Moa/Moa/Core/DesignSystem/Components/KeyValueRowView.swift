@@ -135,6 +135,12 @@ final class KeyValueRowView: UIControl {
         valueLabel.setText(value)
         updateAccessibility()
     }
+    
+    func showChevron(_ isShow: Bool) {
+        chevronImageView.isHidden = !isShow
+        updateAccessibility()
+    }
+
 
     private func updateAccessibility() {
         accessibilityLabel = "\(titleLabel.text ?? ""), \(valueLabel.text ?? "")"

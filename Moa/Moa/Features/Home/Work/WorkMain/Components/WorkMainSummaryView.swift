@@ -140,6 +140,8 @@ final class WorkMainSummaryView: UIView {
         timeRowView.isHidden         = true
         finishedTimeRowView.isHidden = false
         vacationTimeRowView.isHidden = true
+        
+        finishedTimeRowView.showChevron(tappable)
 
         wageRowView.updateValue(formattedWage(dailyWage))
         finishedTimeRowView.updateValue(timeValue)
