@@ -31,12 +31,13 @@ final class SettingItemRowView: UIView {
     private lazy var horizontalStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.addArrangedSubViews([titleSubtitleStack, spacerView, valueLabel, chevronImage])
+        stackView.addArrangedSubViews([titleSubtitleStack, spacerView, valueLabel, trailingImageView, chevronImage])
         stackView.setCustomSpacing(4, after: valueLabel)
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         stackView.backgroundColor = AppColor.Container.primary
         stackView.layer.cornerRadius = 12
+        stackView.alignment = .center
         return stackView
     }()
     
@@ -61,9 +62,8 @@ final class SettingItemRowView: UIView {
 
     private lazy var titleSubtitleStack: UIStackView = {
         let stack = UIStackView()
-        stack.axis = .vertical
+        stack.axis = .horizontal
         stack.spacing = 6
-        stack.alignment = .leading
         stack.distribution = .fill
         stack.addArrangedSubViews([titleLabel, subtitleLabel])
         return stack
@@ -82,6 +82,14 @@ final class SettingItemRowView: UIView {
         let imgView = UIImageView()
         imgView.image = .init(resource: .Icon.iconChevronRight).withRenderingMode(.alwaysTemplate)
         imgView.tintColor = AppColor.IconAndText.lowEmphasis
+        return imgView
+    }()
+    
+    private lazy var trailingImageView: UIImageView = {
+        let imgView = UIImageView()
+        imgView.contentMode = .scaleAspectFit
+        imgView.isHidden = true
+        imgView.tintColor = AppColor.IconAndText.highEmphasis
         return imgView
     }()
     
@@ -118,13 +126,18 @@ final class SettingItemRowView: UIView {
         chevronImage.isHidden = !visible
     }
     
-    init(title: String, subtitle: String? = nil, value: String? = nil, showsChevron: Bool = true) {
+    init(title: String, subtitle: String? = nil, value: String? = nil, showsChevron: Bool = true, trailingImage: UIImage? = nil) {
         super.init(frame: .zero)
         
         titleLabel.setText(title)
         updateValue(value)
         updateSubtitle(subtitle)
         chevronImage.isHidden = !showsChevron
+        
+        if let trailingImage {
+            trailingImageView.image = trailingImage
+            trailingImageView.isHidden = false
+        }
         
         setupUI()
     }
@@ -143,6 +156,10 @@ final class SettingItemRowView: UIView {
         }
         
         chevronImage.snp.makeConstraints {
+            $0.width.height.equalTo(24)
+        }
+        
+        trailingImageView.snp.makeConstraints {
             $0.width.height.equalTo(24)
         }
         

@@ -57,15 +57,15 @@ final class SettingHomeViewController: BaseViewController {
     
     private let logoutLeadingSpacer: UIView = {
         let v = UIView()
-        v.setContentHuggingPriority(.required, for: .horizontal)
-        v.setContentCompressionResistancePriority(.required, for: .horizontal)
+        v.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return v
     }()
 
     private let logoutTrailingSpacer: UIView = {
         let v = UIView()
-        v.setContentHuggingPriority(.required, for: .horizontal)
-        v.setContentCompressionResistancePriority(.required, for: .horizontal)
+        v.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return v
     }()
     
@@ -73,7 +73,7 @@ final class SettingHomeViewController: BaseViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 16
-        stack.distribution = .equalCentering
+        stack.distribution = .fill
         stack.addArrangedSubViews([logoutLeadingSpacer, logoutButton, VerticalDividerView(height: 11.5), withdrawalButton, logoutTrailingSpacer])
         return stack
     }()
@@ -194,6 +194,10 @@ final class SettingHomeViewController: BaseViewController {
         }
         
         logOutAndWithdrawalStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        logoutLeadingSpacer.snp.makeConstraints { make in
+            make.width.equalTo(logoutTrailingSpacer)
+        }
     }
     
     func configureContentStack() {

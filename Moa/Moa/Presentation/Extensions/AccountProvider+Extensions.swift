@@ -21,4 +21,11 @@ extension AccountProvider {
         case .apple: "애플 계정으로 가입"
         }
     }
+    
+    var icon: ImageResource {
+        switch self {
+        case .kakao: .Icon.iconKakaotalk
+        case .apple: .Icon.iconApple
+        }
+    }
 }
