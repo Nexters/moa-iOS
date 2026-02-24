@@ -100,6 +100,7 @@ final class TermsAgreementBottomSheetViewController: UIViewController, BottomShe
             make.top.equalTo(termsAgreementStackView.snp.bottom).offset(44)
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             make.bottom.equalToSuperview().offset(-24)
+            make.height.equalTo(64)
         }
     }
     
@@ -231,6 +232,9 @@ private extension TermsAgreementBottomSheetViewController {
             make.trailing.equalToSuperview()
             make.centerY.equalToSuperview()
         }
+        
+        mainButton.setContentHuggingPriority(.required, for: .vertical)
+        mainButton.setContentCompressionResistancePriority(.required, for: .vertical)
         
         mainButton.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview()
