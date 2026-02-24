@@ -24,39 +24,50 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
     
     func didTapLoginWithKakaoTalk() {
         if UserApi.isKakaoTalkLoginAvailable() {
-            UserApi.shared.loginWithKakaoTalk { [weak self] oauthToken, error in
-                if let error {
-                    print("카카오로 로그인 실패: \(error)")
-                    return
-                }
-                
-                guard let self,
-                      let idToken = oauthToken?.idToken,
-                      !idToken.isEmpty
-                else {
-                    return
-                }
-                
-                Task { [weak self] in
-                    guard let self = self else { return }
-                    do {
-                        let _ = try await self.authUsecase.loginWithKakaoTalk(
-                            idToken: idToken,
-                            fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
-                        )
-                        
-                        await sendFcmTokenIfAvailable()
-                        
-                        await MainActor.run {
-                            self.send(.loginSucceed)
-                        }
-                    } catch {
-                        print("로그인 요청 실패: \(error.localizedDescription)")
-                    }
-                }
-            }
+            loginWithKakaoTalk()
         } else {
-            print("카카오톡 로그인 불가 상태")
+            loginWithKakaoAccount() // 카톡 앱 없을 때 웹 로그인
+        }
+    }
+    
+    private func loginWithKakaoTalk() {
+        UserApi.shared.loginWithKakaoTalk { [weak self] oauthToken, error in
+            self?.handleKakaoLoginResult(oauthToken: oauthToken, error: error)
+        }
+    }
+    
+    private func loginWithKakaoAccount() {
+        UserApi.shared.loginWithKakaoAccount { [weak self] oauthToken, error in
+            self?.handleKakaoLoginResult(oauthToken: oauthToken, error: error)
+        }
+    }
+    
+    private func handleKakaoLoginResult(oauthToken: OAuthToken?, error: Error?) {
+        if let error {
+            print("카카오 로그인 실패: \(error)")
+            return
+        }
+        
+        guard
+            let idToken = oauthToken?.idToken,
+            !idToken.isEmpty
+        else {
+            print("카카오 idToken 없음")
+            return
+        }
+        
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await self.authUsecase.loginWithKakaoTalk(
+                    idToken: idToken,
+                    fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
+                )
+                await sendFcmTokenIfAvailable()
+                await MainActor.run { self.send(.loginSucceed) }
+            } catch {
+                print("로그인 요청 실패: \(error.localizedDescription)")
+            }
         }
     }
     
