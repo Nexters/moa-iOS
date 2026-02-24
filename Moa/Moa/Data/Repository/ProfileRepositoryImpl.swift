@@ -35,8 +35,10 @@ final class ProfileRepositoryImpl: ProfileRepository {
         let _: ProfileResponse = try await apiClient.request(ProfileAPI.updateWorkplace(request))
     }
     
-    func updatePayday(to payday: Int) async throws {
+    func updatePayday(to payday: Int) async throws -> ProfileEntity {
         let request = PaydayUpdateRequest(paydayDay: payday)
-        let _: ProfileResponse = try await apiClient.request(ProfileAPI.updatePayday(request))
+        let response: ProfileResponse = try await apiClient.request(ProfileAPI.updatePayday(request))
+        
+        return response.toDomain()
     }
 }

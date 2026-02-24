@@ -17,6 +17,8 @@ final class SettingUsecase {
     private let versionRepository: VersionRepository
     private let authRepository: AuthRepository
     
+    private let userDefaults: UserDefaults
+    
     init(
         profileRepository: ProfileRepository,
         memberRepository: MemberRepository,
@@ -25,7 +27,8 @@ final class SettingUsecase {
         onboardingRepository: OnboardingRepository,
         notificationSettingRepository: NotificationSettingRepository,
         versionRepository: VersionRepository,
-        authRepository: AuthRepository
+        authRepository: AuthRepository,
+        userDefaults: UserDefaults = .standard
     ) {
         self.profileRepository = profileRepository
         self.memberRepository = memberRepository
@@ -35,10 +38,14 @@ final class SettingUsecase {
         self.notificationSettingRepository = notificationSettingRepository
         self.versionRepository = versionRepository
         self.authRepository = authRepository
+        self.userDefaults = userDefaults
     }
     
     func getProfile() async throws -> ProfileEntity {
-        try await profileRepository.getProfile()
+        let result = try await profileRepository.getProfile()
+        userDefaults.set(result.paydayDay, forKey: "payday")
+        
+        return result
     }
     
     func updateNickname(to nickname: String?) async throws {
@@ -78,7 +85,8 @@ final class SettingUsecase {
     }
     
     func updatePayday(to payday: Int) async throws {
-        try await profileRepository.updatePayday(to: payday)
+        let result = try await profileRepository.updatePayday(to: payday)
+        userDefaults.set(result.paydayDay, forKey: "payday")
     }
     
     func getNotificationSettings() async throws -> [NotificationSettingEntity] {
