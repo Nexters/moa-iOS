@@ -23,24 +23,37 @@ final class AuthUsecase {
         idToken: String,
         fcmDeviceToken: String?
     ) async throws -> SocialLoginEntity {
-        try await authRepository.loginWithKakaoTalk(
+        let entity = try await authRepository.loginWithKakaoTalk(
             idToken: idToken,
             fcmDeviceToken: fcmDeviceToken
         )
+        
+        AuthSessionManager.shared.updateTokens(access: entity.accessToken)
+        
+        return entity
     }
     
     func loginWithApple(
         idToken: String,
         fcmDeviceToken: String?
     ) async throws -> SocialLoginEntity {
-        try await authRepository.loginWithApple(
+        let entity = try await authRepository.loginWithApple(
             idToken: idToken,
             fcmDeviceToken: fcmDeviceToken
         )
+        
+        AuthSessionManager.shared.updateTokens(access: entity.accessToken)
+        
+        return entity
     }
     
     func logout(fcmDeviceToken: String) async throws {
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+        if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
+            await fcmRepository.deleteFcmToken(fcmToken: fcmToken)
+        }
+        
+        AuthSessionManager.shared.clearTokens()
     }
     
     func updateFcmToken(to fcmToken: String) async {

@@ -75,7 +75,10 @@ final class AppContainer {
         AuthUsecase(authRepository: authRepository, fcmRepository: fcmRepository)
     }()
     lazy var onboardingUseCase: OnboardingUsecase = {
-        OnboardingUsecase(repository: onboardingRepository)
+        OnboardingUsecase(
+            onboardingRepository: onboardingRepository,
+            authRepository: authRepository
+        )
     }()
     lazy var homeUseCase: HomeUsecase = {
         HomeUsecase(homeRepository: homeRepository, workdayRepository: workdayRepository)
@@ -92,7 +95,8 @@ final class AppContainer {
             onboardingRepository: onboardingRepository,
             notificationSettingRepository: notificationSettingRepository,
             versionRepository: versionRepository,
-            authRepository: authRepository
+            authRepository: authRepository,
+            fcmRepository: fcmRepository
         )
     }()
 }

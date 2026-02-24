@@ -16,6 +16,7 @@ final class SettingUsecase {
     private let notificationSettingRepository: NotificationSettingRepository
     private let versionRepository: VersionRepository
     private let authRepository: AuthRepository
+    private let fcmRepository: FcmRepository
     
     private let userDefaults: UserDefaults
     
@@ -28,6 +29,7 @@ final class SettingUsecase {
         notificationSettingRepository: NotificationSettingRepository,
         versionRepository: VersionRepository,
         authRepository: AuthRepository,
+        fcmRepository: FcmRepository,
         userDefaults: UserDefaults = .standard
     ) {
         self.profileRepository = profileRepository
@@ -38,6 +40,7 @@ final class SettingUsecase {
         self.notificationSettingRepository = notificationSettingRepository
         self.versionRepository = versionRepository
         self.authRepository = authRepository
+        self.fcmRepository = fcmRepository
         self.userDefaults = userDefaults
     }
     
@@ -103,6 +106,14 @@ final class SettingUsecase {
     
     func logout(fcmDeviceToken: String) async throws {
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+        if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
+            await fcmRepository.deleteFcmToken(fcmToken: fcmToken)
+        }
+        
+        AuthSessionManager.shared.clearTokens()
+        
+        userDefaults.removeObject(forKey: "payday")
+        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
     
     func withdrawal(reason: [String]) async throws {

@@ -64,6 +64,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
+        AuthSessionManager.shared.updateTokens(fcm: fcmToken)
     }
 }

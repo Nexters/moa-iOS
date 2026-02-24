@@ -40,12 +40,10 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 Task { [weak self] in
                     guard let self = self else { return }
                     do {
-                        let accessToken = try await self.authUsecase.loginWithKakaoTalk(
+                        let _ = try await self.authUsecase.loginWithKakaoTalk(
                             idToken: idToken,
                             fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
-                        ).accessToken
-                        
-                        UserDefaults.standard.set(accessToken, forKey: "accessToken")
+                        )
                         
                         await sendFcmTokenIfAvailable()
                         
@@ -66,12 +64,10 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let accessToken = try await self.authUsecase.loginWithApple(
+                let _ = try await self.authUsecase.loginWithApple(
                     idToken: idToken,
                     fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
-                ).accessToken
-                
-                UserDefaults.standard.set(accessToken, forKey: "accessToken")
+                )
                 
                 await sendFcmTokenIfAvailable()
                 

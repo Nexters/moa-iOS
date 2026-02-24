@@ -37,4 +37,8 @@ final class OnboardingNicknameViewModel {
         guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
         _ = try await usecase.updateNickname(to: nickname)
     }
+    
+    func clearTokens() {
+        AuthSessionManager.shared.clearTokens()
+    }
 }

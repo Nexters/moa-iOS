@@ -158,7 +158,16 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton {
-            // TODO: 팝업 노출
+            AlertManager.show(
+                title: "정말 그만 작성하실 건가요?",
+                subtitle: "뒤로 돌아가기를 누르면\n지금까지 작성한 정보가 사라져요",
+                leftButtonTitle: "네",
+                rightButtonTitle: "아니오",
+                onLeftButtonTapped: { [weak self] in
+                    self?.viewModel.clearTokens()
+                    self?.navigationController?.popViewController(animated: true)
+                }
+            )
         }
         setupButton()
         setupSpacers()
