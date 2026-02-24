@@ -229,7 +229,7 @@ final class PayrollEditViewController: BaseViewController {
                 try await viewModel.updatePayroll()
                 self.navigationController?.popViewController(animated: true)
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "급여 수정에 실패했습니다.")
             }
         }
     }

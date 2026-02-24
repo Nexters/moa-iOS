@@ -132,7 +132,7 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
             do {
                 try await viewModel.loadTerms()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "약관 및 정책 목록 조회에 실패했습니다.")
             }
         }
     }
@@ -191,7 +191,7 @@ final class OnboardingWorkPolicyViewController: BaseViewController {
                 try await viewModel.updateWorkPolicy()
                 showTermsAgreementBottomSheet()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "근무시간 등록에 실패했습니다.")
             }
         }
     }
@@ -220,7 +220,7 @@ extension OnboardingWorkPolicyViewController: TermsAgreementBottomSheetViewDeleg
                 try await viewModel.updateTermsAgreement(agreements: agreements)
                 onNext()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "약관 및 정책 동의에 실패했습니다.")
             }
         }
     }

@@ -230,7 +230,7 @@ final class OnboardingPayrollViewController: BaseViewController {
                 try await viewModel.updatePayroll()
                 onNext()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "급여정보 등록에 실패했습니다.")
             }
         }
     }

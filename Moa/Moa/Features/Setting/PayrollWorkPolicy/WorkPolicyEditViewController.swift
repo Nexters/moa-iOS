@@ -165,7 +165,7 @@ final class WorkPolicyEditViewController: BaseViewController {
                 try await viewModel.updateWorkPolicy()
                 navigationController?.popViewController(animated: true)
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "근무 시간 수정에 실패했습니다.")
             }
         }
     }

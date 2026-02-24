@@ -157,18 +157,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Setup
     
     override func setupUI() {
-        replaceSystemBackButtonWithAppBackButton {
-            AlertManager.show(
-                title: "정말 그만 작성하실 건가요?",
-                subtitle: "뒤로 돌아가기를 누르면\n지금까지 작성한 정보가 사라져요",
-                leftButtonTitle: "네",
-                rightButtonTitle: "아니오",
-                onLeftButtonTapped: { [weak self] in
-                    self?.viewModel.clearTokens()
-                    self?.navigationController?.popViewController(animated: true)
-                }
-            )
-        }
+        navigationItem.hidesBackButton = true
         setupButton()
         setupSpacers()
         setupHierarchy()
@@ -208,7 +197,7 @@ final class OnboardingNicknameViewController: BaseViewController {
                 try await viewModel.updateNickname(to: nicknameTextField.text)
                 onNext()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "닉네임 등록에 실패했습니다.")
             }
         }
     }

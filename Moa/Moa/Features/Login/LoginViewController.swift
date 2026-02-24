@@ -203,7 +203,7 @@ final class LoginViewController: BaseViewController {
             case .loginSucceed:
                 router?.routeAfterLogin()
             case .loginFailed:
-                break // TODO: 로그인 실패 처리
+                ToastManager.show(message: "로그인에 실패했습니다.")
             }
         }
     }

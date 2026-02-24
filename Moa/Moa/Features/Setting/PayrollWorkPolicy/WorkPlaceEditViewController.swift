@@ -157,7 +157,7 @@ final class WorkPlaceEditViewController: BaseViewController {
                 try await viewModel.updateWorkplace(to: workplaceTextView.text)
                 navigationController?.popViewController(animated: true)
             } catch {
-                // TODO: 에러 처리
+                ToastManager.show(message: "회사명 수정에 실패했습니다.")
             }
         }
     }
