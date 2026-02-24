@@ -20,8 +20,8 @@ final class WorkScheduleChangeCardView: UIView {
     private lazy var label: UILabel = {
         let label = UILabel()
         label.text = scheduleChangeType.description
-        label.font = AppTypography.b1_600.font()
-        label.textColor = AppColor.IconAndText.highEmphasis
+        label.font = AppTypography.b1_400.font()
+        label.textColor = AppColor.IconAndText.mediumEmphasis
         label.textAlignment = .center
         return label
     }()
@@ -41,6 +41,7 @@ final class WorkScheduleChangeCardView: UIView {
     private func setup() {
         layer.cornerRadius = 12
         clipsToBounds      = true
+        backgroundColor = AppColor.Btn.Secondary.enable
 
         addSubview(label)
         label.snp.makeConstraints { $0.center.equalToSuperview() }
@@ -53,9 +54,8 @@ final class WorkScheduleChangeCardView: UIView {
     // MARK: - State
 
     func setSelected(_ selected: Bool) {
-        backgroundColor = selected ?
-             AppColor.Btn.Secondary.enable
-            : AppColor.Btn.Secondary.disabled
+        label.font = selected ? AppTypography.b1_600.font() : AppTypography.b1_400.font()
+        label.textColor = selected ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.mediumEmphasis
     }
 
     // MARK: - Action
