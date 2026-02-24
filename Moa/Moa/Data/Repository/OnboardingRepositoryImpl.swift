@@ -35,7 +35,7 @@ final class OnboardingRepositoryImpl: OnboardingRepository {
             
             let raw = "\(adj)\(noun)"
             let noSpaces = raw.replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
-            let normalized = noSpaces.replacingOccurrences(of: "[^a-zA-Z가-힣]", with: "", options: .regularExpression)
+            let normalized = noSpaces.replacingOccurrences(of: "[^0-9a-zA-Z가-힣]", with: "", options: .regularExpression)
             return normalized.isEmpty ? defaultAdj + defaultNoun : normalized
         } catch {
             return defaultAdj + defaultNoun
