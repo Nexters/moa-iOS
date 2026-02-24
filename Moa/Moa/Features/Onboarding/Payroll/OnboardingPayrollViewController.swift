@@ -322,6 +322,7 @@ private extension OnboardingPayrollViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
     }
 }
@@ -343,5 +344,11 @@ extension OnboardingPayrollViewController: UITextFieldDelegate {
         let limit = viewModel.selectedSalaryType.maxDigits
         
         return (currentDigitsCount + addingDigitsCount) <= limit
+    }
+}
+
+extension OnboardingPayrollViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !nextButton.bounds.contains(touch.location(in: nextButton))
     }
 }

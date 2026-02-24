@@ -118,5 +118,10 @@ final class SettingUsecase {
     
     func withdrawal(reason: [String]) async throws {
         try await memberRepository.withdrawal(reason: reason)
+        
+        AuthSessionManager.shared.clearTokens()
+        
+        userDefaults.removeObject(forKey: "payday")
+        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
 }

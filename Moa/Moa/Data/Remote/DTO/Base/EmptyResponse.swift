@@ -11,3 +11,5 @@ struct EmptyResponse: Decodable {
     let code: String
     let message: String
 }
+
+struct EmptyContent: Decodable {}

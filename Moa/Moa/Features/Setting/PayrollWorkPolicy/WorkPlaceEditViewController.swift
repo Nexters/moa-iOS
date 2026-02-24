@@ -235,6 +235,7 @@ private extension WorkPlaceEditViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTapBackground))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
     }
 }
@@ -270,6 +271,12 @@ extension WorkPlaceEditViewController: UITextViewDelegate {
     func textViewDidEndEditing(_ textView: UITextView) {
         workplaceHintLabel.isHidden = true
         updatePlaceholderVisibility()
+    }
+}
+
+extension WorkPlaceEditViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !completeButton.bounds.contains(touch.location(in: completeButton))
     }
 }
 

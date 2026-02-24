@@ -21,6 +21,6 @@ final class FcmRepositoryImpl: FcmRepository {
     
     func deleteFcmToken(fcmToken: String) async {
         let request = FcmTokenRequest(token: fcmToken)
-        let _ = try? await apiClient.request(FcmAPI.updateFcmToken(request)) as EmptyResponse?
+        let _ = try? await apiClient.request(FcmAPI.deleteFcmToken(request)) as EmptyResponse?
     }
 }

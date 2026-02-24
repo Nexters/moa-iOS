@@ -54,6 +54,9 @@ final class AuthUsecase {
         }
         
         AuthSessionManager.shared.clearTokens()
+        
+        UserDefaults.standard.removeObject(forKey: "payday")
+        UserDefaults.standard.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
     
     func updateFcmToken(to fcmToken: String) async {

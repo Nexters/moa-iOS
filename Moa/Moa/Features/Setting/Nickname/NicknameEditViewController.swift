@@ -317,6 +317,13 @@ private extension NicknameEditViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
+    }
+}
+
+extension NicknameEditViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !completeButton.bounds.contains(touch.location(in: completeButton))
     }
 }

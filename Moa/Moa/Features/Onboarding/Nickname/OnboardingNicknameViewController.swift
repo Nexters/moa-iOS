@@ -316,6 +316,13 @@ private extension OnboardingNicknameViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
+    }
+}
+
+extension OnboardingNicknameViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !nextButton.bounds.contains(touch.location(in: nextButton))
     }
 }
