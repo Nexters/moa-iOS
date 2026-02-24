@@ -14,11 +14,15 @@ extension NSAttributedString {
         baseColor: UIColor,
         highlights: [(substring: String, typography: UIFont, color: UIColor)]
     ) -> NSAttributedString {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        
         let full = NSMutableAttributedString(
             string: baseText,
             attributes: [
                 .font: baseTypography,
-                .foregroundColor: baseColor
+                .foregroundColor: baseColor,
+                .paragraphStyle: paragraphStyle
             ]
         )
 
@@ -31,7 +35,8 @@ extension NSAttributedString {
                 full.addAttributes(
                     [
                         .font: highlight.typography,
-                        .foregroundColor: highlight.color
+                        .foregroundColor: highlight.color,
+                        .baselineOffset: (baseTypography.capHeight - highlight.typography.capHeight) / 2
                     ],
                     range: found
                 )

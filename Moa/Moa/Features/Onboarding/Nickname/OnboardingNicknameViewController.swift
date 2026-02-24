@@ -157,9 +157,7 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Setup
     
     override func setupUI() {
-        replaceSystemBackButtonWithAppBackButton {
-            // TODO: 팝업 노출
-        }
+        navigationItem.hidesBackButton = true
         setupButton()
         setupSpacers()
         setupHierarchy()
@@ -199,7 +197,7 @@ final class OnboardingNicknameViewController: BaseViewController {
                 try await viewModel.updateNickname(to: nicknameTextField.text)
                 onNext()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "닉네임 등록에 실패했습니다.")
             }
         }
     }
@@ -318,6 +316,13 @@ private extension OnboardingNicknameViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
+    }
+}
+
+extension OnboardingNicknameViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !nextButton.bounds.contains(touch.location(in: nextButton))
     }
 }

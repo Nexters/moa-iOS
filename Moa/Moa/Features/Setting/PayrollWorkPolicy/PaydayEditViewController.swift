@@ -166,7 +166,7 @@ final class PaydayEditViewController: BaseViewController {
                 try await viewModel.updatePayday()
                 navigationController?.popViewController(animated: true)
             } catch {
-                // TODO: 에러 처리
+                ToastManager.show(message: "월급일 수정에 실패했습니다.")
             }
         }
     }

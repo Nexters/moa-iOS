@@ -85,7 +85,7 @@ final class NotificationSettingViewController: BaseViewController {
         }
         
         viewModel.onError = { [weak self] _ in
-            // TODO: 에러 처리
+            ToastManager.show(message: "알림 설정에 실패했습니다.")
         }
     }
     

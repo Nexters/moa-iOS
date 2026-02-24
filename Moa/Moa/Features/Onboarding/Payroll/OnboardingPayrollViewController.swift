@@ -230,7 +230,7 @@ final class OnboardingPayrollViewController: BaseViewController {
                 try await viewModel.updatePayroll()
                 onNext()
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "급여정보 등록에 실패했습니다.")
             }
         }
     }
@@ -322,6 +322,7 @@ private extension OnboardingPayrollViewController {
     func setupGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tap.cancelsTouchesInView = false
+        tap.delegate = self
         view.addGestureRecognizer(tap)
     }
 }
@@ -343,5 +344,11 @@ extension OnboardingPayrollViewController: UITextFieldDelegate {
         let limit = viewModel.selectedSalaryType.maxDigits
         
         return (currentDigitsCount + addingDigitsCount) <= limit
+    }
+}
+
+extension OnboardingPayrollViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !nextButton.bounds.contains(touch.location(in: nextButton))
     }
 }

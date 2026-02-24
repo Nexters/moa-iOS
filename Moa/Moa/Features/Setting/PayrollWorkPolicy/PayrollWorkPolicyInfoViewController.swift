@@ -179,7 +179,11 @@ final class PayrollWorkPolicyInfoViewController: BaseViewController {
         hoursRow.onTap = { [weak self] in self?.workingHoursButtonTapped() }
         self.hoursRow = hoursRow
 
-        let accountRow = SettingItemRowView(title: viewModel.accountProvider.displayDescription, showsChevron: false)
+        let accountRow = SettingItemRowView(
+            title: viewModel.accountProvider.displayDescription,
+            showsChevron: false,
+            trailingImage: UIImage(resource: viewModel.accountProvider.icon).withRenderingMode(.alwaysTemplate)
+        )
         self.accountRow = accountRow
 
         let accountRows = [accountRow]

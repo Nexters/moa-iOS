@@ -16,6 +16,9 @@ final class SettingUsecase {
     private let notificationSettingRepository: NotificationSettingRepository
     private let versionRepository: VersionRepository
     private let authRepository: AuthRepository
+    private let fcmRepository: FcmRepository
+    
+    private let userDefaults: UserDefaults
     
     init(
         profileRepository: ProfileRepository,
@@ -25,7 +28,9 @@ final class SettingUsecase {
         onboardingRepository: OnboardingRepository,
         notificationSettingRepository: NotificationSettingRepository,
         versionRepository: VersionRepository,
-        authRepository: AuthRepository
+        authRepository: AuthRepository,
+        fcmRepository: FcmRepository,
+        userDefaults: UserDefaults = .standard
     ) {
         self.profileRepository = profileRepository
         self.memberRepository = memberRepository
@@ -35,10 +40,15 @@ final class SettingUsecase {
         self.notificationSettingRepository = notificationSettingRepository
         self.versionRepository = versionRepository
         self.authRepository = authRepository
+        self.fcmRepository = fcmRepository
+        self.userDefaults = userDefaults
     }
     
     func getProfile() async throws -> ProfileEntity {
-        try await profileRepository.getProfile()
+        let result = try await profileRepository.getProfile()
+        userDefaults.set(result.paydayDay, forKey: "payday")
+        
+        return result
     }
     
     func updateNickname(to nickname: String?) async throws {
@@ -78,7 +88,8 @@ final class SettingUsecase {
     }
     
     func updatePayday(to payday: Int) async throws {
-        try await profileRepository.updatePayday(to: payday)
+        let result = try await profileRepository.updatePayday(to: payday)
+        userDefaults.set(result.paydayDay, forKey: "payday")
     }
     
     func getNotificationSettings() async throws -> [NotificationSettingEntity] {
@@ -95,9 +106,22 @@ final class SettingUsecase {
     
     func logout(fcmDeviceToken: String) async throws {
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+        if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
+            await fcmRepository.deleteFcmToken(fcmToken: fcmToken)
+        }
+        
+        AuthSessionManager.shared.clearTokens()
+        
+        userDefaults.removeObject(forKey: "payday")
+        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
     
     func withdrawal(reason: [String]) async throws {
         try await memberRepository.withdrawal(reason: reason)
+        
+        AuthSessionManager.shared.clearTokens()
+        
+        userDefaults.removeObject(forKey: "payday")
+        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
 }

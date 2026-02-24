@@ -113,20 +113,21 @@ final class PaydayWheelPickerView: UIView {
         
         backgroundContainerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+            make.height.equalTo(pickerHeight)
         }
         
         paydayColumn.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
+            make.top.bottom.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.height.equalTo(pickerHeight)
-            make.bottom.equalToSuperview().offset(-16)
         }
         
         selectionHighlightView.snp.makeConstraints { make in
-            make.centerY.equalTo(paydayColumn.snp.centerY)
+            make.centerY.equalToSuperview()
             make.leading.trailing.equalTo(paydayColumn)
             make.height.equalTo(52)
         }
+        
+        selectionHighlightView.isUserInteractionEnabled = false
     }
 }
 

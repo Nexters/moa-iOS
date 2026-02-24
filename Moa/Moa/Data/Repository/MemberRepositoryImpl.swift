@@ -23,6 +23,6 @@ final class MemberRepositoryImpl: MemberRepository {
     func withdrawal(reason: [String]) async throws {
         let request = WithdrawalRequest(reason: reason)
         
-        let _ = try await apiClient.request(MemberAPI.withdrawal(request)) as EmptyResponse?
+        let _: EmptyContent = try await apiClient.request(MemberAPI.withdrawal(request))
     }
 }

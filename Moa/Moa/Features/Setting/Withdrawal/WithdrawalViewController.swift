@@ -156,7 +156,7 @@ final class WithdrawalViewController: BaseViewController {
                 try await viewModel.withdrawalButtonTapped(reason: selectedReasons)
                 NotificationCenter.default.post(name: .didLogoutOrWithdrawal, object: nil)
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "회원 탈퇴에 실패했습니다.")
             }
         }
     }

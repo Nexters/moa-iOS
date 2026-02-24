@@ -49,7 +49,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
                 
                 self.send(.nicknameEdited)
             } catch {
-                // TODO: 에러처리
+                ToastManager.show(message: "닉네임 수정에 실패했습니다.")
             }
         }
     }

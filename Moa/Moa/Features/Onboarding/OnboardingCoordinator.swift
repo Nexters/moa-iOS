@@ -29,7 +29,9 @@ final class OnboardingCoordinator {
     func start(from parentNav: UINavigationController, animated: Bool) {
         self.nav = parentNav
         let stack = buildInitialStack(startingAt: startStep, with: status)
-        parentNav.setViewControllers(stack, animated: animated)
+        let currentStack = parentNav.viewControllers
+        
+        parentNav.setViewControllers(currentStack + stack, animated: animated)
     }
 }
 

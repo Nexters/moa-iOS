@@ -37,7 +37,7 @@ final class PaydayEditViewModel {
         do {
             _ = try await settingUsecase.updatePayday(to: selectedPayday)
         } catch {
-            // TODO: 에러처리
+            ToastManager.show(message: "월급일 수정에 실패했습니다.")
         }
     }
 }

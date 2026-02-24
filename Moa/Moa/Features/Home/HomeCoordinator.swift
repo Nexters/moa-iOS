@@ -162,7 +162,7 @@ extension HomeCoordinator: FixScheduleViewControllerDelegate {
 //  MARK: - Fcm token
 private extension HomeCoordinator {
     func sendFcmTokenIfNeeded() {
-        guard let fcmToken = UserDefaults.standard.string(forKey: "fcmToken") else { return }
+        guard let fcmToken = AuthSessionManager.shared.currentFcmToken() else { return }
         Task {
             await container.authUseCase.updateFcmToken(to: fcmToken)
         }

@@ -8,37 +8,42 @@
 import Foundation
 
 final class OnboardingUsecase {
-    private let repository: OnboardingRepository
+    private let onboardingRepository: OnboardingRepository
+    private let authRepository: AuthRepository
     
-    init(repository: OnboardingRepository) {
-        self.repository = repository
+    init(
+        onboardingRepository: OnboardingRepository,
+        authRepository: AuthRepository
+    ) {
+        self.onboardingRepository = onboardingRepository
+        self.authRepository = authRepository
     }
     
     func getOnboardingStatus() async throws -> OnboardingStatusEntity {
-        try await repository.fetchOnboardingStatus()
+        try await onboardingRepository.fetchOnboardingStatus()
     }
     
     func generateRandomNickname() -> String {
-        repository.generateRandomNickname()
+        onboardingRepository.generateRandomNickname()
     }
     
     func updateNickname(to nickname: String) async throws -> ProfileEntity {
-        try await repository.updateNickname(to: nickname)
+        try await onboardingRepository.updateNickname(to: nickname)
     }
     
     func updatePayroll(type: SalaryType, amount: Int) async throws -> PayrollEntity {
-        try await repository.updatePayroll(type: type, amount: amount)
+        try await onboardingRepository.updatePayroll(type: type, amount: amount)
     }
     
     func updateWorkPolicy(selectedWeekdays: [Weekday], clockInTime: TimeIndicatorEntity, clockOutTime: TimeIndicatorEntity) async throws -> WorkPolicyEntity {
-        try await repository.updateWorkPolicy(selectedWeekdays: selectedWeekdays, clockInTime: clockInTime, clockOutTime: clockOutTime)
+        try await onboardingRepository.updateWorkPolicy(selectedWeekdays: selectedWeekdays, clockInTime: clockInTime, clockOutTime: clockOutTime)
     }
     
     func getTerms() async throws -> [TermsEntity] {
-        try await repository.fetchTerms()
+        try await onboardingRepository.fetchTerms()
     }
     
     func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity {
-        try await repository.updateTermsAgreement(to: agreements)
+        try await onboardingRepository.updateTermsAgreement(to: agreements)
     }
 }
