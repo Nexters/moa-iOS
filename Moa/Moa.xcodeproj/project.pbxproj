@@ -14,11 +14,42 @@
 		CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE8182F279DA800CC8D17 /* CombineMoya */; };
 		CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = CD2DE81A2F279DA800CC8D17 /* Moya */; };
 		CDCDC1672F4C861E000F2D8F /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = CDCDC1662F4C861E000F2D8F /* Lottie */; };
+		CDCDD1FE2F4DD699000F2D8F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDCDD1E32F4DD184000F2D8F /* WidgetKit.framework */; };
+		CDCDD1FF2F4DD699000F2D8F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDCDD1E52F4DD184000F2D8F /* SwiftUI.framework */; };
+		CDCDD20C2F4DD69B000F2D8F /* MoaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CDCDD1FD2F4DD699000F2D8F /* MoaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		CDCDD20A2F4DD69B000F2D8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8DAC50852F20FF7100FAA818 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CDCDD1FC2F4DD699000F2D8F;
+			remoteInfo = MoaWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CDCDD1F42F4DD186000F2D8F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CDCDD20C2F4DD69B000F2D8F /* MoaWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		8DAC508D2F20FF7100FAA818 /* Moa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moa.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDCDD1E32F4DD184000F2D8F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		CDCDD1E52F4DD184000F2D8F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		CDCDD1FD2F4DD699000F2D8F /* MoaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDCDD2112F4DD8DB000F2D8F /* MoaWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoaWidgetExtension.entitlements; sourceTree = "<group>"; };
 		CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -30,6 +61,41 @@
 			);
 			target = 8DAC508C2F20FF7100FAA818 /* Moa */;
 		};
+		CD8B23782F4DE91100974B7B /* Exceptions for "Moa" folder in "MoaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				App/Resources/Assets.xcassets,
+				"App/Resources/Fonts/Pretendard-Bold.otf",
+				"App/Resources/Fonts/Pretendard-Medium.otf",
+				"App/Resources/Fonts/Pretendard-Regular.otf",
+				"App/Resources/Fonts/Pretendard-SemiBold.otf",
+				Core/DesignSystem/Tokens/AppColor.swift,
+				Core/DesignSystem/Tokens/AppSpacing.swift,
+				Core/DesignSystem/Tokens/Typography/AppFont.swift,
+				Core/DesignSystem/Tokens/Typography/AppTypography.swift,
+				Core/DesignSystem/Tokens/Typography/TextStyle.swift,
+				Core/DesignSystem/Tokens/Typography/TypographyStyle.swift,
+			);
+			target = CDCDD1FC2F4DD699000F2D8F /* MoaWidgetExtension */;
+		};
+		CDCDD2102F4DD69B000F2D8F /* Exceptions for "MoaWidget" folder in "MoaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Helper/MoaWidgetUpdater.swift,
+				Info.plist,
+			);
+			target = CDCDD1FC2F4DD699000F2D8F /* MoaWidgetExtension */;
+		};
+		CDCDD2192F4DDA0F000F2D8F /* Exceptions for "MoaWidget" folder in "Moa" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Data/MoaWidgetSharedData.swift,
+				Data/MoaWidgetStatus.swift,
+				Helper/MoaWidgetUpdater.swift,
+				Helper/WidgetIntents.swift,
+			);
+			target = 8DAC508C2F20FF7100FAA818 /* Moa */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -37,8 +103,18 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				8DAC509F2F20FF7300FAA818 /* Exceptions for "Moa" folder in "Moa" target */,
+				CD8B23782F4DE91100974B7B /* Exceptions for "Moa" folder in "MoaWidgetExtension" target */,
 			);
 			path = Moa;
+			sourceTree = "<group>";
+		};
+		CDCDD2002F4DD699000F2D8F /* MoaWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CDCDD2192F4DDA0F000F2D8F /* Exceptions for "MoaWidget" folder in "Moa" target */,
+				CDCDD2102F4DD69B000F2D8F /* Exceptions for "MoaWidget" folder in "MoaWidgetExtension" target */,
+			);
+			path = MoaWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -58,14 +134,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CDCDD1FA2F4DD699000F2D8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CDCDD1FF2F4DD699000F2D8F /* SwiftUI.framework in Frameworks */,
+				CDCDD1FE2F4DD699000F2D8F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		8DAC50842F20FF7100FAA818 = {
 			isa = PBXGroup;
 			children = (
+				CDCDD2112F4DD8DB000F2D8F /* MoaWidgetExtension.entitlements */,
 				CDCF8BDC2F24B15A003F8ED7 /* .swiftlint.yml */,
 				8DAC508F2F20FF7100FAA818 /* Moa */,
+				CDCDD2002F4DD699000F2D8F /* MoaWidget */,
 				8DB775342F4CCB150014BCE0 /* Frameworks */,
 				8DAC508E2F20FF7100FAA818 /* Products */,
 			);
@@ -75,6 +162,7 @@
 			isa = PBXGroup;
 			children = (
 				8DAC508D2F20FF7100FAA818 /* Moa.app */,
+				CDCDD1FD2F4DD699000F2D8F /* MoaWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +170,8 @@
 		8DB775342F4CCB150014BCE0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CDCDD1E32F4DD184000F2D8F /* WidgetKit.framework */,
+				CDCDD1E52F4DD184000F2D8F /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -97,10 +187,12 @@
 				8DAC50892F20FF7100FAA818 /* Sources */,
 				8DAC508A2F20FF7100FAA818 /* Frameworks */,
 				8DAC508B2F20FF7100FAA818 /* Resources */,
+				CDCDD1F42F4DD186000F2D8F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CDCDD20B2F4DD69B000F2D8F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8DAC508F2F20FF7100FAA818 /* Moa */,
@@ -119,6 +211,28 @@
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CDCDD1FC2F4DD699000F2D8F /* MoaWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CDCDD20D2F4DD69B000F2D8F /* Build configuration list for PBXNativeTarget "MoaWidgetExtension" */;
+			buildPhases = (
+				CDCDD1F92F4DD699000F2D8F /* Sources */,
+				CDCDD1FA2F4DD699000F2D8F /* Frameworks */,
+				CDCDD1FB2F4DD699000F2D8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CDCDD2002F4DD699000F2D8F /* MoaWidget */,
+			);
+			name = MoaWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = MoaWidgetExtension;
+			productReference = CDCDD1FD2F4DD699000F2D8F /* MoaWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -126,11 +240,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					8DAC508C2F20FF7100FAA818 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					CDCDD1FC2F4DD699000F2D8F = {
+						CreatedOnToolsVersion = 26.1.1;
 					};
 				};
 			};
@@ -157,6 +274,7 @@
 			projectRoot = "";
 			targets = (
 				8DAC508C2F20FF7100FAA818 /* Moa */,
+				CDCDD1FC2F4DD699000F2D8F /* MoaWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -167,6 +285,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDCF8BDD2F24B15A003F8ED7 /* .swiftlint.yml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CDCDD1FB2F4DD699000F2D8F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,7 +326,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CDCDD1F92F4DD699000F2D8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CDCDD20B2F4DD69B000F2D8F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CDCDD1FC2F4DD699000F2D8F /* MoaWidgetExtension */;
+			targetProxy = CDCDD20A2F4DD69B000F2D8F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8DAC50A12F20FF7300FAA818 /* Debug */ = {
@@ -215,7 +355,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5QS2KL98Q7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Moa/Info.plist;
@@ -258,7 +398,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5QS2KL98Q7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Moa/Info.plist;
@@ -417,6 +557,80 @@
 			};
 			name = Release;
 		};
+		CDCDD20E2F4DD69B000F2D8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MoaWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MoaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.ios.moa.MoaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		CDCDD20F2F4DD69B000F2D8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MoaWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MoaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.co.nexters.ios.moa.MoaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -434,6 +648,15 @@
 			buildConfigurations = (
 				8DAC50A12F20FF7300FAA818 /* Debug */,
 				8DAC50A22F20FF7300FAA818 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CDCDD20D2F4DD69B000F2D8F /* Build configuration list for PBXNativeTarget "MoaWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CDCDD20E2F4DD69B000F2D8F /* Debug */,
+				CDCDD20F2F4DD69B000F2D8F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
