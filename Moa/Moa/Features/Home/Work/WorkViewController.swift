@@ -268,7 +268,9 @@ private extension WorkViewController {
     func startWorkingTimer() {
         stopWorkingTimer()
         workingTimer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.workingContentView.tick()
+            guard let self else { return }
+            self.workingContentView.tick()
+            self.checkAutoWorkFinish()
         }
         RunLoop.main.add(workingTimer!, forMode: .common)
     }
@@ -276,6 +278,21 @@ private extension WorkViewController {
     func stopWorkingTimer() {
         workingTimer?.invalidate()
         workingTimer = nil
+    }
+
+    /// 매초 호출 — 퇴근 시각이 지났고 .working 상태면 자동으로 .workFinished 전환
+    func checkAutoWorkFinish() {
+        guard case let .loaded(status, data) = viewModel.state,
+              status == .working,
+              let clockOut = data.clockOutTime else { return }
+
+        let now = Calendar.korea.dateComponents([.hour, .minute], from: Date())
+        let nowMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
+
+        guard nowMinutes >= clockOut.totalMinutes else { return }
+
+        // 퇴근 시각 도달 → ViewModel에 종료 신호 → .workFinished 전환
+        viewModel.send(.endWork)
     }
 }
 
