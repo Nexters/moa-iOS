@@ -36,7 +36,10 @@ struct RefreshWidgetIntent: AppIntent {
         let refreshed = MoaWidgetData(
             status:        current.status,
             displayAmount: recalculateEarned(from: current),
-            updatedAt:     .now
+            updatedAt:     .now,
+            clockInMinutes:  current.clockInMinutes,
+            clockOutMinutes: current.clockOutMinutes,
+            dailyPay:        current.dailyPay
         )
         refreshed.save()
         WidgetCenter.shared.reloadAllTimelines()
@@ -56,16 +59,21 @@ struct RefreshWidgetIntent: AppIntent {
             let pay    = data.dailyPay,
             outMin > inMin
         else {
-            // 필드가 없으면 저장된 값 그대로 반환
             return data.displayAmount
         }
 
-        let totalSec = (outMin - inMin) * 60
-        let cal      = Calendar.current
-        let c        = cal.dateComponents([.hour, .minute], from: .now)
-        let nowMin   = (c.hour ?? 0) * 60 + (c.minute ?? 0)
-        let elapsed  = max(0, (nowMin - inMin) * 60)
-        let ratio    = min(Double(elapsed) / Double(totalSec), 1.0)
+        let now = Date()
+
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: now)
+
+        let clockInDate  = calendar.date(byAdding: .minute, value: inMin,  to: startOfDay)!
+        let clockOutDate = calendar.date(byAdding: .minute, value: outMin, to: startOfDay)!
+
+        let totalSec = clockOutDate.timeIntervalSince(clockInDate)
+        let elapsed  = max(0, now.timeIntervalSince(clockInDate))
+
+        let ratio = min(elapsed / totalSec, 1.0)
 
         return Int(Double(pay) * ratio)
     }
