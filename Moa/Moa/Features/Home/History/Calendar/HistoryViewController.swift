@@ -62,6 +62,20 @@ final class HistoryViewController: BaseViewController {
         v.clipsToBounds       = true
         return v
     }()
+    
+    private let calendarOverlayView: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor.white.withAlphaComponent(0.04)
+        v.isUserInteractionEnabled = false
+        return v
+    }()
+    
+    private let globalOverlayView: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor.white.withAlphaComponent(0.04)
+        v.isUserInteractionEnabled = false
+        return v
+    }()
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -131,13 +145,23 @@ final class HistoryViewController: BaseViewController {
             $0.width.equalTo(scrollView)
         }
 
-        view.addSubViews([calendarView, scrollView])
+        view.addSubViews([globalOverlayView, calendarView, scrollView])
+        calendarView.addSubview(calendarOverlayView)
 
+        calendarOverlayView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        
         // calendarView
         calendarView.snp.makeConstraints {
             $0.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
         }
-
+        
+        globalOverlayView.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(calendarView.snp.top)
+        }
+        
         // scrollView
         scrollView.snp.makeConstraints {
             $0.top.equalTo(calendarView.snp.bottom)
