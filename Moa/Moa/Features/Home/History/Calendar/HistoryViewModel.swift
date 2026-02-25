@@ -109,8 +109,11 @@ private extension HistoryViewModel {
         
         Task { @MainActor in
             do {
-                let workday = try await historyUseCase.fetchWorkday(date: dateString)
-                state = .dayDetail(date: date, workday: workday)
+                let workday    = try await historyUseCase.fetchWorkday(date: dateString)
+                let dayOfMonth = Calendar.korea.component(.day, from: date)
+                let isPayday   = payday == dayOfMonth
+                let salary     = earningsInfo?.standardSalary ?? 0
+                state = .dayDetail(date: date, workday: workday, isPayday: isPayday, salary: salary)
             } catch {
                 state = .error(.network)
             }
@@ -211,7 +214,7 @@ enum HistoryViewState: Equatable {
     case loading
     case loaded(days: [CalendarDay], earnings: EarningsEntity)
     /// 날짜 탭 후 상세 표시
-    case dayDetail(date: Date, workday: WorkdayEntity)
+    case dayDetail(date: Date, workday: WorkdayEntity, isPayday: Bool, salary: Int)
     case error(HistoryError)
 }
 

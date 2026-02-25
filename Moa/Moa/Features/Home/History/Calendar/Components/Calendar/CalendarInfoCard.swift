@@ -88,8 +88,8 @@ final class CalendarInfoCard: UIView {
 
     func update(with info: EarningsEntity) {
         workHoursValueView.configure(
-            current: Int(Double(info.workedMinutes) / 60),
-            total: Int(Double(info.standardMinutes) / 60),
+            current: Int(round(Double(info.workedMinutes) / 60)),
+            total: Int(round(Double(info.standardMinutes) / 60)),
             unit: "시간"
         )
         

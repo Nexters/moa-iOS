@@ -207,9 +207,14 @@ private extension HistoryViewController {
         case .loaded(let days, let earnings):
             calendarView.updateCalendarDays(days)
             calendarView.updateWorkInfo(earnings)
-            hideDetail()
-        case .dayDetail(let date, let workday):
-            detailView.configure(date: date, workday: workday)
+            // 수정/추가 후 돌아왔을 때 선택된 날짜가 있으면 티켓 패널 유지
+            if let date = selectedDate {
+                viewModel.send(.selectDay(date))
+            } else {
+                hideDetail()
+            }
+        case .dayDetail(let date, let workday, let isPayday, let salary):
+            detailView.configure(date: date, workday: workday, isPayday: isPayday, salary: salary)
             showDetail()
         case .error(let error):
             handleError(error)
@@ -289,5 +294,34 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
         date: Date
     ) {
         coordinatorDelegate?.historyViewControllerDidTapEdit(self, workday: workday, date: date)
+    }
+
+    func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView) {
+        presentPaydayBottomSheet()
+    }
+}
+
+// MARK: - Payday BottomSheet
+
+private extension HistoryViewController {
+
+    func presentPaydayBottomSheet() {
+        let currentPayday = UserDefaults.standard.integer(forKey: "payday")
+        let sheet = PaydaySelectionBottomSheet(initialPayday: currentPayday)
+        sheet.delegate = self
+        presentBottomSheet(sheet)
+    }
+}
+
+// MARK: - PaydaySelectionBottomSheetDelegate
+
+extension HistoryViewController: PaydaySelectionBottomSheetDelegate {
+
+    func paydaySelectionBottomSheet(
+        _ sheet: PaydaySelectionBottomSheet,
+        didTapConfirmButton selectedPayday: Int
+    ) {
+        UserDefaults.standard.set(selectedPayday, forKey: "payday")
+        viewModel.send(.refresh)
     }
 }

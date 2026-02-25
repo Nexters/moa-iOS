@@ -14,8 +14,10 @@ import SnapKit
 // MARK: - Delegate
 
 protocol WorkdayDetailViewDelegate: AnyObject {
-    /// 티켓 탭 → 일정 수정 화면으로 이동
+    /// 근무/휴가 티켓 탭 → 일정 수정 화면으로 이동
     func workdayDetailView(_ view: WorkdayDetailView, didTapEdit workday: WorkdayEntity, date: Date)
+    /// 월급 티켓 탭 → 월급날 수정 바텀시트
+    func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView)
 }
 
 // MARK: - WorkdayDetailView
@@ -30,6 +32,8 @@ final class WorkdayDetailView: UIView {
 
     private var currentWorkday: WorkdayEntity?
     private var currentDate: Date?
+    private var currentIsPayday: Bool = false
+    private var currentSalary: Int = 0
 
     // MARK: - UI
 
@@ -79,15 +83,17 @@ final class WorkdayDetailView: UIView {
 
     // MARK: - Configure
 
-    func configure(date: Date, workday: WorkdayEntity) {
-        currentWorkday = workday
-        currentDate    = date
+    func configure(date: Date, workday: WorkdayEntity, isPayday: Bool = false, salary: Int = 0) {
+        currentWorkday    = workday
+        currentDate       = date
+        currentIsPayday   = isPayday
+        currentSalary     = salary
 
         dateLabel.setText(dateString(from: date))
 
         ticketStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
-        let tickets = makeTickets(from: workday, date: date)
+        let tickets = makeTickets(from: workday, date: date, isPayday: isPayday, salary: salary)
 
         if tickets.isEmpty {
             let emptyLabel = StyledLabel()
@@ -107,11 +113,13 @@ final class WorkdayDetailView: UIView {
 
     // MARK: - Ticket Factory
 
-    private func makeTickets(from workday: WorkdayEntity, date: Date) -> [WorkScheduleTicket] {
+    private func makeTickets(from workday: WorkdayEntity, date: Date, isPayday: Bool, salary: Int) -> [WorkScheduleTicket] {
         let type     = workday.type
         let startStr = workday.clockInTime?.displayString  ?? "--:--"
         let endStr   = workday.clockOutTime?.displayString ?? "--:--"
         let today    = Date()
+
+        var tickets: [WorkScheduleTicket] = []
 
         switch type {
         case .work:
@@ -120,21 +128,43 @@ final class WorkdayDetailView: UIView {
             ) != .orderedDescending
 
             let ticket: WorkScheduleTicket = isPastOrToday
-                ? .worked(startTime: startStr, endTime: endStr)  { [weak self] in self?.handleTicketTap() }
+                ? .worked(startTime: startStr, endTime: endStr)    { [weak self] in self?.handleTicketTap() }
                 : .scheduled(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }
-            return [ticket]
+            tickets.append(ticket)
 
         case .vacation:
-            return [.vacation(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }]
+            tickets.append(.vacation(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() })
 
         case .none:
-            return []
+            break
         }
+
+        // 월급날이면 월급 티켓 추가
+        if isPayday {
+            let nf = NumberFormatter()
+            nf.numberStyle       = .decimal
+            nf.groupingSeparator = ","
+            let formatted = nf.string(from: NSNumber(value: salary)) ?? "\(salary)"
+            tickets.append(.payday(schedule: paydayScheduleString(), salary: formatted) { [weak self] in
+                self?.handlePaydayTicketTap()
+            })
+        }
+
+        return tickets
+    }
+
+    private func paydayScheduleString() -> String {
+        let day = UserDefaults.standard.integer(forKey: "payday")
+        return day > 0 ? "\(day)" : "-"
     }
 
     private func handleTicketTap() {
         guard let workday = currentWorkday, let date = currentDate else { return }
         delegate?.workdayDetailView(self, didTapEdit: workday, date: date)
+    }
+
+    private func handlePaydayTicketTap() {
+        delegate?.workdayDetailViewDidTapPaydayTicket(self)
     }
 
     // MARK: - Helpers
