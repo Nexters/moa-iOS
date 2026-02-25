@@ -207,7 +207,12 @@ private extension HistoryViewController {
         case .loaded(let days, let earnings):
             calendarView.updateCalendarDays(days)
             calendarView.updateWorkInfo(earnings)
-            hideDetail()
+            // 수정/추가 후 돌아왔을 때 선택된 날짜가 있으면 티켓 패널 유지
+            if let date = selectedDate {
+                viewModel.send(.selectDay(date))
+            } else {
+                hideDetail()
+            }
         case .dayDetail(let date, let workday, let isPayday, let salary):
             detailView.configure(date: date, workday: workday, isPayday: isPayday, salary: salary)
             showDetail()
