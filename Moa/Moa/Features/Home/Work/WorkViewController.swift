@@ -143,18 +143,21 @@ private extension WorkViewController {
     func setupHierarchy() {
         view.addSubViews([navigationBarView, workMainView, workingContentView, loadingIndicator])
     }
-
+    
     func setupConstraints() {
         navigationBarView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(Constant.navigationBarHeight)
         }
-        [workMainView, workingContentView].forEach {
-            $0.snp.makeConstraints {
-                $0.top.equalTo(navigationBarView.snp.bottom)
-                $0.leading.trailing.bottom.equalToSuperview()
-            }
+        workMainView.snp.makeConstraints {
+            $0.top.equalTo(navigationBarView.snp.bottom)
+            $0.leading.trailing.bottom.equalToSuperview()
+        }
+        workingContentView.snp.makeConstraints {
+            $0.top.equalTo(navigationBarView.snp.bottom)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         loadingIndicator.snp.makeConstraints { $0.center.equalToSuperview() }
     }

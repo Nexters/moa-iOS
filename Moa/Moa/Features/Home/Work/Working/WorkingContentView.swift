@@ -42,11 +42,11 @@ final class WorkingContentView: UIView {
 
     // MARK: - State
 
-    private var dailyPay: Int                    = 0
-    private var totalWorkSeconds: Int            = 0
-    private var isFinished: Bool                 = false
-    private var endTime: TimeIndicatorEntity     = .from(hour: 18, minute: 0)
-    private var workedEarnings: Int              = 0   // 이번달 누적 월급
+    private var dailyPay: Int                = 0
+    private var totalWorkSeconds: Int        = 0
+    private var isFinished: Bool             = false
+    private var endTime: TimeIndicatorEntity = .from(hour: 18, minute: 0)
+    private var workedEarnings: Int          = 0
 
     // MARK: - Init
 
@@ -61,22 +61,21 @@ final class WorkingContentView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
-        addSubViews([earningsStackView, workingStatusView, workEndIndicator])
+            addSubViews([earningsStackView, workingStatusView, workEndIndicator])
 
-        earningsStackView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(workingStatusView.snp.top).offset(40)
+            workingStatusView.snp.makeConstraints {
+                $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+                $0.bottom.equalToSuperview().inset(48)
+            }
+            earningsStackView.snp.makeConstraints {
+                $0.top.leading.trailing.equalToSuperview()
+                $0.bottom.equalTo(workingStatusView.snp.top).offset(40)
+            }
+            workEndIndicator.snp.makeConstraints {
+                $0.leading.trailing.bottom.equalToSuperview()
+                $0.top.equalTo(snp.centerY)
+            }
         }
-        workingStatusView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.bottom.equalTo(safeAreaLayoutGuide)
-        }
-        workEndIndicator.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.top.equalTo(snp.centerY)
-        }
-    }
-
     // MARK: - Configure
 
     func configure(
@@ -88,12 +87,12 @@ final class WorkingContentView: UIView {
         status:      WorkStatus,
         data:        HomeEntity
     ) {
-        let newIsFinished         = (status == .workFinished)
-        self.isFinished           = newIsFinished
-        self.dailyPay             = dailyPay
-        self.totalWorkSeconds     = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
-        self.endTime              = endTime
-        self.workedEarnings       = data.workedEarnings
+        let newIsFinished     = (status == .workFinished)
+        self.isFinished       = newIsFinished
+        self.dailyPay         = dailyPay
+        self.totalWorkSeconds = max(1, (endTime.totalMinutes - startTime.totalMinutes) * 60)
+        self.endTime          = endTime
+        self.workedEarnings   = data.workedEarnings
 
         if self.workingType != workingType {
             self.workingType = workingType
@@ -101,7 +100,6 @@ final class WorkingContentView: UIView {
         }
 
         if newIsFinished {
-            // 근무완료 1: 말풍선·성장 완전 차단
             earningsStackView.configure(
                 amount:     dailyPay,
                 startedAt:  startedAt,
@@ -133,7 +131,6 @@ final class WorkingContentView: UIView {
         guard !isFinished else { return }
         let elapsed = workingStatusView.elapsedSeconds()
         earningsStackView.updateAmount(earnedAmount(elapsed: elapsed))
-        // cheer 문구는 매 tick 남은 시간이 바뀌므로 context 갱신
         earningsStackView.updateContext(makeTooltipContext())
         workingStatusView.tick()
     }
