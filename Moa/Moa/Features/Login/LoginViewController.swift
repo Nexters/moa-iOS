@@ -289,7 +289,24 @@ final class LoginViewController: BaseViewController {
     private func scrollToPage(index: Int, animated: Bool) {
         let pageWidth = pagerScrollView.bounds.width
         let offsetX = CGFloat(index) * pageWidth
-        pagerScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: animated)
+        
+        if animated {
+            // Ease in 애니메이션
+            UIView.animate(
+                withDuration: 0.6,
+                delay: 0,
+                options: [.curveEaseIn],
+                animations: { [weak self] in
+                    self?.pagerScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: false)
+                },
+                completion: { [weak self] _ in
+                    self?.correctOffsetIfNeeded()
+                    self?.updateCurrentPageFromOffset()
+                }
+            )
+        } else {
+            pagerScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: false)
+        }
     }
     
     private func applyPageControlAppearance() {
