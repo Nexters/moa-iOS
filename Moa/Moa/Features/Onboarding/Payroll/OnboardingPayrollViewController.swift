@@ -105,17 +105,6 @@ final class OnboardingPayrollViewController: BaseViewController {
         return label
     }()
     
-    private let formattedAmountLabel: StyledLabel = {
-        let label = StyledLabel()
-        label.setStyle(
-            .init(
-                typography: AppTypography.b2_500,
-                color: AppColor.IconAndText.green
-            )
-        )
-        return label
-    }()
-    
     private let koreanAmountLabel: StyledLabel = {
         let label = StyledLabel()
         label.setStyle(
