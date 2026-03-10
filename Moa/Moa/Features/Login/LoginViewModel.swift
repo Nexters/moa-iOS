@@ -57,11 +57,13 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
         }
         
         Task { [weak self] in
-            guard let self else { return }
+            guard let self,
+                  let fcmToken = AuthSessionManager.shared.currentFcmToken()
+            else { return }
             do {
                 _ = try await self.authUsecase.loginWithKakaoTalk(
                     idToken: idToken,
-                    fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
+                    fcmDeviceToken: fcmToken
                 )
                 await sendFcmTokenIfAvailable()
                 await MainActor.run { self.send(.loginSucceed) }
@@ -73,11 +75,13 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
     
     func didReceiveInfoFromApple(idToken: String) {
         Task { [weak self] in
-            guard let self else { return }
+            guard let self,
+                  let fcmToken = AuthSessionManager.shared.currentFcmToken()
+            else { return }
             do {
                 let _ = try await self.authUsecase.loginWithApple(
                     idToken: idToken,
-                    fcmDeviceToken: UserDefaults.standard.string(forKey: "apnsDeviceToken")
+                    fcmDeviceToken: fcmToken
                 )
                 
                 await sendFcmTokenIfAvailable()
