@@ -10,7 +10,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.moa.app</string>
+		<string>group.kr.co.nexters.ios.moa</string>
 	</array>
 </dict>
 </plist>
