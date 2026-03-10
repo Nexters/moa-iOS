@@ -106,9 +106,6 @@ final class SettingUsecase {
     
     func logout(fcmDeviceToken: String) async throws {
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
-        if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
-            await fcmRepository.deleteFcmToken(fcmToken: fcmToken)
-        }
         
         AuthSessionManager.shared.clearTokens()
         

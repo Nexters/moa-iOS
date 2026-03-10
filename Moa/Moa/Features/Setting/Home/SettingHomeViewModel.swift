@@ -87,13 +87,13 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     }
     
     func logout() {
-        guard let fcmDeviceToken = UserDefaults.standard.string(forKey: "apnsDeviceToken") else {
+        guard let fcmToken = AuthSessionManager.shared.currentFcmToken() else {
             return
         }
         
         Task {
             do {
-                try await settingUsecase.logout(fcmDeviceToken: fcmDeviceToken)
+                try await settingUsecase.logout(fcmDeviceToken: fcmToken)
                 self.send(.logoutSucceed)
             } catch {
                 ToastManager.show(message: "로그아웃에 실패했습니다.")
