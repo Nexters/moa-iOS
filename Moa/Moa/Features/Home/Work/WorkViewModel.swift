@@ -126,7 +126,7 @@ private extension WorkViewModel {
             guard let clockIn  = entity.clockInTime,
                   let clockOut = entity.clockOutTime else { return .idle }
             
-            let now    = nowInMinutes()
+            let now    = Date().minutesFromMidnight
             let inMin  = clockIn.totalMinutes
             let outMin = clockOut.totalMinutes
             
@@ -142,7 +142,7 @@ private extension WorkViewModel {
             guard let clockIn  = entity.clockInTime,
                   let clockOut = entity.clockOutTime else { return .idle }
             
-            let now    = nowInMinutes()
+            let now    = Date().minutesFromMidnight
             let inMin  = clockIn.totalMinutes
             let outMin = clockOut.totalMinutes
             
@@ -171,14 +171,14 @@ private extension WorkViewModel {
         }
         
         // 출근 전으로 시간 변경 시 → idle로 되돌림
-        if start.totalMinutes > nowInMinutes(), currentStatus.isActive {
+        if start.totalMinutes > Date().minutesFromMidnight, currentStatus.isActive {
             currentStatus = .idle
         }
         
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: .work,
                     clockInTime: start,
                     clockOutTime: end
@@ -199,7 +199,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateClockOutTime(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     clockOutTime: end
                 )
                 applyWorkdayUpdate(updated, to: &entity)
@@ -221,7 +221,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: .work,
                     clockInTime: start,
                     clockOutTime: end
@@ -260,7 +260,7 @@ private extension WorkViewModel {
               let originalOut = entity.clockOutTime
         else { return }
         
-        let nowMinutes = nowInMinutes()
+        let nowMinutes = Date().minutesFromMidnight
         let originalInMinutes  = originalIn.totalMinutes
         let originalOutMinutes = originalOut.totalMinutes
         
@@ -290,7 +290,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: entity.type,
                     clockInTime: newClockIn,
                     clockOutTime: newClockOut
@@ -314,10 +314,8 @@ private extension WorkViewModel {
             state = .error(.dataCorrupted); return
         }
         
-        let nowComponents = Calendar.korea.dateComponents([.hour, .minute], from: Date())
-        let nowHour       = nowComponents.hour   ?? 9
-        let nowMinute     = nowComponents.minute ?? 0
-        let clockIn       = TimeIndicatorEntity(hour: nowHour, minute: nowMinute)
+        let nowMinutes = Date().minutesFromMidnight
+        let clockIn    = TimeIndicatorEntity(hour: nowMinutes / 60, minute: nowMinutes % 60)
         
         // +3시간 계산 (24시 넘어가면 23:59 클램프)
         let endTotalMinutes = min(clockIn.totalMinutes + 180, 23 * 60 + 59)
@@ -329,7 +327,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let created = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: .work,
                     clockInTime: clockIn,
                     clockOutTime: clockOut
@@ -348,14 +346,14 @@ private extension WorkViewModel {
         guard currentStatus.isActive,
               var entity = homeEntity else { return }
         
-        let now    = Calendar.korea.dateComponents([.hour, .minute], from: Date())
-        let endTime   = TimeIndicatorEntity(hour: now.hour ?? 0, minute: now.minute ?? 0)
-        let startTime = entity.clockInTime ?? TimeIndicatorEntity(hour: 9, minute: 0)
+        let nowMinutes = Date().minutesFromMidnight
+        let endTime    = TimeIndicatorEntity(hour: nowMinutes / 60, minute: nowMinutes % 60)
+        let startTime  = entity.clockInTime ?? TimeIndicatorEntity(hour: 9, minute: 0)
         
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: entity.type,
                     clockInTime: startTime,
                     clockOutTime: endTime
@@ -384,7 +382,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: .vacation,
                     clockInTime: originalIn,
                     clockOutTime: originalOut
@@ -408,7 +406,7 @@ private extension WorkViewModel {
               let originalOut = entity.clockOutTime
         else { return }
         
-        let nowMinutes = nowInMinutes()
+        let nowMinutes = Date().minutesFromMidnight
         let originalInMinutes  = originalIn.totalMinutes
         let originalOutMinutes = originalOut.totalMinutes
         
@@ -438,7 +436,7 @@ private extension WorkViewModel {
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
-                    date: todayDateString(),
+                    date: Date().dateString,
                     type: .vacation,
                     clockInTime: newClockIn,
                     clockOutTime: newClockOut
@@ -467,23 +465,5 @@ private extension WorkViewModel {
         state = .loaded(status: currentStatus, data: entity)
         
         MoaWidgetUpdater.sync(status: currentStatus, entity: entity)
-    }
-}
-
-// MARK: - Helpers
-
-private extension WorkViewModel {
-    
-    func nowInMinutes() -> Int {
-        let c = Calendar.korea.dateComponents([.hour, .minute], from: Date())
-        return (c.hour ?? 0) * 60 + (c.minute ?? 0)
-    }
-    
-    func todayDateString() -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.locale     = Locale(identifier: "ko_KR")
-        f.timeZone   = TimeZone(identifier: "Asia/Seoul")
-        return f.string(from: Date())
     }
 }

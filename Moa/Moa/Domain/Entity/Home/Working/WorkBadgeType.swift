@@ -5,7 +5,7 @@
 //  Created by 정도현 on 3/17/26.
 //
 
-import Foundation
+import UIKit
 
 // MARK: - BadgeType
 

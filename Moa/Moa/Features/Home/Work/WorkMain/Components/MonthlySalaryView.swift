@@ -6,13 +6,6 @@
 import UIKit
 import SnapKit
 
-struct MonthlySalaryEntity {
-    let workedEarnings: Int
-    let standardSalary: Int
-    let type: WorkdayType
-    let workStatus: WorkStatusEntity
-}
-
 // MARK: - MonthlySalaryView
 
 final class MonthlySalaryView: UIView {
@@ -208,25 +201,5 @@ private extension MonthlySalaryView {
         displayLink?.invalidate()
         displayLink = nil
         amountLabel.setText(formattedAmount(config.workedEarnings))
-    }
-}
-
-extension Calendar {
-    
-    static var korea: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
-        return calendar
-    }
-}
-
-extension Date {
-    
-    var year: Int {
-        Calendar.korea.component(.year, from: self)
-    }
-    
-    var month: Int {
-        Calendar.korea.component(.month, from: self)
     }
 }
