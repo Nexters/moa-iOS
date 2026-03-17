@@ -68,7 +68,7 @@ final class WorkMainSummaryView: UIView {
     /// 일반 상태별 렌더링
     /// - idle / working: 탭 가능
     /// - finished (최종완료): 탭 불가
-    func configure(status: WorkStatus, data: HomeEntity) {
+    func configure(status: WorkStatusEntity, data: HomeEntity) {
         switch (data.type, status) {
 
         case (.none, .finished), (.vacation, .finished):

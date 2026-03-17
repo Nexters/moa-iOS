@@ -84,7 +84,7 @@ final class WorkingContentView: UIView {
         endTime:     TimeIndicatorEntity,
         startedAt:   Date,
         workingType: WorkingType,
-        status:      WorkStatus,
+        status:      WorkStatusEntity,
         data:        HomeEntity
     ) {
         let newIsFinished     = (status == .workFinished)

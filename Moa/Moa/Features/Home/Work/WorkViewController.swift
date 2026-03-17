@@ -186,7 +186,7 @@ private extension WorkViewController {
         workingContentView.isHidden = true
     }
 
-    func renderLoaded(status: WorkStatus, data: HomeEntity) {
+    func renderLoaded(status: WorkStatusEntity, data: HomeEntity) {
         loadingIndicator.stopAnimating()
 
         switch status {
@@ -223,7 +223,7 @@ private extension WorkViewController {
 
     // MARK: working / workFinished
 
-    func renderActiveWork(status: WorkStatus, data: HomeEntity) {
+    func renderActiveWork(status: WorkStatusEntity, data: HomeEntity) {
         workMainView.isHidden       = true
         workingContentView.isHidden = false
 

@@ -61,7 +61,7 @@ final class WorkMainHeaderView: UIView {
 
     // MARK: - Configure
 
-    func configure(data: HomeEntity, status: WorkStatus) {
+    func configure(data: HomeEntity, status: WorkStatusEntity) {
         badgeView.configure(workplace: data.workplace)
 
         salaryView.configure(

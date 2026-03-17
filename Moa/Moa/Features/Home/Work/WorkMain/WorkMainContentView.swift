@@ -77,7 +77,7 @@ final class WorkMainContentView: UIView {
 
     // MARK: - Configure
 
-    func configure(data: HomeEntity, status: WorkStatus) {
+    func configure(data: HomeEntity, status: WorkStatusEntity) {
         headerView.configure(data: data, status: status)
 
         let isFinished = (status == .finished)

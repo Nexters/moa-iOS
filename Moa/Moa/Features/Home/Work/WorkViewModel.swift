@@ -36,7 +36,7 @@ final class WorkViewModel {
     
     private var cancellables = Set<AnyCancellable>()
     private var homeEntity: HomeEntity?
-    private var currentStatus: WorkStatus = .idle
+    private var currentStatus: WorkStatusEntity = .idle
     
     // MARK: - Init
     
@@ -114,7 +114,7 @@ private extension WorkViewModel {
     /// - `.work`     → now < inMin → `.idle`
     ///                 inMin ≤ now < outMin → `.working`
     ///                 now ≥ outMin → `.workFinished`(근무완료1)
-    func resolveAutoStatus(for entity: HomeEntity) -> WorkStatus {
+    func resolveAutoStatus(for entity: HomeEntity) -> WorkStatusEntity {
         switch entity.type {
             
         case .none:

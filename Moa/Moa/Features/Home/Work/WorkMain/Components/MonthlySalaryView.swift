@@ -10,7 +10,7 @@ struct MonthlySalaryEntity {
     let workedEarnings: Int
     let standardSalary: Int
     let type: WorkdayType
-    let workStatus: WorkStatus
+    let workStatus: WorkStatusEntity
 }
 
 // MARK: - MonthlySalaryView

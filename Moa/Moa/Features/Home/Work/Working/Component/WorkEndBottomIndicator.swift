@@ -90,7 +90,7 @@ final class WorkEndBottomIndicator: UIView {
 
     /// 근무완료 1 진입 시 호출
     /// - summaryView: alpha 0.6, 탭 가능 (실제 근무 시간 수정)
-    func configure(status: WorkStatus, data: HomeEntity) {
+    func configure(status: WorkStatusEntity, data: HomeEntity) {
         // configureForEndIndicator: alpha 0.6 + tappable: true 보장
         summaryView.configureForEndIndicator(data: data)
     }
