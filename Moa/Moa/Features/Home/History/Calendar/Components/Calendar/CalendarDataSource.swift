@@ -63,7 +63,6 @@ final class CalendarDataSource {
     }
     
     @discardableResult func moveToNextMonth() -> Date {
-        guard canMoveToNextMonth() else { return currentDate }
         currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
         return currentDate
     }
@@ -96,13 +95,7 @@ final class CalendarDataSource {
         return formatter.string(from: date)
     }
     
-    func canMoveToNextMonth() -> Bool {
-        let now = Date()
-        let currentMonthStart = startOfMonth(for: currentDate)
-        let todayMonthStart   = startOfMonth(for: now)
-        return currentMonthStart < todayMonthStart
-    }
-    
+
     // MARK: - Private
     
     private func startOfMonth(for date: Date) -> Date {

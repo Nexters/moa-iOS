@@ -11,10 +11,10 @@ import SnapKit
 final class CalendarDayIndicatorView: UIView {
     
     private let dotView: UIView = {
-        let v = UIView()
-        v.layer.cornerRadius = 3
-        v.isHidden = true
-        return v
+        let view = UIView()
+        view.layer.cornerRadius = 3
+        view.isHidden = true
+        return view
     }()
     
     private let labelStack: UIStackView = {
