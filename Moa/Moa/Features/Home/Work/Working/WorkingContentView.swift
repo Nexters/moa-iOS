@@ -158,8 +158,8 @@ final class WorkingContentView: UIView {
         workingStatusView.updateWorkingType(type)
     }
 
-    private func makeTooltipContext() -> TooltipContext {
-        TooltipContext(
+    private func makeTooltipContext() -> TooltipContextEntity {
+        TooltipContextEntity(
             workingType:    workingType,
             workedEarnings: workedEarnings,
             endTime:        endTime

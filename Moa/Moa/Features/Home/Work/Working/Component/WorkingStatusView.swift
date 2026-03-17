@@ -92,7 +92,7 @@ final class WorkingStatusView: UIView {
         updateProgress()
     }
 
-    func updateBadgeType(_ type: BadgeType) {
+    func updateBadgeType(_ type: WorkBadgeType) {
         statusBadgeView.updateType(type)
     }
 

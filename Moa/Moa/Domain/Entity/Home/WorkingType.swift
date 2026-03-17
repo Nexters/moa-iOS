@@ -25,7 +25,7 @@ enum WorkingType {
         }
     }
 
-    var badgeType: BadgeType {
+    var badgeType: WorkBadgeType {
         switch self {
         case .work:     return .working
         case .vacation: return .vacation
