@@ -22,7 +22,7 @@ protocol WorkdayRepository {
     func fetchHistory(
         year: Int,
         month: Int
-    ) async throws -> [History]
+    ) async throws -> [HistoryEntity]
     
     func fetchEarnings(
         year: Int,

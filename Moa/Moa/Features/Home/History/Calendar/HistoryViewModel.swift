@@ -37,7 +37,7 @@ final class HistoryViewModel {
     private var cancellables     = Set<AnyCancellable>()
     private var currentYear:  Int?
     private var currentMonth: Int?
-    private var histories:    [History]       = []
+    private var histories:    [HistoryEntity]       = []
     private var earningsInfo: EarningsEntity?
     
     // MARK: - Init
@@ -148,7 +148,7 @@ private extension HistoryViewModel {
     }
     
     func mapToCalendarDays(
-        _ histories: [History],
+        _ histories: [HistoryEntity],
         year: Int,
         month: Int
     ) -> [CalendarDay] {

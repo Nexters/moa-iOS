@@ -13,8 +13,8 @@ struct HistoryResponse: Decodable {
 }
 
 extension HistoryResponse {
-    func toDomain() -> History {
-        History(
+    func toDomain() -> HistoryEntity {
+        HistoryEntity(
             date: date,
             type: WorkdayType(rawValue: type) ?? .none
         )
