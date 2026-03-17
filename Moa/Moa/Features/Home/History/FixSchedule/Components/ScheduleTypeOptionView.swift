@@ -8,20 +8,6 @@
 import UIKit
 import SnapKit
 
-enum ScheduleTypeOptionType {
-    case vacation
-    case workday
-    
-    var title: String {
-        switch self {
-        case .vacation:
-            return "휴가"
-        case .workday:
-            return "근무"
-        }
-    }
-}
-
 final class ScheduleTypeOptionView: UIView {
     
     private let type: ScheduleTypeOptionType

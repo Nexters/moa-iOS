@@ -8,62 +8,6 @@
 import Foundation
 import Combine
 
-// MARK: - FixScheduleViewState
-
-struct FixScheduleViewState: Equatable {
-    var scheduleType: ScheduleTypeOptionType = .workday
-    var dateRange:    ScheduleDateRange?     = nil
-    var startTime:    TimeIndicatorEntity    = .from(hour: 9,  minute: 0)
-    var endTime:      TimeIndicatorEntity    = .from(hour: 18, minute: 0)
-
-    var isConfirmEnabled: Bool { dateRange != nil }
-}
-
-// MARK: - ScheduleDateRange
-
-struct ScheduleDateRange: Equatable {
-    let start: Date
-    let end:   Date
-
-    private static let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy.MM.dd"
-        return f
-    }()
-
-    private static let serverFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone   = TimeZone(identifier: "Asia/Seoul")
-        return f
-    }()
-
-    func formatted(_ date: Date) -> String { Self.formatter.string(from: date) }
-
-    var displayString: String {
-        if Calendar.current.isDate(start, inSameDayAs: end) {
-            return formatted(start)
-        }
-        return "\(formatted(start)) ~ \(formatted(end))"
-    }
-
-    /// API 전송용 "yyyy-MM-dd" 문자열
-    var startDateString: String { Self.serverFormatter.string(from: start) }
-
-    init(single date: Date)      { self.start = date; self.end = date }
-    init(start: Date, end: Date) { self.start = start; self.end = end }
-}
-
-// MARK: - SubmitState
-
-enum FixScheduleSubmitState: Equatable {
-    case idle
-    case submitting
-    case success
-    case failure(String)
-}
-
-// MARK: - FixScheduleViewModel
 
 final class FixScheduleViewModel {
 
@@ -102,7 +46,7 @@ final class FixScheduleViewModel {
         if let existing = existingSchedule {
             state = existing
         } else if let date = preselectedDate {
-            state.dateRange = ScheduleDateRange(single: date)
+            state.dateRange = ScheduleDateRangeEntity(single: date)
         }
     }
 
@@ -116,7 +60,7 @@ extension FixScheduleViewModel {
     func send(_ input: Input) {
         switch input {
         case .selectDate(let date):
-            state.dateRange = ScheduleDateRange(single: date)
+            state.dateRange = ScheduleDateRangeEntity(single: date)
 
         case .selectScheduleType(let type):
             state.scheduleType = type
@@ -184,7 +128,7 @@ extension FixScheduleViewModel {
     static func makeState(from workday: WorkdayEntity, date: Date) -> FixScheduleViewState {
         var state = FixScheduleViewState()
 
-        state.dateRange = ScheduleDateRange(single: date)
+        state.dateRange = ScheduleDateRangeEntity(single: date)
 
         switch workday.type {
         case .vacation: state.scheduleType = .vacation

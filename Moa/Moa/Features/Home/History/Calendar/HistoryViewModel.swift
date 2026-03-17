@@ -205,20 +205,3 @@ private extension HistoryViewModel {
         }
     }
 }
-
-
-// MARK: - State / Error
-
-enum HistoryViewState: Equatable {
-    case idle
-    case loading
-    case loaded(days: [CalendarDayEntity], earnings: EarningsEntity)
-    /// 날짜 탭 후 상세 표시
-    case dayDetail(date: Date, workday: WorkdayEntity, isPayday: Bool, salary: Int)
-    case error(HistoryError)
-}
-
-enum HistoryError: Equatable {
-    case network
-    case dataCorrupted
-}

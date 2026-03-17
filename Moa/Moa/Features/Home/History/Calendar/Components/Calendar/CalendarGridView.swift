@@ -68,7 +68,9 @@ extension CalendarGridView: UICollectionViewDataSource {
         return cell
     }
 }
+
 extension CalendarGridView: UICollectionViewDelegate {}
+
 extension CalendarGridView: CalendarDayCellDelegate {
     func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDayEntity) {
         delegate?.gridView(self, didTapDay: day)
