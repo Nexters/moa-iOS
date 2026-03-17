@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol CalendarGridViewDelegate: AnyObject {
-    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDay)
+    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDayEntity)
 }
 
 final class CalendarGridView: UIView {
@@ -17,7 +17,7 @@ final class CalendarGridView: UIView {
     private static let cellHeight: CGFloat = 66
     
     weak var delegate: CalendarGridViewDelegate?
-    private var days: [CalendarDay?] = []
+    private var days: [CalendarDayEntity?] = []
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -49,7 +49,7 @@ final class CalendarGridView: UIView {
         layout.itemSize = newSize
     }
     
-    func reload(with days: [CalendarDay?]) {
+    func reload(with days: [CalendarDayEntity?]) {
         self.days = days
         collectionView.reloadData()
     }
@@ -68,9 +68,11 @@ extension CalendarGridView: UICollectionViewDataSource {
         return cell
     }
 }
+
 extension CalendarGridView: UICollectionViewDelegate {}
+
 extension CalendarGridView: CalendarDayCellDelegate {
-    func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDay) {
+    func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDayEntity) {
         delegate?.gridView(self, didTapDay: day)
     }
 }

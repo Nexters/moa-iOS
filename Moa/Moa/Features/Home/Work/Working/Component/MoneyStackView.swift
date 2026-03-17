@@ -7,24 +7,6 @@ import UIKit
 import SnapKit
 import Lottie
 
-// MARK: - TooltipContext
-
-struct TooltipContext {
-    let workingType: WorkingType
-    let workedEarnings: Int            // 이번달 누적 월급
-    let endTime: TimeIndicatorEntity   // 오늘 퇴근 시간
-}
-
-// MARK: - TooltipKind (Work 3종 롤링 순서)
-
-private enum TooltipKind: CaseIterable {
-    case monthlyGoal  // 이번달에 쌓은 월급 ~원
-    case buyable      // 지금까지 번 돈으로 ~ 살 수 있어요
-    case cheer        // 화이팅! n시간(n분) 후 퇴근이에요
-}
-
-// MARK: - EarningsStackView
-
 final class EarningsStackView: UIView {
     
     // MARK: - Constants
@@ -138,11 +120,11 @@ final class EarningsStackView: UIView {
     
     private var tooltipTimer: Timer?
     private var currentAmount: Int      = 0
-    private var tooltipContext: TooltipContext?
+    private var tooltipContext: TooltipContextEntity?
     
     /// Work 3종 롤링 현재 인덱스
     private var tooltipKindIndex: Int   = 0
-    private let tooltipKinds            = TooltipKind.allCases
+    private let tooltipKinds            = TooltipType.allCases
     
     // MARK: - Init
     
@@ -252,7 +234,7 @@ final class EarningsStackView: UIView {
         amount: Int,
         startedAt: Date,
         isFinished: Bool = false,
-        context: TooltipContext? = nil
+        context: TooltipContextEntity? = nil
     ) {
         currentAmount    = amount
         tooltipContext   = context
@@ -287,7 +269,7 @@ final class EarningsStackView: UIView {
     }
     
     /// tick마다 퇴근까지 남은 시간이 변하므로 context 갱신
-    func updateContext(_ context: TooltipContext) {
+    func updateContext(_ context: TooltipContextEntity) {
         tooltipContext = context
     }
     
@@ -388,7 +370,7 @@ final class EarningsStackView: UIView {
     
     // MARK: - Message Factory
     
-    private func makeMessage(for context: TooltipContext) -> String? {
+    private func makeMessage(for context: TooltipContextEntity) -> String? {
         // 휴가: 단일 문구 (advanceKind 호출돼도 같은 문구만 반복)
         if context.workingType == .vacation {
             return "휴가 중이지만 월급은 쌓여요"

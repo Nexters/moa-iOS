@@ -84,7 +84,7 @@ final class WorkingContentView: UIView {
         endTime:     TimeIndicatorEntity,
         startedAt:   Date,
         workingType: WorkingType,
-        status:      WorkStatus,
+        status:      WorkStatusEntity,
         data:        HomeEntity
     ) {
         let newIsFinished     = (status == .workFinished)
@@ -158,8 +158,8 @@ final class WorkingContentView: UIView {
         workingStatusView.updateWorkingType(type)
     }
 
-    private func makeTooltipContext() -> TooltipContext {
-        TooltipContext(
+    private func makeTooltipContext() -> TooltipContextEntity {
+        TooltipContextEntity(
             workingType:    workingType,
             workedEarnings: workedEarnings,
             endTime:        endTime

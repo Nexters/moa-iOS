@@ -63,7 +63,7 @@ final class ScheduleDateRangeCardView: UIView {
     
     // MARK: - Configure
     
-    func configure(dateRange: ScheduleDateRange?) {
+    func configure(dateRange: ScheduleDateRangeEntity?) {
         let isSelected = dateRange != nil
         let font  = isSelected ? AppTypography.t2_700 : AppTypography.t2_400
         let textColor  = isSelected ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.lowEmphasis

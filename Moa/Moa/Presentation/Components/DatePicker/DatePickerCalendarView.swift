@@ -163,7 +163,7 @@ extension DatePickerCalendarView: CalendarNavigationBarDelegate {
 // MARK: - DatePickerCalendarGridViewDelegate
 
 extension DatePickerCalendarView: DatePickerCalendarGridViewDelegate {
-    func datePickerGridView(_ grid: DatePickerCalendarGridView, didTapDay day: CalendarDay) {
+    func datePickerGridView(_ grid: DatePickerCalendarGridView, didTapDay day: CalendarDayEntity) {
         selectedDate = day.date
         reloadGrid()
         delegate?.datePickerCalendarView(self, didSelectDate: day.date)

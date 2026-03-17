@@ -25,17 +25,17 @@ final class HomeNavigationBarView: UIView {
     }()
     
     private let calendarButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setImage(UIImage(resource: .Icon.iconCalendar).withRenderingMode(.alwaysTemplate), for: .normal)
-        b.tintColor = AppColor.IconAndText.highEmphasis
-        return b
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(resource: .Icon.iconCalendar).withRenderingMode(.alwaysTemplate), for: .normal)
+        button.tintColor = AppColor.IconAndText.highEmphasis
+        return button
     }()
     
     private let settingButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setImage(UIImage(resource: .Icon.iconSetting).withRenderingMode(.alwaysTemplate), for: .normal)
-        b.tintColor = AppColor.IconAndText.highEmphasis
-        return b
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(resource: .Icon.iconSetting).withRenderingMode(.alwaysTemplate), for: .normal)
+        button.tintColor = AppColor.IconAndText.highEmphasis
+        return button
     }()
     
     private lazy var rightStackView: UIStackView = {

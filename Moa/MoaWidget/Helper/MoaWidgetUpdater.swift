@@ -12,7 +12,7 @@ enum MoaWidgetUpdater {
     // MARK: - 외부 진입점
 
     /// WorkViewModel.publish() 직후 호출
-    static func sync(status: WorkStatus, entity: HomeEntity) {
+    static func sync(status: WorkStatusEntity, entity: HomeEntity) {
         // 1순위: 절전 모드
         if ProcessInfo.processInfo.isLowPowerModeEnabled {
             MoaWidgetData(status: .lowPower, displayAmount: 0, updatedAt: .now).save()
@@ -47,7 +47,7 @@ enum MoaWidgetUpdater {
 
     // MARK: - WorkStatus → MoaWidgetData
 
-    private static func resolve(status: WorkStatus, entity: HomeEntity) -> MoaWidgetData {
+    private static func resolve(status: WorkStatusEntity, entity: HomeEntity) -> MoaWidgetData {
         switch status {
         case .working:
             let ws: MoaWidgetStatus = entity.type == .vacation ? .vacation : .working

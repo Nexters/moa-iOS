@@ -23,26 +23,6 @@ protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
     )
 }
 
-// MARK: - CalendarLabelStyle / CalendarDayType / CalendarDay
-
-enum CalendarLabelStyle: Equatable { case payday, vacation }
-
-enum CalendarDayType: Equatable {
-    case none
-    case scheduled
-    case worked
-    case dualLabel
-    case singleLabel(CalendarLabelStyle)
-}
-
-struct CalendarDay: Equatable {
-    let date: Date
-    let contentType: CalendarDayType
-    let isToday: Bool
-    let isSelected: Bool
-    let isCurrentMonth: Bool
-}
-
 // MARK: - HistoryViewController
 //
 final class HistoryViewController: BaseViewController {
@@ -55,26 +35,26 @@ final class HistoryViewController: BaseViewController {
     // MARK: - UI
 
     private let calendarView: CalendarView = {
-        let v = CalendarView()
-        v.layer.backgroundColor = AppColor.Background.primary.cgColor
-        v.layer.cornerRadius  = 16
-        v.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        v.clipsToBounds       = true
-        return v
+        let view = CalendarView()
+        view.layer.backgroundColor = AppColor.Background.primary.cgColor
+        view.layer.cornerRadius  = 16
+        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        view.clipsToBounds       = true
+        return view
     }()
     
     private let calendarOverlayView: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.04)
-        v.isUserInteractionEnabled = false
-        return v
+        let view = UIView()
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.04)
+        view.isUserInteractionEnabled = false
+        return view
     }()
     
     private let globalOverlayView: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.04)
-        v.isUserInteractionEnabled = false
-        return v
+        let view = UIView()
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.04)
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let scrollView: UIScrollView = {
@@ -85,15 +65,15 @@ final class HistoryViewController: BaseViewController {
     }()
 
     private let detailContainer: UIView = {
-        let v = UIView()
-        v.isHidden = true
-        return v
+        let view = UIView()
+        view.isHidden = true
+        return view
     }()
 
     private lazy var detailView: WorkdayDetailView = {
-        let v = WorkdayDetailView()
-        v.delegate = self
-        return v
+        let view = WorkdayDetailView()
+        view.delegate = self
+        return view
     }()
 
     // MARK: - Init
@@ -267,7 +247,7 @@ private extension HistoryViewController {
 
 extension HistoryViewController: CalendarViewDelegate {
 
-    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay) {
+    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDayEntity) {
         selectedDate = day.date
         viewModel.send(.selectDay(day.date))
     }

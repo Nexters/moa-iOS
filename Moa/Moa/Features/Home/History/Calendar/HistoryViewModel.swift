@@ -37,7 +37,7 @@ final class HistoryViewModel {
     private var cancellables     = Set<AnyCancellable>()
     private var currentYear:  Int?
     private var currentMonth: Int?
-    private var histories:    [History]       = []
+    private var histories:    [HistoryEntity]       = []
     private var earningsInfo: EarningsEntity?
     
     // MARK: - Init
@@ -148,10 +148,10 @@ private extension HistoryViewModel {
     }
     
     func mapToCalendarDays(
-        _ histories: [History],
+        _ histories: [HistoryEntity],
         year: Int,
         month: Int
-    ) -> [CalendarDay] {
+    ) -> [CalendarDayEntity] {
         
         let formatter        = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -195,7 +195,7 @@ private extension HistoryViewModel {
                 finalType = workType
             }
             
-            return CalendarDay(
+            return CalendarDayEntity(
                 date: date,
                 contentType: finalType,
                 isToday: isToday,
@@ -204,21 +204,4 @@ private extension HistoryViewModel {
             )
         }
     }
-}
-
-
-// MARK: - State / Error
-
-enum HistoryViewState: Equatable {
-    case idle
-    case loading
-    case loaded(days: [CalendarDay], earnings: EarningsEntity)
-    /// 날짜 탭 후 상세 표시
-    case dayDetail(date: Date, workday: WorkdayEntity, isPayday: Bool, salary: Int)
-    case error(HistoryError)
-}
-
-enum HistoryError: Equatable {
-    case network
-    case dataCorrupted
 }

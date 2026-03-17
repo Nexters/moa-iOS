@@ -8,18 +8,6 @@
 import UIKit
 import SnapKit
 
-enum CalendarNavigationType {
-    case history
-    case bottomSheet
-    
-    var showsAddButton: Bool {
-        switch self {
-        case .history: return true
-        case .bottomSheet: return false
-        }
-    }
-}
-
 protocol CalendarNavigationBarDelegate: AnyObject {
     func navigationBarDidTapPrev()
     func navigationBarDidTapNext()

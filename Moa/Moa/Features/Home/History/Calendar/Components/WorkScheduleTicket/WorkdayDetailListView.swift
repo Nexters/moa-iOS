@@ -38,12 +38,12 @@ final class WorkdayDetailView: UIView {
     // MARK: - UI
 
     private let dateLabel: StyledLabel = {
-        let l = StyledLabel()
-        l.setStyle(.init(
+        let label = StyledLabel()
+        label.setStyle(.init(
             typography: AppTypography.b1_500,
             color: UIColor(resource: .Color.Grayscale.gray40)
         ))
-        return l
+        return label
     }()
 
     private let ticketStack: UIStackView = {
@@ -170,10 +170,10 @@ final class WorkdayDetailView: UIView {
     // MARK: - Helpers
 
     private func dateString(from date: Date) -> String {
-        let f        = DateFormatter()
-        f.dateFormat = "yyyy.M.d"
-        f.locale     = Locale(identifier: "ko_KR")
-        f.timeZone   = TimeZone(identifier: "Asia/Seoul")
-        return f.string(from: date)
+        let formatter        = DateFormatter()
+        formatter.dateFormat = "yyyy.M.d"
+        formatter.locale     = Locale(identifier: "ko_KR")
+        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
+        return formatter.string(from: date)
     }
 }

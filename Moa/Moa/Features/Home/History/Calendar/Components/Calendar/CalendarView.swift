@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol CalendarViewDelegate: AnyObject {
-    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay)
+    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDayEntity)
     func calendarView(_ view: CalendarView, didChangeToDate date: Date)
     func calendarViewDidTapAdd(_ view: CalendarView)
 }
@@ -182,7 +182,7 @@ final class CalendarView: UIView {
     }
     
     /// API 데이터 업데이트 — 슬라이드 중이 아닐 때만 높이 갱신
-    func updateCalendarDays(_ days: [CalendarDay]) {
+    func updateCalendarDays(_ days: [CalendarDayEntity]) {
         dataSource.resetAndApply(days)
         reloadGrid()
     }
@@ -224,13 +224,13 @@ extension CalendarView: CalendarNavigationBarDelegate {
 
 extension CalendarView: CalendarGridViewDelegate {
     
-    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDay) {
+    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDayEntity) {
         selectedDate = day.date
         
         let contentType = dataSource.rawType(for: day.date)
         let isToday     = Calendar.current.isDateInToday(day.date)
         
-        let rawDay = CalendarDay(
+        let rawDay = CalendarDayEntity(
             date: day.date,
             contentType: contentType,
             isToday: isToday,

@@ -21,13 +21,13 @@ final class CalendarDataSource {
     
     // MARK: - Public
     
-    func days(for date: Date, selectedDate: Date? = nil) -> [CalendarDay?] {
+    func days(for date: Date, selectedDate: Date? = nil) -> [CalendarDayEntity?] {
         
         let start   = startOfMonth(for: date)
         let total   = daysInMonth(for: date)
         let leading = weekdayIndex(for: start)
         
-        var result: [CalendarDay?] = Array(repeating: nil, count: leading)
+        var result: [CalendarDayEntity?] = Array(repeating: nil, count: leading)
         
         for day in 1...total {
             var comps = calendar.dateComponents([.year, .month], from: date)
@@ -39,7 +39,7 @@ final class CalendarDataSource {
             let baseType   = rawDayTypes[key(d)] ?? .none
             
             result.append(
-                CalendarDay(
+                CalendarDayEntity(
                     date: d,
                     contentType: baseType,
                     isToday: isToday,
@@ -77,7 +77,7 @@ final class CalendarDataSource {
         rawDayTypes[key(date)] = type
     }
     
-    func resetAndApply(_ days: [CalendarDay]) {
+    func resetAndApply(_ days: [CalendarDayEntity]) {
         let monthPrefix = monthKeyPrefix(for: currentDate)
         rawDayTypes = rawDayTypes.filter { !$0.key.hasPrefix(monthPrefix) }
         for day in days {

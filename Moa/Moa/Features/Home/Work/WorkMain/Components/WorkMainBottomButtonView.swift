@@ -67,7 +67,7 @@ final class WorkMainBottomButtonView: UIView {
     // MARK: - Configure (idle 상태 전용)
 
     func configure(
-        status:         WorkStatus,
+        status:         WorkStatusEntity,
         data:           HomeEntity,
         primaryAction:  (() -> Void)?,
         vacationAction: (() -> Void)? = nil
