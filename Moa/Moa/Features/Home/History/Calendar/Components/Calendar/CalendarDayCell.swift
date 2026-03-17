@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol CalendarDayCellDelegate: AnyObject {
-    func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDay)
+    func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDayEntity)
 }
 
 final class CalendarDayCell: UICollectionViewCell {
@@ -17,7 +17,7 @@ final class CalendarDayCell: UICollectionViewCell {
     static let identifier = "CalendarDayCell"
     weak var delegate: CalendarDayCellDelegate?
     
-    private var tappedDay: CalendarDay?
+    private var tappedDay: CalendarDayEntity?
     
     // MARK: - UI
     
@@ -78,7 +78,7 @@ final class CalendarDayCell: UICollectionViewCell {
     
     // MARK: - Configure
     
-    func configure(with day: CalendarDay?) {
+    func configure(with day: CalendarDayEntity?) {
         
         reset()
         guard let day else { return }

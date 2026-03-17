@@ -35,13 +35,6 @@ enum CalendarDayType: Equatable {
     case singleLabel(CalendarLabelStyle)
 }
 
-struct CalendarDay: Equatable {
-    let date: Date
-    let contentType: CalendarDayType
-    let isToday: Bool
-    let isSelected: Bool
-    let isCurrentMonth: Bool
-}
 
 // MARK: - HistoryViewController
 //
@@ -267,7 +260,7 @@ private extension HistoryViewController {
 
 extension HistoryViewController: CalendarViewDelegate {
 
-    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDay) {
+    func calendarView(_ view: CalendarView, didSelectDay day: CalendarDayEntity) {
         selectedDate = day.date
         viewModel.send(.selectDay(day.date))
     }

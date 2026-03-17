@@ -151,7 +151,7 @@ private extension HistoryViewModel {
         _ histories: [HistoryEntity],
         year: Int,
         month: Int
-    ) -> [CalendarDay] {
+    ) -> [CalendarDayEntity] {
         
         let formatter        = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -195,7 +195,7 @@ private extension HistoryViewModel {
                 finalType = workType
             }
             
-            return CalendarDay(
+            return CalendarDayEntity(
                 date: date,
                 contentType: finalType,
                 isToday: isToday,
@@ -212,7 +212,7 @@ private extension HistoryViewModel {
 enum HistoryViewState: Equatable {
     case idle
     case loading
-    case loaded(days: [CalendarDay], earnings: EarningsEntity)
+    case loaded(days: [CalendarDayEntity], earnings: EarningsEntity)
     /// 날짜 탭 후 상세 표시
     case dayDetail(date: Date, workday: WorkdayEntity, isPayday: Bool, salary: Int)
     case error(HistoryError)

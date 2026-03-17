@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol DatePickerCalendarGridViewDelegate: AnyObject {
-    func datePickerGridView(_ grid: DatePickerCalendarGridView, didTapDay day: CalendarDay)
+    func datePickerGridView(_ grid: DatePickerCalendarGridView, didTapDay day: CalendarDayEntity)
 }
 
 /// 바텀시트 날짜 선택용 그리드
@@ -18,7 +18,7 @@ final class DatePickerCalendarGridView: UIView {
     private static let cellHeight: CGFloat = 66
 
     weak var delegate: DatePickerCalendarGridViewDelegate?
-    private var days: [CalendarDay?] = []
+    private var days: [CalendarDayEntity?] = []
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -53,7 +53,7 @@ final class DatePickerCalendarGridView: UIView {
         layout.itemSize = newSize
     }
 
-    func reload(with days: [CalendarDay?]) {
+    func reload(with days: [CalendarDayEntity?]) {
         self.days = days
         collectionView.reloadData()
     }
@@ -80,7 +80,7 @@ extension DatePickerCalendarGridView: UICollectionViewDataSource {
 extension DatePickerCalendarGridView: UICollectionViewDelegate {}
 
 extension DatePickerCalendarGridView: DatePickerCalendarDayCellDelegate {
-    func datePickerDayCell(_ cell: DatePickerCalendarDayCell, didTap day: CalendarDay) {
+    func datePickerDayCell(_ cell: DatePickerCalendarDayCell, didTap day: CalendarDayEntity) {
         delegate?.datePickerGridView(self, didTapDay: day)
     }
 }
