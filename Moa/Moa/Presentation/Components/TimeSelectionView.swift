@@ -160,7 +160,7 @@ final class TimeSelectionView: UIView {
         
         addSubview(timeDisplayStackView)
         timeDisplayStackView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
+            $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.height.equalTo(55)
         }
