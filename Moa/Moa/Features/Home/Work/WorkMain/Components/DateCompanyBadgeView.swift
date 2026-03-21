@@ -109,7 +109,7 @@ final class DateCompanyBadgeView: UIView {
         workplaceItemStack.isHidden = !hasCompany
 
         if let workplace {
-            workplaceLabel.text = workplace
+            workplaceLabel.text = Self.truncatedText(workplace, limit: 10)
         }
     }
 }
@@ -126,5 +126,13 @@ private extension DateCompanyBadgeView {
 
     static func todayString() -> String {
         dateFormatter.string(from: Date())
+    }
+}
+
+private extension DateCompanyBadgeView {
+    static func truncatedText(_ text: String, limit: Int) -> String {
+        guard text.count > limit else { return text }
+        let index = text.index(text.startIndex, offsetBy: limit)
+        return String(text[..<index]) + "..."
     }
 }
