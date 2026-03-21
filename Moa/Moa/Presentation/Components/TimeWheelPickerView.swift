@@ -29,7 +29,6 @@ final class TimeWheelPickerView: UIView {
     // MARK: - Properties
     private let initialHour: Int
     private let initialMinute: Int
-    private var hasAppliedInitialScroll = false
     
     // MARK: - Background Container
     private let backgroundContainerView: UIView = {
@@ -97,17 +96,6 @@ final class TimeWheelPickerView: UIView {
         }
         
         setupLayout()
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        guard !hasAppliedInitialScroll, bounds.width > 0 else { return }
-        hasAppliedInitialScroll = true
-        
-        hourColumn.layoutIfNeeded()
-        minuteColumn.layoutIfNeeded()
-        setTime(hour: initialHour, minute: initialMinute, animated: false)
     }
     
     required init?(coder: NSCoder) {
