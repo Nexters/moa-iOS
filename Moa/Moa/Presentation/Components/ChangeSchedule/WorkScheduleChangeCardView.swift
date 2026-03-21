@@ -41,7 +41,7 @@ final class WorkScheduleChangeCardView: UIView {
     private func setup() {
         layer.cornerRadius = 12
         clipsToBounds      = true
-        backgroundColor = AppColor.Btn.Secondary.enable
+        backgroundColor = AppColor.Btn.Secondary.pressed
 
         addSubview(label)
         label.snp.makeConstraints { $0.center.equalToSuperview() }
@@ -54,8 +54,10 @@ final class WorkScheduleChangeCardView: UIView {
     // MARK: - State
 
     func setSelected(_ selected: Bool) {
-        label.font = selected ? AppTypography.b1_600.font() : AppTypography.b1_400.font()
-        label.textColor = selected ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.mediumEmphasis
+        label.font        = selected ? AppTypography.b1_600.font()          : AppTypography.b1_400.font()
+        label.textColor   = selected ? AppColor.IconAndText.green            : AppColor.IconAndText.highEmphasis
+        layer.borderWidth = selected ? 1                                     : 0
+        layer.borderColor = selected ? AppColor.IconAndText.green.cgColor    : nil
     }
 
     // MARK: - Action
