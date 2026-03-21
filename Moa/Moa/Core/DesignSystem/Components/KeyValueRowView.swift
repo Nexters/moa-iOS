@@ -12,20 +12,23 @@ import SnapKit
 
 enum KeyValueRowType {
     case wageRow(wage: Int)
+    case accumulatedWageRow(wage: Int)          // 근무완료1: "누적 월급"
     case timeRow(startTime: String, endTime: String)
-    case customRow(key: String, value: String)   // holiday 등 범용 케이스
+    case customRow(key: String, value: String)  // holiday 등 범용 케이스
 
     var title: String {
         switch self {
-        case .wageRow:                  return "오늘 일급"
-        case .timeRow:                  return "근무 시간"
-        case let .customRow(key, _):    return key
+        case .wageRow:              return "오늘 일급"
+        case .accumulatedWageRow:   return "누적 월급"
+        case .timeRow:              return "근무 시간"
+        case let .customRow(key, _): return key
         }
     }
 
     var value: String {
         switch self {
-        case let .wageRow(wage):
+        case let .wageRow(wage),
+             let .accumulatedWageRow(wage):
             return "\(AppNumberFormatter.decimalString(from: wage))원"
         case let .timeRow(startTime, endTime):
             return "\(startTime) - \(endTime)"
@@ -94,7 +97,7 @@ final class KeyValueRowView: UIControl {
     // MARK: - Setup
 
     private func setupUI() {
-        clipsToBounds  = true
+        clipsToBounds   = true
         backgroundColor = .clear
 
         addTarget(self, action: #selector(didTapRow), for: .touchUpInside)
@@ -104,13 +107,11 @@ final class KeyValueRowView: UIControl {
             $0.leading.equalToSuperview()
             $0.centerY.equalToSuperview()
         }
-
         chevronImageView.snp.makeConstraints {
             $0.trailing.equalToSuperview()
             $0.centerY.equalToSuperview()
             $0.size.equalTo(24)
         }
-
         valueLabel.snp.makeConstraints {
             $0.leading.equalTo(titleLabel.snp.trailing).offset(12)
             $0.centerY.equalToSuperview()
@@ -119,8 +120,8 @@ final class KeyValueRowView: UIControl {
             ).offset(showsChevron ? -8 : 0)
         }
 
-        isAccessibilityElement = true
-        accessibilityTraits = .button
+        isAccessibilityElement  = true
+        accessibilityTraits     = .button
     }
 
     // MARK: - Configure
@@ -135,12 +136,11 @@ final class KeyValueRowView: UIControl {
         valueLabel.setText(value)
         updateAccessibility()
     }
-    
+
     func showChevron(_ isShow: Bool) {
         chevronImageView.isHidden = !isShow
         updateAccessibility()
     }
-
 
     private func updateAccessibility() {
         accessibilityLabel = "\(titleLabel.text ?? ""), \(valueLabel.text ?? "")"

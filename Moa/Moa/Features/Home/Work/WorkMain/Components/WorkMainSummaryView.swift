@@ -22,7 +22,10 @@ final class WorkMainSummaryView: UIView {
         return view
     }()
 
-    private lazy var wageRowView = KeyValueRowView(type: .wageRow(wage: 0))
+    private lazy var wageRowView: KeyValueRowView = KeyValueRowView(type: .wageRow(wage: 0))
+
+    /// 근무완료1 전용 누적 월급 행 — 배경에 blur 삽입
+    private lazy var accumulatedWageRowView: KeyValueRowView = KeyValueRowView(type: .accumulatedWageRow(wage: 0))
 
     private let dividerView: UIView = {
         let view = UIView()
@@ -30,20 +33,19 @@ final class WorkMainSummaryView: UIView {
         return view
     }()
 
-    /// idle / working (근무일): 탭 가능, chevron O
+    /// idle / working: 탭 가능, chevron O
     private lazy var timeRowView: KeyValueRowView = {
         let row = KeyValueRowView(type: .timeRow(startTime: "", endTime: ""), showsChevron: true)
         row.onTap = { [weak self] in self?.onTapTimeRow?() }
         return row
     }()
 
-    /// 근무완료 1 / 최종완료 (근무일): chevron O or X, tappable 여부 동적 결정
+    /// 근무완료1 / 최종완료: chevron O or X, tappable 여부 동적 결정
     private lazy var finishedTimeRowView: KeyValueRowView = {
-        let row = KeyValueRowView(type: .timeRow(startTime: "", endTime: ""), showsChevron: true)
-        return row
+        KeyValueRowView(type: .timeRow(startTime: "", endTime: ""), showsChevron: true)
     }()
 
-    /// 휴가 / 최종완료(휴가): "휴가" 고정, chevron X, 탭 불가
+    /// 휴가: "휴가" 고정, chevron X, 탭 불가
     private lazy var vacationTimeRowView = KeyValueRowView(
         type: .customRow(key: "근무 시간", value: "휴가"),
         showsChevron: false
@@ -57,7 +59,9 @@ final class WorkMainSummaryView: UIView {
 
     // MARK: - State
 
-    private enum LayoutVariant { case twoRow, finishedRow, vacationRow, holidayRow }
+    private enum LayoutVariant {
+        case twoRow, finishedRow, accumulatedRow, vacationRow, holidayRow
+    }
     private var currentVariant: LayoutVariant = .twoRow
 
     // MARK: - Init
@@ -71,10 +75,9 @@ final class WorkMainSummaryView: UIView {
 
     // MARK: - Configure
 
-    /// 일반 상태별 렌더링
-    /// - idle / working: 탭 가능
-    /// - finished (최종완료): 탭 불가
     func configure(status: WorkStatusEntity, data: HomeEntity) {
+        containerView.backgroundColor = AppColor.Container.primary
+
         switch (data.type, status) {
 
         case (.none, _):
@@ -83,7 +86,6 @@ final class WorkMainSummaryView: UIView {
         case (.vacation, .finished):
             renderVacationRow(dailyPay: data.dailyPay)
 
-        // 최종완료 — 근무일: chevron O, 탭 불가
         case (.work, .finished):
             let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
             let clockOutStr = data.clockOutTime?.displayString ?? "--:--"
@@ -107,10 +109,8 @@ final class WorkMainSummaryView: UIView {
     }
 
     /// 근무완료 1 전용 — WorkEndBottomIndicator 내부에서 호출
-    /// 항상 tappable: true (탭 → 실제 근무 시간 수정 시트)
-    /// containerView alpha 0.6 적용
+    /// "누적 월급" 타이틀 + 블러 오버레이 적용
     func configureForEndIndicator(data: HomeEntity) {
-        containerView.backgroundColor = AppColor.Container.primary.withAlphaComponent(0.6)
 
         switch data.type {
         case .none:
@@ -120,10 +120,9 @@ final class WorkMainSummaryView: UIView {
         case .work:
             let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
             let clockOutStr = data.clockOutTime?.displayString ?? "--:--"
-            renderFinishedRow(
-                dailyWage: data.dailyPay,
-                timeValue: "\(clockInStr) - \(clockOutStr)",
-                tappable: true
+            renderAccumulatedRow(
+                accumulatedWage: data.dailyPay,
+                timeValue: "\(clockInStr) - \(clockOutStr)"
             )
         }
     }
@@ -131,47 +130,49 @@ final class WorkMainSummaryView: UIView {
     // MARK: - Render
 
     private func renderTwoRow(dailyWage: Int, timeValue: String) {
-        wageRowView.isHidden         = false
-        dividerView.isHidden         = false
-        timeRowView.isHidden         = false
-        finishedTimeRowView.isHidden = true
-        vacationTimeRowView.isHidden = true
+        setRowsHidden(wage: false, accumulated: true, divider: false,
+                      time: false, finished: true, vacation: true, holiday: true)
 
         wageRowView.updateValue(formattedWage(dailyWage))
         timeRowView.updateValue(timeValue)
 
         guard currentVariant != .twoRow else { return }
         currentVariant = .twoRow
-        applyBottomRowConstraints(bottomRow: timeRowView)
+        applyBottomRowConstraints(bottomRow: timeRowView, wageRow: wageRowView)
     }
 
     private func renderFinishedRow(dailyWage: Int, timeValue: String, tappable: Bool) {
-        wageRowView.isHidden         = false
-        dividerView.isHidden         = false
-        timeRowView.isHidden         = true
-        finishedTimeRowView.isHidden = false
-        vacationTimeRowView.isHidden = true
-        
-        finishedTimeRowView.showChevron(tappable)
+        setRowsHidden(wage: false, accumulated: true, divider: false,
+                      time: true, finished: false, vacation: true, holiday: true)
 
+        finishedTimeRowView.showChevron(tappable)
         wageRowView.updateValue(formattedWage(dailyWage))
         finishedTimeRowView.updateValue(timeValue)
-        finishedTimeRowView.onTap = tappable
-            ? { [weak self] in self?.onTapTimeRow?() }
-            : nil
+        finishedTimeRowView.onTap = tappable ? { [weak self] in self?.onTapTimeRow?() } : nil
 
         guard currentVariant != .finishedRow else { return }
         currentVariant = .finishedRow
-        applyBottomRowConstraints(bottomRow: finishedTimeRowView)
+        applyBottomRowConstraints(bottomRow: finishedTimeRowView, wageRow: wageRowView)
+    }
+
+    /// 근무완료1 전용: 누적 월급 행 + 탭 가능한 시간 행
+    private func renderAccumulatedRow(accumulatedWage: Int, timeValue: String) {
+        setRowsHidden(wage: true, accumulated: false, divider: false,
+                      time: true, finished: false, vacation: true, holiday: true)
+
+        accumulatedWageRowView.updateValue(formattedWage(accumulatedWage))
+        finishedTimeRowView.showChevron(true)
+        finishedTimeRowView.updateValue(timeValue)
+        finishedTimeRowView.onTap = { [weak self] in self?.onTapTimeRow?() }
+
+        guard currentVariant != .accumulatedRow else { return }
+        currentVariant = .accumulatedRow
+        applyBottomRowConstraints(bottomRow: finishedTimeRowView, wageRow: accumulatedWageRowView)
     }
 
     private func renderHolidayRow() {
-        wageRowView.isHidden         = true
-        dividerView.isHidden         = true
-        timeRowView.isHidden         = true
-        finishedTimeRowView.isHidden = true
-        vacationTimeRowView.isHidden = true
-        holidayRowView.isHidden      = false
+        setRowsHidden(wage: true, accumulated: true, divider: true,
+                      time: true, finished: true, vacation: true, holiday: false)
 
         guard currentVariant != .holidayRow else { return }
         currentVariant = .holidayRow
@@ -179,20 +180,30 @@ final class WorkMainSummaryView: UIView {
     }
 
     private func renderVacationRow(dailyPay: Int) {
-        wageRowView.isHidden         = false
-        dividerView.isHidden         = false
-        timeRowView.isHidden         = true
-        finishedTimeRowView.isHidden = true
-        vacationTimeRowView.isHidden = false
+        setRowsHidden(wage: false, accumulated: true, divider: false,
+                      time: true, finished: true, vacation: false, holiday: true)
 
         wageRowView.updateValue(formattedWage(dailyPay))
 
         guard currentVariant != .vacationRow else { return }
         currentVariant = .vacationRow
-        applyBottomRowConstraints(bottomRow: vacationTimeRowView)
+        applyBottomRowConstraints(bottomRow: vacationTimeRowView, wageRow: wageRowView)
     }
 
     // MARK: - Helpers
+
+    private func setRowsHidden(
+        wage: Bool, accumulated: Bool, divider: Bool,
+        time: Bool, finished: Bool, vacation: Bool, holiday: Bool
+    ) {
+        wageRowView.isHidden          = wage
+        accumulatedWageRowView.isHidden = accumulated
+        dividerView.isHidden          = divider
+        timeRowView.isHidden          = time
+        finishedTimeRowView.isHidden  = finished
+        vacationTimeRowView.isHidden  = vacation
+        holidayRowView.isHidden       = holiday
+    }
 
     private func formattedWage(_ amount: Int) -> String {
         "\(AppNumberFormatter.decimalString(from: amount))원"
@@ -202,27 +213,41 @@ final class WorkMainSummaryView: UIView {
 
     private func setupUI() {
         addSubview(containerView)
+
         containerView.snp.makeConstraints { $0.edges.equalToSuperview() }
+
         containerView.addSubViews([
-            wageRowView, dividerView,
+            wageRowView, accumulatedWageRowView, dividerView,
             timeRowView, finishedTimeRowView, vacationTimeRowView, holidayRowView
         ])
-        applyBottomRowConstraints(bottomRow: timeRowView)
+
+        applyBottomRowConstraints(bottomRow: timeRowView, wageRow: wageRowView)
     }
 
-    private func applyBottomRowConstraints(bottomRow: UIView) {
+    private func applyBottomRowConstraints(bottomRow: UIView, wageRow: UIView) {
+        // 높이=0으로 layout에서 배제
         holidayRowView.snp.remakeConstraints {
             $0.top.horizontalEdges.equalToSuperview().inset(16)
             $0.height.equalTo(0)
         }
+
         wageRowView.snp.remakeConstraints {
+            let isActive = wageRow === wageRowView
             $0.top.horizontalEdges.equalToSuperview().inset(16)
+            if !isActive { $0.height.equalTo(0) }
         }
+        accumulatedWageRowView.snp.remakeConstraints {
+            let isActive = wageRow === accumulatedWageRowView
+            $0.top.horizontalEdges.equalToSuperview().inset(16)
+            if !isActive { $0.height.equalTo(0) }
+        }
+
         dividerView.snp.remakeConstraints {
-            $0.top.equalTo(wageRowView.snp.bottom).offset(14)
+            $0.top.equalTo(wageRow.snp.bottom).offset(14)
             $0.horizontalEdges.equalToSuperview().inset(16)
             $0.height.equalTo(1)
         }
+
         [timeRowView, finishedTimeRowView, vacationTimeRowView].forEach { row in
             row.snp.remakeConstraints {
                 $0.top.equalTo(dividerView.snp.bottom).offset(14)
@@ -232,11 +257,12 @@ final class WorkMainSummaryView: UIView {
         }
     }
 
-    // MARK: - One Row Layout (공휴일 전용)
-
     private func applyOneRowConstraints(row: UIView) {
-        // hidden 뷰들: 높이 0 고정 → 내부 subview 제약과 충돌 없이 레이아웃에서 배제
         wageRowView.snp.remakeConstraints {
+            $0.top.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(0)
+        }
+        accumulatedWageRowView.snp.remakeConstraints {
             $0.top.horizontalEdges.equalToSuperview().inset(16)
             $0.height.equalTo(0)
         }
