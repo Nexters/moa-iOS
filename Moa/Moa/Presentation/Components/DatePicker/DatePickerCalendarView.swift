@@ -21,7 +21,7 @@ final class DatePickerCalendarView: UIView {
     weak var delegate: DatePickerCalendarViewDelegate?
 
     /// 현재 선택된 날짜
-    private(set) var selectedDate: Date?
+    private(set) var selectedDate: Date? = Calendar.current.startOfDay(for: Date())
 
     /// 현재 표시 중인 월
     var currentMonth: Date { dataSource.currentDate }
