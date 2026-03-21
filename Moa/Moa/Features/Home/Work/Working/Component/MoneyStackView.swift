@@ -1,5 +1,5 @@
 //
-//  MoneyStackView.swift
+//  EarningsStackView.swift
 //  Moa
 //
 
@@ -8,27 +8,43 @@ import SnapKit
 import Lottie
 
 final class EarningsStackView: UIView {
-    
+
     // MARK: - Constants
-    
+
     private enum Constants {
-        static let minHeightRatio: CGFloat         = 0.30
-        static let maxHeightRatio: CGFloat         = 0.78
-        static let endHeightRatio: CGFloat         = 0.9
-        static let growthDuration: TimeInterval    = 10
-        
-        static let tooltipFadeIn:  TimeInterval    = 0.3
-        static let tooltipDisplay: TimeInterval    = 5.0
-        static let tooltipFadeOut: TimeInterval    = 0.3
-        static let tooltipGap:     TimeInterval    = 2.0
+        /// 고점 간격 — workStartedAt + N * peakInterval 이 N번째 고점 시각
+        static let peakInterval: TimeInterval        = 30 * 60
+        /// 고점 도달 후 유지 시간
+        static let peakHoldDuration: TimeInterval    = 2.0
+        /// 하강 시간
+        static let dropDuration: TimeInterval        = 1.2
+        /// peakHold + drop 이후 다음 growing 시작까지의 오프셋
+        static var postPeakDuration: TimeInterval    { peakHoldDuration + dropDuration }
+
+        static let minHeightRatio: CGFloat           = 0.30
+        static let maxHeightRatio: CGFloat           = 0.78
+        static let endHeightRatio: CGFloat           = 0.9
+
+        static let tooltipFadeIn:  TimeInterval      = 0.3
+        static let tooltipDisplay: TimeInterval      = 5.0
+        static let tooltipFadeOut: TimeInterval      = 0.3
+        static let tooltipGap:     TimeInterval      = 2.0
         static let tooltipInitialDelay: TimeInterval = 0.5
-        
-        static let solidMaskHeight: CGFloat        = 90
-        static let gradientMaskHeight: CGFloat     = 60
+
+        static let solidMaskHeight: CGFloat          = 90
+        static let gradientMaskHeight: CGFloat       = 60
     }
-    
+
+    // MARK: - Phase
+
+    private enum Phase {
+        case growing
+        case peakHold
+        case dropping
+    }
+
     // MARK: - Buyable Thresholds
-    
+
     private static let buyableThresholds: [(minAmount: Int, item: String)] = [
         (10_000,  "커피와 조각 케이크를"),
         (20_000,  "치킨 한 마리를"),
@@ -43,16 +59,16 @@ final class EarningsStackView: UIView {
         (450_000, "닌텐도 스위치를"),
         (500_000, "플레이스테이션 5를"),
     ]
-    
+
     private static func buyableItem(for amount: Int) -> String? {
         buyableThresholds.last(where: { amount >= $0.minAmount })?.item
     }
-    
+
     // MARK: - UI
-    
+
     private let floatingInfoContainer = UIView()
     private let tooltipView           = SpeechBubble()
-    
+
     private let titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText("오늘 쌓은 월급", style: .init(
@@ -62,13 +78,13 @@ final class EarningsStackView: UIView {
         label.textAlignment = .center
         return label
     }()
-    
+
     private let rollingLabel: RollingAmountLabel = {
         let label = RollingAmountLabel()
         label.transform = CGAffineTransform(translationX: 0, y: -2)
         return label
     }()
-    
+
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText("원", style: .init(
@@ -78,97 +94,122 @@ final class EarningsStackView: UIView {
         label.setContentHuggingPriority(.required, for: .horizontal)
         return label
     }()
-    
+
     private lazy var amountRow: UIStackView = {
-        let sv = UIStackView(arrangedSubviews: [rollingLabel, unitLabel])
-        sv.axis = .horizontal
-        sv.alignment = .center
-        sv.spacing = 2
-        return sv
+        let stackView = UIStackView(arrangedSubviews: [rollingLabel, unitLabel])
+        stackView.axis      = .horizontal
+        stackView.alignment = .center
+        stackView.spacing   = 2
+        return stackView
     }()
-    
+
     private let stackContainer = UIView()
-    
+
     private let stackImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode     = .scaleAspectFit
-        iv.backgroundColor = .clear
-        return iv
+        let imageView = UIImageView()
+        imageView.contentMode     = .scaleAspectFit
+        imageView.backgroundColor = .clear
+        return imageView
     }()
-    
+
     private let maskGradientLayer = CAGradientLayer()
-    
+
     private lazy var confetiView: LottieAnimationView = {
-        let view = LottieAnimationView(name: "confeti")
-        view.contentMode = .scaleAspectFill
-        view.loopMode = .playOnce
-        view.isUserInteractionEnabled = false
-        view.alpha = 0
-        view.layer.zPosition = 999
-        return view
+        let animationView = LottieAnimationView(name: "confeti")
+        animationView.contentMode              = .scaleAspectFill
+        animationView.loopMode                 = .playOnce
+        animationView.isUserInteractionEnabled = false
+        animationView.alpha                    = 0
+        animationView.layer.zPosition          = 999
+        return animationView
     }()
-    
-    // MARK: - State
-    
+
+    // MARK: - Animation State
+
     private var isStopped = false
-    
-    private var stackBottomConstraint: Constraint?
-    private var floatingContainerBottomConstraint: Constraint?
-    private var growthCycleStart: Date?
-    private var growthDisplayLink: CADisplayLink?
+    private var currentPhase: Phase = .growing
+
+    /// 근무 시작 절대 시각
+    /// N번째 고점 시각 = workStartedAt + N * peakInterval  (N = 1, 2, 3 ...)
+    private var workStartedAt: Date = Date()
+
+    /// 현재 사이클 인덱스 (1-based: 첫 고점 = index 1)
+    /// 현재 growing 중인 목표 고점 시각 = workStartedAt + peakIndex * peakInterval
+    private var peakIndex: Int = 1
+
+    /// 현재 growing 시작 시각
+    /// - 첫 사이클: workStartedAt (이미 경과분 반영)
+    /// - 이후 사이클: 이전 drop 완료 시각
+    private var growingStartDate: Date = Date()
+
+    /// 현재 growing 종료(= 고점) 시각
+    /// = workStartedAt + peakIndex * peakInterval
+    private var peakDate: Date = Date()
+
+    /// growing 시작 시점의 ratio (이전 사이클 drop 완료 = minHeightRatio)
+    private var growingStartRatio: CGFloat = Constants.minHeightRatio
+
+    /// drop 시작 시각
+    private var dropStartDate: Date = Date()
+
+    /// drop 시작 시점의 ratio
+    private var dropStartRatio: CGFloat = Constants.maxHeightRatio
+
+    /// 마지막으로 렌더링된 ratio
+    private var lastRenderedRatio: CGFloat = Constants.minHeightRatio
+
+    private var displayLink: CADisplayLink?
     private var hasAppliedInitialPosition = false
-    
-    private var tooltipTimer: Timer?
-    private var currentAmount: Int      = 0
-    private var tooltipContext: TooltipContextEntity?
-    
-    /// Work 3종 롤링 현재 인덱스
-    private var tooltipKindIndex: Int   = 0
-    private let tooltipKinds            = TooltipType.allCases
-    
+
+    // MARK: - Tooltip State
+
+    private var tooltipTimer:     Timer?
+    private var currentAmount:    Int = 0
+    private var tooltipContext:   TooltipContextEntity?
+    private var tooltipKindIndex: Int = 0
+    private let tooltipKinds          = TooltipType.allCases
+
+    // MARK: - Layout Constraints
+
+    private var stackBottomConstraint:             Constraint?
+    private var floatingContainerBottomConstraint: Constraint?
+
     // MARK: - Init
-    
+
     init(workingType: WorkingType) {
         super.init(frame: .zero)
         stackImageView.image = workingType.stackImage
         setupUI()
         setupMask()
     }
-    
+
     required init?(coder: NSCoder) { fatalError() }
     deinit { stopAnimations() }
-    
-    // MARK: - Layout
-    
+
+    // MARK: - layoutSubviews
+
     override func layoutSubviews() {
         super.layoutSubviews()
         if !hasAppliedInitialPosition, stackContainer.bounds.height > 0 {
             hasAppliedInitialPosition = true
-            applyInitialPosition()
+            applyPosition(ratio: lastRenderedRatio)
         }
         updateMaskLayout()
     }
-    
-    private func applyInitialPosition() {
-        let ratio = currentCycleRatio()
-        let h     = stackContainer.bounds.height
-        stackBottomConstraint?.update(offset: h * (1 - ratio))
-        updateFloatingContainerPosition(ratio: ratio)
-        layoutIfNeeded()
-    }
-    
+
     // MARK: - Setup
-    
+
     private func setupUI() {
         floatingInfoContainer.addSubViews([tooltipView, titleLabel, amountRow])
         addSubViews([stackContainer, confetiView])
-        
+
         confetiView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
+            $0.height.equalToSuperview().multipliedBy(0.5)
         }
-        
+
         stackContainer.addSubViews([floatingInfoContainer, stackImageView])
-        
+
         tooltipView.snp.makeConstraints {
             $0.top.centerX.equalToSuperview()
         }
@@ -194,21 +235,23 @@ final class EarningsStackView: UIView {
             floatingContainerBottomConstraint = $0.bottom.equalToSuperview().constraint
         }
     }
-    
+
     private func setupMask() {
         layer.mask = maskGradientLayer
         maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         maskGradientLayer.endPoint   = CGPoint(x: 0.5, y: 1)
     }
-    
+
     private func updateMaskLayout() {
-        let h = bounds.height
-        guard h > 0 else { return }
+        let totalHeight = bounds.height
+        guard totalHeight > 0 else { return }
         maskGradientLayer.frame = bounds
-        let solid         = Constants.solidMaskHeight
-        let gradient      = Constants.gradientMaskHeight
-        let solidStart    = 1 - (solid / h)
-        let gradientStart = 1 - ((solid + gradient) / h)
+
+        let solidHeight    = Constants.solidMaskHeight
+        let gradientHeight = Constants.gradientMaskHeight
+        let solidStart     = 1 - (solidHeight / totalHeight)
+        let gradientStart  = 1 - ((solidHeight + gradientHeight) / totalHeight)
+
         maskGradientLayer.colors = [
             UIColor.white.cgColor,
             UIColor.white.cgColor,
@@ -224,12 +267,9 @@ final class EarningsStackView: UIView {
             1.0,
         ]
     }
-    
+
     // MARK: - Configure
-    
-    /// - Parameters:
-    ///   - isFinished: 근무완료1이면 true → 말풍선·성장 완전 차단
-    ///   - context:    말풍선 문구 생성용 컨텍스트 (nil이면 말풍선 없음)
+
     func configure(
         amount: Int,
         startedAt: Date,
@@ -238,12 +278,12 @@ final class EarningsStackView: UIView {
     ) {
         currentAmount    = amount
         tooltipContext   = context
-        growthCycleStart = resolveCycleStart(from: startedAt)
         tooltipKindIndex = 0
-        
+        workStartedAt    = startedAt
+
         rollingLabel.setText(formatted(amount))
         layoutIfNeeded()
-        
+
         if isFinished {
             isStopped            = true
             tooltipView.alpha    = 0
@@ -252,239 +292,391 @@ final class EarningsStackView: UIView {
                 typography: AppTypography.t3_500,
                 color: AppColor.IconAndText.highEmphasis
             ))
-            snapToMaxHeightNow()
+            snapToEndHeightAnimated()
         } else {
             isStopped = false
             titleLabel.setText("오늘 쌓은 월급", style: .init(
                 typography: AppTypography.b1_400,
                 color: AppColor.IconAndText.mediumEmphasis
             ))
+
+            resolveCurrentPhaseAndRatio()
+
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self, !self.isStopped else { return }
-                self.startAnimations()
+                self.startDisplayLink()
+                self.scheduleNextTooltip(delay: Constants.tooltipInitialDelay)
             }
         }
     }
-    
+
+    // MARK: - Phase Resolution
+    //
+    // 타임라인 (workStartedAt 기준):
+    //
+    //   고점 시각(N) = workStartedAt + N * peakInterval  (N = 1, 2, 3...)
+    //
+    //   ┌── growing ──┬── peakHold ──┬── dropping ──┬── growing ──┬ ...
+    //   0s           10s            12s           13.2s          20s
+    //
+    //   현재 시각이 어느 구간에 있는지 역산해서 페이즈와 ratio를 결정.
+    //   growing 시작 시각(growingStartDate)과 목표 고점 시각(peakDate)을
+    //   정확히 세팅하면 tick()은 항상 올바른 위치를 계산함.
+
+    private func resolveCurrentPhaseAndRatio() {
+        let now              = Date()
+        let peakInterval     = Constants.peakInterval
+        let peakHoldDuration = Constants.peakHoldDuration
+        let dropDuration     = Constants.dropDuration
+        let postPeakDuration = Constants.postPeakDuration
+
+        // 가장 최근 고점 시각을 역산
+        // 예) startedAt=9:00, now=9:00:25 → 최근 고점 = 9:00:20 (N=2)
+        let totalElapsed        = max(0, now.timeIntervalSince(workStartedAt))
+        let latestPeakIndex     = max(1, Int(totalElapsed / peakInterval))
+        let latestPeakDate      = workStartedAt.addingTimeInterval(Double(latestPeakIndex) * peakInterval)
+
+        // 최근 고점 이후 경과 시간
+        let elapsedSinceLatestPeak = now.timeIntervalSince(latestPeakDate)
+
+        if elapsedSinceLatestPeak < 0 {
+            // ── 아직 첫 고점 전 → Growing ──
+            // now < latestPeakDate: 현재 growing 중
+            peakIndex        = latestPeakIndex
+            peakDate         = latestPeakDate
+
+            // growing 시작 시각: 이전 drop 완료 시각
+            // 첫 사이클이면 workStartedAt, 이후면 (N-1)번째 고점 + postPeak
+            let previousDropEndDate: Date
+            if latestPeakIndex == 1 {
+                previousDropEndDate = workStartedAt
+            } else {
+                let previousPeakDate = workStartedAt.addingTimeInterval(Double(latestPeakIndex - 1) * peakInterval)
+                previousDropEndDate  = previousPeakDate.addingTimeInterval(postPeakDuration)
+            }
+
+            growingStartDate  = previousDropEndDate
+            growingStartRatio = Constants.minHeightRatio
+
+            // 현재 growing 진행률 계산
+            let growingDuration = peakDate.timeIntervalSince(growingStartDate)
+            let growingElapsed  = now.timeIntervalSince(growingStartDate)
+            let growingProgress = CGFloat(max(0, min(growingElapsed / growingDuration, 1.0)))
+            lastRenderedRatio   = Constants.minHeightRatio
+                + (Constants.maxHeightRatio - Constants.minHeightRatio)
+                * easeOutCubic(growingProgress)
+            currentPhase = .growing
+
+        } else if elapsedSinceLatestPeak < peakHoldDuration {
+            // ── PeakHold 구간 ──
+            peakIndex         = latestPeakIndex
+            peakDate          = latestPeakDate
+            lastRenderedRatio = Constants.maxHeightRatio
+            currentPhase      = .peakHold
+
+        } else if elapsedSinceLatestPeak < postPeakDuration {
+            // ── Dropping 구간 (중간 진입) ──
+            peakIndex = latestPeakIndex
+            peakDate  = latestPeakDate
+
+            let dropElapsed  = elapsedSinceLatestPeak - peakHoldDuration
+            let dropProgress = CGFloat(min(dropElapsed / dropDuration, 1.0))
+            let currentRatio = Constants.maxHeightRatio
+                + (Constants.minHeightRatio - Constants.maxHeightRatio)
+                * easeInOutCubic(dropProgress)
+
+            // dropStartDate 역산: tick()이 이 시각부터 경과 시간 계산
+            dropStartDate     = now.addingTimeInterval(-dropElapsed)
+            dropStartRatio    = Constants.maxHeightRatio
+            lastRenderedRatio = currentRatio
+            currentPhase      = .dropping
+
+        } else {
+            // ── drop 완료 후 다음 growing 시작 ──
+            peakIndex = latestPeakIndex + 1
+            peakDate  = workStartedAt.addingTimeInterval(Double(peakIndex) * peakInterval)
+
+            let previousDropEndDate = latestPeakDate.addingTimeInterval(postPeakDuration)
+            growingStartDate        = previousDropEndDate
+            growingStartRatio       = Constants.minHeightRatio
+
+            let growingDuration = peakDate.timeIntervalSince(growingStartDate)
+            let growingElapsed  = now.timeIntervalSince(growingStartDate)
+            let growingProgress = CGFloat(max(0, min(growingElapsed / growingDuration, 1.0)))
+            lastRenderedRatio   = Constants.minHeightRatio
+                + (Constants.maxHeightRatio - Constants.minHeightRatio)
+                * easeOutCubic(growingProgress)
+            currentPhase = .growing
+        }
+    }
+
+    // MARK: - Amount / Context Update
+
     func updateAmount(_ amount: Int) {
         guard amount != currentAmount else { return }
-        let old = formatted(currentAmount)
-        let new = formatted(amount)
+        let oldFormatted = formatted(currentAmount)
+        let newFormatted = formatted(amount)
         currentAmount = amount
-        if old.count == new.count { rollingLabel.rollTo(new) }
-        else                      { rollingLabel.setText(new) }
+        if oldFormatted.count == newFormatted.count { rollingLabel.rollTo(newFormatted) }
+        else                                        { rollingLabel.setText(newFormatted) }
     }
-    
-    /// tick마다 퇴근까지 남은 시간이 변하므로 context 갱신
+
     func updateContext(_ context: TooltipContextEntity) {
         tooltipContext = context
     }
-    
-    func updateWorkingType(_ type: WorkingType) {
+
+    func updateWorkingType(_ workingType: WorkingType) {
         UIView.transition(with: stackImageView, duration: 0.3, options: .transitionCrossDissolve) {
-            self.stackImageView.image = type.stackImage
+            self.stackImageView.image = workingType.stackImage
         }
     }
-    
-    // MARK: - Animations
-    
+
+    // MARK: - Public Animation Control
+
     func startAnimations() {
         guard !isStopped else { return }
-        startStackGrowth()
+        startDisplayLink()
         scheduleNextTooltip(delay: Constants.tooltipInitialDelay)
     }
-    
+
     func stopAnimations() {
         isStopped = true
-        stopStackGrowth()
+        stopDisplayLink()
         cancelTooltipTimer()
         tooltipView.layer.removeAllAnimations()
         tooltipView.alpha    = 0
         tooltipView.isHidden = true
-        snapToMaxHeightNow()
+        snapToEndHeightAnimated()
     }
-    
-    private func snapToMaxHeightNow() {
-        layoutIfNeeded()
-        let h = stackContainer.bounds.height
-        guard h > 0 else { return }
-        stackBottomConstraint?.update(offset: h * (1 - Constants.endHeightRatio))
-        updateFloatingContainerPosition(ratio: Constants.endHeightRatio)
-        UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseOut) {
+
+    // MARK: - DisplayLink
+
+    private func startDisplayLink() {
+        stopDisplayLink()
+        displayLink = CADisplayLink(target: self, selector: #selector(tick))
+        displayLink?.add(to: .main, forMode: .common)
+    }
+
+    private func stopDisplayLink() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+
+    // MARK: - Tick
+    //
+    // 고점 시각(peakDate) = workStartedAt + peakIndex * peakInterval
+    // 모든 구간 계산은 절대 시각 기준이므로 오차 누적 없음
+
+    @objc private func tick() {
+        guard !isStopped else { return }
+
+        let now              = Date()
+        let peakHoldDuration = Constants.peakHoldDuration
+        let dropDuration     = Constants.dropDuration
+
+        switch currentPhase {
+
+        // ── Growing ──────────────────────────────────────────────
+        case .growing:
+            if now >= peakDate {
+                // 정확히 고점 도달
+                applyPosition(ratio: Constants.maxHeightRatio)
+                currentPhase = .peakHold
+                playConfeti()
+            } else {
+                let growingDuration = peakDate.timeIntervalSince(growingStartDate)
+                let growingElapsed  = now.timeIntervalSince(growingStartDate)
+                let growingProgress = CGFloat(max(0, min(growingElapsed / growingDuration, 1.0)))
+                let ratio           = growingStartRatio
+                    + (Constants.maxHeightRatio - growingStartRatio)
+                    * easeOutCubic(growingProgress)
+                applyPosition(ratio: ratio)
+            }
+
+        // ── PeakHold ─────────────────────────────────────────────
+        case .peakHold:
+            let elapsedSincePeak = now.timeIntervalSince(peakDate)
+            if elapsedSincePeak >= peakHoldDuration {
+                dropStartDate  = now
+                dropStartRatio = lastRenderedRatio
+                currentPhase   = .dropping
+            }
+            // 위치 고정
+
+        // ── Dropping ─────────────────────────────────────────────
+        case .dropping:
+            let dropElapsed  = now.timeIntervalSince(dropStartDate)
+            let dropProgress = CGFloat(min(dropElapsed / dropDuration, 1.0))
+            let ratio        = dropStartRatio
+                + (Constants.minHeightRatio - dropStartRatio)
+                * easeInOutCubic(dropProgress)
+            applyPosition(ratio: ratio)
+
+            if dropProgress >= 1.0 {
+                // drop 완료 → 다음 사이클 growing 시작
+                applyPosition(ratio: Constants.minHeightRatio)
+
+                peakIndex       += 1
+                peakDate         = workStartedAt.addingTimeInterval(Double(peakIndex) * Constants.peakInterval)
+                growingStartDate = now
+                growingStartRatio = Constants.minHeightRatio
+                currentPhase     = .growing
+            }
+        }
+    }
+
+    // MARK: - Position Apply
+
+    private func applyPosition(ratio: CGFloat) {
+        let containerHeight = stackContainer.bounds.height
+        guard containerHeight > 0 else { return }
+
+        lastRenderedRatio = ratio
+        stackBottomConstraint?.update(offset: containerHeight * (1 - ratio))
+        floatingContainerBottomConstraint?.update(offset: -(containerHeight * ratio) - 20)
+        stackContainer.layoutIfNeeded()
+    }
+
+    // MARK: - Snap (finished 상태)
+
+    private func snapToEndHeightAnimated() {
+        let containerHeight = stackContainer.bounds.height
+        guard containerHeight > 0 else { return }
+        stackBottomConstraint?.update(offset: containerHeight * (1 - Constants.endHeightRatio))
+        floatingContainerBottomConstraint?.update(offset: -(containerHeight * Constants.endHeightRatio) - 20)
+        UIView.animate(withDuration: 0.4, delay: 0, options: .curveEaseOut) {
             self.layoutIfNeeded()
         }
     }
-    
+
+    // MARK: - Easing
+
+    private func easeOutCubic(_ progress: CGFloat) -> CGFloat {
+        let inversedProgress = progress - 1
+        return inversedProgress * inversedProgress * inversedProgress + 1
+    }
+
+    private func easeInOutCubic(_ progress: CGFloat) -> CGFloat {
+        if progress < 0.5 { return 4 * progress * progress * progress }
+        let inversedProgress = -2 * progress + 2
+        return 1 - inversedProgress * inversedProgress * inversedProgress / 2
+    }
+
+    // MARK: - Helpers
+
+    private func formatted(_ amount: Int) -> String {
+        AppNumberFormatter.decimalString(from: amount)
+    }
+
     // MARK: - Tooltip Scheduling
-    
+
     private func scheduleNextTooltip(delay: TimeInterval) {
         guard !isStopped else { return }
         cancelTooltipTimer()
-        tooltipTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+        tooltipTimer = Timer.scheduledTimer(
+            withTimeInterval: delay,
+            repeats: false
+        ) { [weak self] _ in
             guard let self, !self.isStopped else { return }
             self.showCurrentTooltip()
         }
     }
-    
+
     private func showCurrentTooltip() {
         guard !isStopped, let context = tooltipContext else { return }
-        
-        // 메시지 생성 불가(buyable 미달 등) → 즉시 다음 종류로 스킵
-        guard let message = makeMessage(for: context) else {
-            advanceKind()
-            scheduleNextTooltip(delay: 0.1)
+
+        // 메시지가 없거나 빈 문자열이면 표시하지 않고 다음으로 넘어감
+        guard let message = makeMessage(for: context), !message.isEmpty else {
+            advanceTooltipKind()
+            scheduleNextTooltip(delay: Constants.tooltipGap)
             return
         }
-        
-        // ── 페이드 인 ──────────────────────────────────────────
+
         tooltipView.isHidden = false
         tooltipView.alpha    = 0
         tooltipView.configure(text: message)
-        
+
         UIView.animate(withDuration: Constants.tooltipFadeIn) {
             self.tooltipView.alpha = 1
         } completion: { [weak self] _ in
             guard let self, !self.isStopped else { return }
-            
-            // ── display 유지 ──────────────────────────────────
+
             self.tooltipTimer = Timer.scheduledTimer(
                 withTimeInterval: Constants.tooltipDisplay,
                 repeats: false
             ) { [weak self] _ in
                 guard let self, !self.isStopped else { return }
-                
-                // ── 페이드 아웃 → 다음 순서 ──────────────────────
+
                 UIView.animate(withDuration: Constants.tooltipFadeOut) {
                     self.tooltipView.alpha = 0
                 } completion: { [weak self] _ in
                     guard let self, !self.isStopped else { return }
-                    self.advanceKind()
+                    self.tooltipView.isHidden = true
+                    self.advanceTooltipKind()
                     self.scheduleNextTooltip(delay: Constants.tooltipGap)
                 }
             }
         }
     }
-    
-    /// Work 3종 인덱스 순환. 휴가는 단일이지만 호출돼도 무해
-    private func advanceKind() {
+
+    private func advanceTooltipKind() {
         tooltipKindIndex = (tooltipKindIndex + 1) % tooltipKinds.count
     }
-    
+
     private func cancelTooltipTimer() {
         tooltipTimer?.invalidate()
         tooltipTimer = nil
     }
-    
+
     // MARK: - Message Factory
-    
+
     private func makeMessage(for context: TooltipContextEntity) -> String? {
-        // 휴가: 단일 문구 (advanceKind 호출돼도 같은 문구만 반복)
         if context.workingType == .vacation {
             return "휴가 중이지만 월급은 쌓여요"
         }
-        
-        // Work 3종 롤링
+
         switch tooltipKinds[tooltipKindIndex] {
-            
+
         case .monthlyGoal:
-            let amount = AppNumberFormatter.decimalString(from: context.workedEarnings)
-            return "이번달에 쌓은 월급 \(amount)원"
-            
+            let formattedAmount = AppNumberFormatter.decimalString(from: context.workedEarnings)
+            return "이번달에 쌓은 월급 \(formattedAmount)원"
+
         case .buyable:
             guard let item = Self.buyableItem(for: currentAmount) else { return nil }
             return "지금까지 번 돈으로 \(item) 살 수 있어요"
-            
+
         case .cheer:
             return cheerMessage(endTime: context.endTime)
         }
     }
-    
+
     private func cheerMessage(endTime: TimeIndicatorEntity) -> String? {
-        let comps     = Calendar.current.dateComponents([.hour, .minute], from: Date())
-        let nowMin    = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
-        let remaining = endTime.totalMinutes - nowMin
-        
-        switch remaining {
-        case ..<1:
-            return nil
-        case 1..<60:
-            return "화이팅! \(remaining)분 후 퇴근이에요"
-        default:
-            let hours   = remaining / 60
-            let minutes = remaining % 60
+        let dateComponents   = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        let nowTotalMinutes  = (dateComponents.hour ?? 0) * 60 + (dateComponents.minute ?? 0)
+        let remainingMinutes = endTime.totalMinutes - nowTotalMinutes
+
+        guard remainingMinutes >= 1 else { return nil }
+
+        if remainingMinutes < 60 {
+            return "화이팅! \(remainingMinutes)분 후 퇴근이에요"
+        } else {
+            let hours   = remainingMinutes / 60
+            let minutes = remainingMinutes % 60
             return minutes == 0
-            ? "화이팅! \(hours)시간 후 퇴근이에요"
-            : "화이팅! \(hours)시간 \(minutes)분 후 퇴근이에요"
+                ? "화이팅! \(hours)시간 후 퇴근이에요"
+                : "화이팅! \(hours)시간 \(minutes)분 후 퇴근이에요"
         }
     }
-    
-    // MARK: - Helpers
-    
-    private func formatted(_ amount: Int) -> String {
-        AppNumberFormatter.decimalString(from: amount)
-    }
-    
-    private func resolveCycleStart(from startedAt: Date) -> Date {
-        let elapsed    = max(0, Date().timeIntervalSince(startedAt))
-        let cycleCount = Int(elapsed / Constants.growthDuration)
-        return startedAt.addingTimeInterval(Double(cycleCount) * Constants.growthDuration)
-    }
-    
-    private func currentCycleRatio() -> CGFloat {
-        guard let cycleStart = growthCycleStart else { return Constants.minHeightRatio }
-        let elapsed  = max(0, Date().timeIntervalSince(cycleStart))
-        let progress = min(CGFloat(elapsed) / CGFloat(Constants.growthDuration), 1.0)
-        return Constants.minHeightRatio +
-        (Constants.maxHeightRatio - Constants.minHeightRatio) * easeOutQuad(progress)
-    }
-    
-    // MARK: - Stack Growth
-    
-    private func startStackGrowth() {
-        stopStackGrowth()
-        growthDisplayLink = CADisplayLink(target: self, selector: #selector(updateStackPosition))
-        growthDisplayLink?.add(to: .main, forMode: .common)
-    }
-    
-    private func stopStackGrowth() {
-        growthDisplayLink?.invalidate()
-        growthDisplayLink = nil
-    }
-    
-    @objc private func updateStackPosition() {
-        guard !isStopped, let cycleStart = growthCycleStart else { return }
-
-        let elapsed = Date().timeIntervalSince(cycleStart)
-
-        if elapsed >= Constants.growthDuration {
-            playConfeti()
-            growthCycleStart = Date()
-        }
-
-        let ratio = currentCycleRatio()
-        let h     = stackContainer.bounds.height
-        guard h > 0 else { return }
-
-        stackBottomConstraint?.update(offset: h * (1 - ratio))
-        updateFloatingContainerPosition(ratio: ratio)
-    }
-    
-    private func updateFloatingContainerPosition(ratio: CGFloat) {
-        let h = stackContainer.bounds.height
-        guard h > 0 else { return }
-        floatingContainerBottomConstraint?.update(offset: -(h * ratio) - 20)
-    }
-    
-    private func easeOutQuad(_ t: CGFloat) -> CGFloat { t * (2 - t) }
 }
 
-// Lottie
+// MARK: - Lottie
+
 private extension EarningsStackView {
     func playConfeti() {
+        confetiView.stop()
         confetiView.alpha = 1
-
         confetiView.play { [weak self] _ in
-            UIView.animate(withDuration: 0.3) {
+            UIView.animate(withDuration: 0.5) {
                 self?.confetiView.alpha = 0
             }
         }
