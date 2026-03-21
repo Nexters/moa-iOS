@@ -32,8 +32,9 @@ final class DatePickerCalendarView: UIView {
 
     // MARK: - Subviews
 
-    private let navBar     = CalendarNavigationBar(type: .bottomSheet)
-    private let gridView   = DatePickerCalendarGridView()
+    private let navBar      = CalendarNavigationBar(type: .bottomSheet)
+    private let weekHeader  = CalendarWeekdayHeader()
+    private let gridView    = CalendarGridView(calendarType: .bottomSheet)
 
     // MARK: - Init
 
@@ -59,18 +60,21 @@ final class DatePickerCalendarView: UIView {
     private func buildLayout() {
         backgroundColor = AppColor.Container.primary
 
-        [navBar, gridView].forEach { addSubview($0) }
+        [navBar, weekHeader, gridView].forEach { addSubview($0) }
 
         navBar.snp.makeConstraints {
             $0.top.equalToSuperview().offset(16)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(28)
         }
-
-        gridView.snp.makeConstraints {
+        weekHeader.snp.makeConstraints {
             $0.top.equalTo(navBar.snp.bottom).offset(12)
             $0.leading.trailing.equalToSuperview().inset(8)
-            $0.height.equalTo(330)
+            $0.height.equalTo(20)
+        }
+        gridView.snp.makeConstraints {
+            $0.top.equalTo(weekHeader.snp.bottom).offset(4)
+            $0.leading.trailing.equalToSuperview().inset(8)
             $0.bottom.equalToSuperview()
         }
 
@@ -158,10 +162,10 @@ extension DatePickerCalendarView: CalendarNavigationBarDelegate {
     }
 }
 
-// MARK: - DatePickerCalendarGridViewDelegate
+// MARK: - CalendarGridViewDelegate
 
-extension DatePickerCalendarView: DatePickerCalendarGridViewDelegate {
-    func datePickerGridView(_ grid: DatePickerCalendarGridView, didTapDay day: CalendarDayEntity) {
+extension DatePickerCalendarView: CalendarGridViewDelegate {
+    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDayEntity) {
         selectedDate = day.date
         reloadGrid()
         delegate?.datePickerCalendarView(self, didSelectDate: day.date)
