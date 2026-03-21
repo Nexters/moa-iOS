@@ -43,7 +43,7 @@ final class HistoryViewController: BaseViewController {
 
     private let calendarView: CalendarView = {
         let view = CalendarView()
-        view.layer.backgroundColor = AppColor.Background.primary.cgColor
+        view.backgroundColor = AppColor.Container.primary
         view.layer.cornerRadius  = 16
         view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         view.clipsToBounds       = true
@@ -78,15 +78,18 @@ final class HistoryViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        setupUI()
-        bind()
         viewModel.send(.viewDidLoad)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        configureNavigationBarAppearance(backgroundColor: AppColor.Container.primary)
         viewModel.send(.refresh)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        configureNavigationBarAppearance(backgroundColor: AppColor.Background.primary)
     }
 
     // MARK: - Setup

@@ -49,4 +49,15 @@ class BaseViewController: UIViewController {
             .sink(receiveValue: handler)
             .store(in: &cancellables)
     }
+    
+    // BaseViewController
+    func configureNavigationBarAppearance(backgroundColor: UIColor) {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = backgroundColor
+        appearance.shadowColor = .clear
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+    }
 }

@@ -22,9 +22,30 @@ final class CalendarInfoCard: UIView {
     private let salaryTitleLabel    = CalendarInfoCard.makeTitleLabel("내 월급")
     private let salaryValueView     = SlashValueView()
 
+    private lazy var workRow = makeRow(
+        titleLabel: workHoursTitleLabel,
+        valueView: workHoursValueView
+    )
+
+    private lazy var salaryRow = makeRow(
+        titleLabel: salaryTitleLabel,
+        valueView: salaryValueView
+    )
+
+    private lazy var containerStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [
+            workRow,
+            divider,
+            salaryRow
+        ])
+        stack.axis = .vertical
+        stack.spacing = 8
+        return stack
+    }()
+    
     private let divider: UIView = {
         let view = UIView()
-        view.backgroundColor = AppColor.Divider.secondary
+        view.backgroundColor = .white.withAlphaComponent(0.12)
         return view
     }()
 
@@ -40,49 +61,22 @@ final class CalendarInfoCard: UIView {
     // MARK: - Setup
 
     private func setup() {
-        backgroundColor    = AppColor.Container.primary
+        backgroundColor    = AppColor.Container.secondary
         layer.cornerRadius = 16
         clipsToBounds      = true
 
-        addSubViews([
-            workHoursTitleLabel,
-            workHoursValueView,
-            divider,
-            salaryTitleLabel,
-            salaryValueView
-        ])
+        addSubview(containerStack)
 
-        // ───── 상단 (근무시간)
-        workHoursTitleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().inset(20)
-            $0.top.equalToSuperview().inset(12)
-        }
-
-        workHoursValueView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(20)
-            $0.centerY.equalTo(workHoursTitleLabel)
-        }
-
-        // ───── Divider
         divider.snp.makeConstraints {
-            $0.top.equalTo(workHoursTitleLabel.snp.bottom).offset(8)
-            $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(1)
         }
-
-        // ───── 하단 (월급)
-        salaryTitleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().inset(20)
-            $0.top.equalTo(divider.snp.bottom).offset(8)
-            $0.bottom.equalToSuperview().inset(12)
-        }
-
-        salaryValueView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(20)
-            $0.centerY.equalTo(salaryTitleLabel)
+        
+        containerStack.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(12)
+            $0.horizontalEdges.equalToSuperview().inset(20)
         }
     }
-
+       
     // MARK: - Update
 
     func update(with info: EarningsEntity) {
@@ -104,12 +98,23 @@ final class CalendarInfoCard: UIView {
 
     // MARK: - Factory
 
-    private static func makeTitleLabel(_ text: String) -> StyledLabel {
-        let label = StyledLabel()
-        label.setText(text, style: .init(
-            typography: AppTypography.b2_400,
-            color: AppColor.IconAndText.mediumEmphasis
-        ))
+    private static func makeTitleLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = AppTypography.b2_400.font()
+        label.textColor = AppColor.IconAndText.mediumEmphasis
+        label.textAlignment = .center
         return label
+    }
+    
+    private func makeRow(
+        titleLabel: UILabel,
+        valueView: UIView
+    ) -> UIStackView {
+        let stack = UIStackView(arrangedSubviews: [titleLabel, valueView])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.distribution = .equalSpacing
+        return stack
     }
 }
