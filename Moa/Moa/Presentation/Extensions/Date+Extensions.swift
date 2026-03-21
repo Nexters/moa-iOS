@@ -34,6 +34,11 @@ extension Date {
         let c = Calendar.korea.dateComponents([.hour, .minute], from: self)
         return (c.hour ?? 0) * 60 + (c.minute ?? 0)
     }
+    
+    /// "yyyy년 M월 d일" 문자열 (UI 표시용)
+    var koreanDateString: String {
+        DateFormatter.koreanDateLong.string(from: self)
+    }
  
     /// KST 기준 오늘 날짜에 지정 시:분을 덮어쓴 Date 반환
     /// - clockIn / clockOut startedAt 계산에 사용
@@ -44,4 +49,5 @@ extension Date {
         c.second = 0
         return Calendar.korea.date(from: c) ?? Date()
     }
+    
 }

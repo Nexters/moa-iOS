@@ -88,8 +88,8 @@ private extension HomeCoordinator {
     }
 
     /// 일정 추가
-    func showAddSchedule(preselectedDate: Date? = nil) {
-        let vc = makeFixScheduleViewController(viewType: .add, preselectedDate: preselectedDate)
+    func showAddSchedule() {
+        let vc = makeFixScheduleViewController(viewType: .add)
         nav?.pushViewController(vc, animated: true)
     }
 
@@ -127,10 +127,9 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
 
     func historyViewControllerDidTapAdd(
-        _ vc: HistoryViewController,
-        preselectedDate: Date?
+        _ vc: HistoryViewController
     ) {
-        showAddSchedule(preselectedDate: preselectedDate)
+        showAddSchedule()
     }
 
     func historyViewControllerDidTapEdit(

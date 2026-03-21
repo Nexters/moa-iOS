@@ -67,8 +67,8 @@ final class ScheduleDateRangeCardView: UIView {
         let isSelected = dateRange != nil
         let font  = isSelected ? AppTypography.t2_700 : AppTypography.t2_400
         let textColor  = isSelected ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.lowEmphasis
-        
-        dateLabel.text = dateRange?.displayString ?? "2026년 1월 20일"
+
+        dateLabel.text = dateRange?.displayString ?? Date().koreanDateString
         dateLabel.font = font.font()
         dateLabel.textColor = textColor
     }
