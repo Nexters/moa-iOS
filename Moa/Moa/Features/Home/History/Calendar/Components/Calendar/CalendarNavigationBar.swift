@@ -126,13 +126,6 @@ final class CalendarNavigationBar: UIView {
         monthLabel.setText(title)
     }
     
-    func setNextEnabled(_ enabled: Bool) {
-        nextButton.isEnabled = enabled
-        nextButton.tintColor = enabled
-            ? AppColor.IconAndText.highEmphasis
-            : AppColor.IconAndText.disabled
-    }
-    
     // MARK: - Actions
     
     @objc private func tappedPrev() { delegate?.navigationBarDidTapPrev() }

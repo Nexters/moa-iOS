@@ -47,7 +47,7 @@ final class MoaLoadingView: UIView {
         
         lottieView.snp.makeConstraints {
             $0.center.equalToSuperview()
-            $0.width.height.equalTo(160)
+            $0.width.height.equalTo(52)
         }
     }
     

@@ -49,9 +49,15 @@ final class WorkMainSummaryView: UIView {
         showsChevron: false
     )
 
+    /// 공휴일(NONE): "근무 예정 없음" 고정, 단일 행, chevron X, 탭 불가
+    private lazy var holidayRowView = KeyValueRowView(
+        type: .customRow(key: "근무 시간", value: "근무 예정 없음"),
+        showsChevron: false
+    )
+
     // MARK: - State
 
-    private enum LayoutVariant { case twoRow, finishedRow, vacationRow }
+    private enum LayoutVariant { case twoRow, finishedRow, vacationRow, holidayRow }
     private var currentVariant: LayoutVariant = .twoRow
 
     // MARK: - Init
@@ -71,7 +77,10 @@ final class WorkMainSummaryView: UIView {
     func configure(status: WorkStatusEntity, data: HomeEntity) {
         switch (data.type, status) {
 
-        case (.none, .finished), (.vacation, .finished):
+        case (.none, _):
+            renderHolidayRow()
+
+        case (.vacation, .finished):
             renderVacationRow(dailyPay: data.dailyPay)
 
         // 최종완료 — 근무일: chevron O, 탭 불가
@@ -84,7 +93,7 @@ final class WorkMainSummaryView: UIView {
                 tappable: false
             )
 
-        case (.none, _), (.vacation, _):
+        case (.vacation, _):
             renderVacationRow(dailyPay: data.dailyPay)
 
         default:
@@ -104,7 +113,9 @@ final class WorkMainSummaryView: UIView {
         containerView.backgroundColor = AppColor.Container.primary.withAlphaComponent(0.6)
 
         switch data.type {
-        case .none, .vacation:
+        case .none:
+            renderHolidayRow()
+        case .vacation:
             renderVacationRow(dailyPay: data.dailyPay)
         case .work:
             let clockInStr  = data.clockInTime?.displayString  ?? "--:--"
@@ -154,6 +165,19 @@ final class WorkMainSummaryView: UIView {
         applyBottomRowConstraints(bottomRow: finishedTimeRowView)
     }
 
+    private func renderHolidayRow() {
+        wageRowView.isHidden         = true
+        dividerView.isHidden         = true
+        timeRowView.isHidden         = true
+        finishedTimeRowView.isHidden = true
+        vacationTimeRowView.isHidden = true
+        holidayRowView.isHidden      = false
+
+        guard currentVariant != .holidayRow else { return }
+        currentVariant = .holidayRow
+        applyOneRowConstraints(row: holidayRowView)
+    }
+
     private func renderVacationRow(dailyPay: Int) {
         wageRowView.isHidden         = false
         dividerView.isHidden         = false
@@ -181,12 +205,16 @@ final class WorkMainSummaryView: UIView {
         containerView.snp.makeConstraints { $0.edges.equalToSuperview() }
         containerView.addSubViews([
             wageRowView, dividerView,
-            timeRowView, finishedTimeRowView, vacationTimeRowView
+            timeRowView, finishedTimeRowView, vacationTimeRowView, holidayRowView
         ])
         applyBottomRowConstraints(bottomRow: timeRowView)
     }
 
     private func applyBottomRowConstraints(bottomRow: UIView) {
+        holidayRowView.snp.remakeConstraints {
+            $0.top.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(0)
+        }
         wageRowView.snp.remakeConstraints {
             $0.top.horizontalEdges.equalToSuperview().inset(16)
         }
@@ -201,6 +229,31 @@ final class WorkMainSummaryView: UIView {
                 $0.horizontalEdges.equalToSuperview().inset(16)
                 if row === bottomRow { $0.bottom.equalToSuperview().inset(16) }
             }
+        }
+    }
+
+    // MARK: - One Row Layout (공휴일 전용)
+
+    private func applyOneRowConstraints(row: UIView) {
+        // hidden 뷰들: 높이 0 고정 → 내부 subview 제약과 충돌 없이 레이아웃에서 배제
+        wageRowView.snp.remakeConstraints {
+            $0.top.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(0)
+        }
+        dividerView.snp.remakeConstraints {
+            $0.top.equalTo(wageRowView.snp.bottom)
+            $0.horizontalEdges.equalToSuperview()
+            $0.height.equalTo(0)
+        }
+        [timeRowView, finishedTimeRowView, vacationTimeRowView].forEach {
+            $0.snp.remakeConstraints {
+                $0.top.equalTo(dividerView.snp.bottom)
+                $0.horizontalEdges.equalToSuperview().inset(16)
+                $0.height.equalTo(0)
+            }
+        }
+        row.snp.remakeConstraints {
+            $0.edges.equalToSuperview().inset(16)
         }
     }
 }

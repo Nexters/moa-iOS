@@ -91,7 +91,6 @@ final class DatePickerCalendarView: UIView {
 
     private func reloadAll() {
         navBar.setTitle(dataSource.monthTitle(for: dataSource.currentDate))
-        navBar.setNextEnabled(dataSource.canMoveToNextMonth())
         reloadGrid()
     }
 
@@ -104,7 +103,6 @@ final class DatePickerCalendarView: UIView {
 
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         if gesture.direction == .left {
-            guard dataSource.canMoveToNextMonth() else { return }
             dataSource.moveToNextMonth()
             slide(.left)
         } else {
