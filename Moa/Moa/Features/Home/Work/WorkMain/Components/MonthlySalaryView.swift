@@ -166,13 +166,7 @@ final class MonthlySalaryView: UIView {
     private func formattedAmount(_ amount: Int) -> String {
         let base = AppNumberFormatter.decimalString(from: amount)
         
-        guard let config else { return base }
-        
-        if config.workStatus == .finished {
-            return "+\(base)"
-        } else {
-            return base
-        }
+        return base
     }
 }
 

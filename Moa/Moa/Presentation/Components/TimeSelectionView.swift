@@ -86,7 +86,7 @@ final class TimeSelectionView: UIView {
     /// 옵션 버튼 (예: "오늘 휴가") — optionTitle이 nil이면 숨김
     private lazy var optionButton: AppButton = {
         let button = AppButton()
-        button.applyStyle(.secondary())
+        button.applyStyle(.tertiary())
         button.addTarget(self, action: #selector(optionButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -160,7 +160,7 @@ final class TimeSelectionView: UIView {
         
         addSubview(timeDisplayStackView)
         timeDisplayStackView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
+            $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.height.equalTo(55)
         }

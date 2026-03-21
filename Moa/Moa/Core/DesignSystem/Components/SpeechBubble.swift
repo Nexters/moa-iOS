@@ -30,7 +30,7 @@ final class SpeechBubble: UIView {
     
     private lazy var backgroundShapeLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
-        layer.fillColor = AppColor.Background.secondary.cgColor
+        layer.fillColor = AppColor.Container.secondary.cgColor
         return layer
     }()
     

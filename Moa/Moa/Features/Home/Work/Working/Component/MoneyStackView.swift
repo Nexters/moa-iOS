@@ -13,9 +13,9 @@ final class EarningsStackView: UIView {
     
     private enum Constants {
         static let minHeightRatio: CGFloat         = 0.30
-        static let maxHeightRatio: CGFloat         = 0.70
-        static let endHeightRatio: CGFloat         = 0.84
-        static let growthDuration: TimeInterval    = 30 * 60
+        static let maxHeightRatio: CGFloat         = 0.78
+        static let endHeightRatio: CGFloat         = 0.9
+        static let growthDuration: TimeInterval    = 10
         
         static let tooltipFadeIn:  TimeInterval    = 0.3
         static let tooltipDisplay: TimeInterval    = 5.0
@@ -245,13 +245,20 @@ final class EarningsStackView: UIView {
         layoutIfNeeded()
         
         if isFinished {
-            // configure 시점에 isStopped = true → asyncAfter 예약이 실행돼도 guard에서 차단
             isStopped            = true
             tooltipView.alpha    = 0
             tooltipView.isHidden = true
+            titleLabel.setText("오늘 쌓은 월급", style: .init(
+                typography: AppTypography.t3_500,
+                color: AppColor.IconAndText.highEmphasis
+            ))
             snapToMaxHeightNow()
         } else {
             isStopped = false
+            titleLabel.setText("오늘 쌓은 월급", style: .init(
+                typography: AppTypography.b1_400,
+                color: AppColor.IconAndText.mediumEmphasis
+            ))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self, !self.isStopped else { return }
                 self.startAnimations()
