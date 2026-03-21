@@ -18,6 +18,7 @@ final class WorkViewModel {
     
     enum Input {
         case viewDidLoad
+        case refresh
         case updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
         case requestVacation
         case changeRequestVacation
@@ -55,6 +56,8 @@ extension WorkViewModel {
         switch input {
         case .viewDidLoad:
             loadInitialData()
+        case .refresh:
+            refreshData()
         case let .updateWorkTime(start, end):
             handleUpdateWorkTime(start: start, end: end)
         case .requestVacation:
@@ -79,9 +82,15 @@ extension WorkViewModel {
 
 private extension WorkViewModel {
     
+    /// 최초 진입 — 로딩 인디케이터 표시
     func loadInitialData() {
         guard state != .loading else { return }
         state = .loading
+        loadHomeData()
+    }
+
+    /// 뒤로가기 후 재진입
+    func refreshData() {
         loadHomeData()
     }
     
@@ -118,11 +127,9 @@ private extension WorkViewModel {
         switch entity.type {
             
         case .none:
-            // 일정 없는 날 → 항상 근무 전 공휴일 상태
             return .idle
             
         case .vacation:
-            // 휴가: 퇴근 시간 이후 진입 → 최종완료
             guard let clockIn  = entity.clockInTime,
                   let clockOut = entity.clockOutTime else { return .idle }
             
@@ -151,7 +158,6 @@ private extension WorkViewModel {
             } else if now < outMin {
                 return .working
             } else {
-                // 퇴근 시간 이후 → 근무완료 1 (최종완료 전 단계)
                 return .workFinished
             }
         }
@@ -170,7 +176,6 @@ private extension WorkViewModel {
             state = .error(.invalidWorkTime); return
         }
         
-        // 출근 전으로 시간 변경 시 → idle로 되돌림
         if start.totalMinutes > Date().minutesFromMidnight, currentStatus.isActive {
             currentStatus = .idle
         }
@@ -252,7 +257,6 @@ private extension WorkViewModel {
 
 private extension WorkViewModel {
     
-    /// 일정 있는 날 idle → working (버튼 탭)
     func handleStartWork() {
         guard currentStatus == .idle,
               var entity = homeEntity,
@@ -260,32 +264,21 @@ private extension WorkViewModel {
               let originalOut = entity.clockOutTime
         else { return }
         
-        let nowMinutes = Date().minutesFromMidnight
+        let nowMinutes         = Date().minutesFromMidnight
         let originalInMinutes  = originalIn.totalMinutes
         let originalOutMinutes = originalOut.totalMinutes
         
-        // 이미 예정 출근시간 이후라면 시간 조정 없이 working만
         guard nowMinutes < originalInMinutes else {
             currentStatus = .working
             publish()
             return
         }
         
-        // 얼마나 일찍 출근했는지 차이 계산
-        let diff = originalInMinutes - nowMinutes
-        
-        // 퇴근시간도 동일하게 당김
+        let diff          = originalInMinutes - nowMinutes
         let newOutMinutes = max(originalOutMinutes - diff, nowMinutes)
         
-        let newClockIn = TimeIndicatorEntity(
-            hour: nowMinutes / 60,
-            minute: nowMinutes % 60
-        )
-        
-        let newClockOut = TimeIndicatorEntity(
-            hour: newOutMinutes / 60,
-            minute: newOutMinutes % 60
-        )
+        let newClockIn  = TimeIndicatorEntity(hour: nowMinutes / 60,    minute: nowMinutes % 60)
+        let newClockOut = TimeIndicatorEntity(hour: newOutMinutes / 60,  minute: newOutMinutes % 60)
         
         Task { @MainActor in
             do {
@@ -295,34 +288,25 @@ private extension WorkViewModel {
                     clockInTime: newClockIn,
                     clockOutTime: newClockOut
                 )
-                
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
                 currentStatus = .working
                 publish()
-                
             } catch {
                 state = .error(.network)
             }
         }
     }
     
-    /// 일정 없는 날(NONE) 쉬는날 출근하기
-    /// - 현재 시각을 clockIn, +3시간을 clockOut으로 WORK 신규 생성
     func handleStartWorkOnHoliday() {
         guard var entity = homeEntity else {
             state = .error(.dataCorrupted); return
         }
         
-        let nowMinutes = Date().minutesFromMidnight
-        let clockIn    = TimeIndicatorEntity(hour: nowMinutes / 60, minute: nowMinutes % 60)
-        
-        // +3시간 계산 (24시 넘어가면 23:59 클램프)
+        let nowMinutes      = Date().minutesFromMidnight
+        let clockIn         = TimeIndicatorEntity(hour: nowMinutes / 60, minute: nowMinutes % 60)
         let endTotalMinutes = min(clockIn.totalMinutes + 180, 23 * 60 + 59)
-        let clockOut = TimeIndicatorEntity(
-            hour:   endTotalMinutes / 60,
-            minute: endTotalMinutes % 60
-        )
+        let clockOut        = TimeIndicatorEntity(hour: endTotalMinutes / 60, minute: endTotalMinutes % 60)
         
         Task { @MainActor in
             do {
@@ -360,7 +344,6 @@ private extension WorkViewModel {
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
-                
                 currentStatus = entity.type == .vacation ? .finished : .workFinished
                 publish()
             } catch {
@@ -376,9 +359,6 @@ private extension WorkViewModel {
               let originalOut = entity.clockOutTime
         else { return }
         
-        let originalInMinutes  = originalIn.totalMinutes
-        let originalOutMinutes = originalOut.totalMinutes
-        
         Task { @MainActor in
             do {
                 let updated = try await homeUseCase.updateWorkday(
@@ -387,12 +367,10 @@ private extension WorkViewModel {
                     clockInTime: originalIn,
                     clockOutTime: originalOut
                 )
-                
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
                 currentStatus = .working
                 publish()
-                
             } catch {
                 state = .error(.network)
             }
@@ -406,32 +384,21 @@ private extension WorkViewModel {
               let originalOut = entity.clockOutTime
         else { return }
         
-        let nowMinutes = Date().minutesFromMidnight
+        let nowMinutes         = Date().minutesFromMidnight
         let originalInMinutes  = originalIn.totalMinutes
         let originalOutMinutes = originalOut.totalMinutes
         
-        // 이미 예정 출근시간 이후라면 시간 조정 없이 working만
         guard nowMinutes < originalInMinutes else {
             currentStatus = .working
             publish()
             return
         }
         
-        // 얼마나 일찍 출근했는지 차이 계산
-        let diff = originalInMinutes - nowMinutes
-        
-        // 퇴근시간도 동일하게 당김
+        let diff          = originalInMinutes - nowMinutes
         let newOutMinutes = max(originalOutMinutes - diff, nowMinutes)
         
-        let newClockIn = TimeIndicatorEntity(
-            hour: nowMinutes / 60,
-            minute: nowMinutes % 60
-        )
-        
-        let newClockOut = TimeIndicatorEntity(
-            hour: newOutMinutes / 60,
-            minute: newOutMinutes % 60
-        )
+        let newClockIn  = TimeIndicatorEntity(hour: nowMinutes / 60,   minute: nowMinutes % 60)
+        let newClockOut = TimeIndicatorEntity(hour: newOutMinutes / 60, minute: newOutMinutes % 60)
         
         Task { @MainActor in
             do {
@@ -441,12 +408,10 @@ private extension WorkViewModel {
                     clockInTime: newClockIn,
                     clockOutTime: newClockOut
                 )
-                
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
                 currentStatus = .working
                 publish()
-                
             } catch {
                 state = .error(.network)
             }
@@ -463,7 +428,6 @@ private extension WorkViewModel {
             state = .error(.dataCorrupted); return
         }
         state = .loaded(status: currentStatus, data: entity)
-        
         MoaWidgetUpdater.sync(status: currentStatus, entity: entity)
     }
 }
