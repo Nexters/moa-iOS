@@ -35,7 +35,7 @@ enum WorkScheduleType {
         case .worked(let s, let e),
              .scheduled(let s, let e),
              .vacation(let s, let e): return "\(s) - \(e)"
-        case .payday(_, let salary):  return "+ \(salary)원"
+        case .payday(_, let salary):  return "\(salary)원"
         }
     }
 
