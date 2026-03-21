@@ -78,7 +78,7 @@ final class CalendarDayCell: UICollectionViewCell {
     
     // MARK: - Configure
     
-    func configure(with day: CalendarDayEntity?) {
+    func configure(with day: CalendarDayEntity?, calendarType: CalendarNavigationType = .history) {
         
         reset()
         guard let day else { return }
@@ -87,27 +87,38 @@ final class CalendarDayCell: UICollectionViewCell {
         let number = Calendar.current.component(.day, from: day.date)
         
         var textColor = day.isCurrentMonth
-        ? AppColor.IconAndText.highEmphasis
-        : AppColor.IconAndText.disabled
+            ? AppColor.IconAndText.highEmphasis
+            : AppColor.IconAndText.disabled
         
         var font = AppTypography.b1_400
         
         if day.isSelected {
             selectionCircle.isHidden = false
             font = AppTypography.b1_600
+
+            switch calendarType {
+            case .bottomSheet:
+                selectionCircle.backgroundColor = AppColor.IconAndText.green
+                textColor = AppColor.IconAndText.highEmphasisReverse
+            case .history:
+                selectionCircle.backgroundColor = AppColor.Container.secondary
+                textColor = AppColor.IconAndText.highEmphasis
+            }
         }
         
         if day.isToday {
-            textColor = AppColor.IconAndText.green
-            font = AppTypography.b1_600
+            switch calendarType {
+            case .bottomSheet:
+                break
+            case .history:
+                textColor = AppColor.IconAndText.green
+                font = AppTypography.b1_500
+            }
         }
         
         dateLabel.setText(
             "\(number)",
-            style: .init(
-                typography: font,
-                color: textColor
-            )
+            style: .init(typography: font, color: textColor)
         )
         
         switch day.contentType {
@@ -127,6 +138,7 @@ final class CalendarDayCell: UICollectionViewCell {
     private func reset() {
         tappedDay = nil
         selectionCircle.isHidden = true
+        selectionCircle.backgroundColor = AppColor.Container.secondary
         dateLabel.text = nil
         dateLabel.attributedText = nil
         indicator.configure(type: .none)

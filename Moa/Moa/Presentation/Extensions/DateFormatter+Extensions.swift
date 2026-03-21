@@ -17,4 +17,13 @@ extension DateFormatter {
         formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
         return formatter
     }()
+    
+    /// "yyyy년 M월 d일" 포맷 (KST, UI용)
+    static let koreanDateLong: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy년 M월 d일"
+        formatter.locale     = Locale(identifier: "ko_KR")
+        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
+        return formatter
+    }()
 }

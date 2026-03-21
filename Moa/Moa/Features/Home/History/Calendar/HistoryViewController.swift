@@ -2,8 +2,6 @@
 //  HistoryViewController.swift
 //  Moa
 //
-//  Created by 정도현 on 2/19/26.
-//
 
 import UIKit
 import SnapKit
@@ -13,8 +11,7 @@ import Combine
 
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
     func historyViewControllerDidTapAdd(
-        _ vc: HistoryViewController,
-        preselectedDate: Date?
+        _ vc: HistoryViewController
     )
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
@@ -24,7 +21,7 @@ protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
 }
 
 // MARK: - HistoryViewController
-//
+
 final class HistoryViewController: BaseViewController {
 
     // MARK: - Properties
@@ -34,34 +31,23 @@ final class HistoryViewController: BaseViewController {
 
     // MARK: - UI
 
+    private let scrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsVerticalScrollIndicator = false
+        sv.alwaysBounceVertical = true
+        return sv
+    }()
+
+    /// 스크롤 내부 컨테이너
+    private let contentView = UIView()
+
     private let calendarView: CalendarView = {
         let view = CalendarView()
-        view.layer.backgroundColor = AppColor.Background.primary.cgColor
+        view.backgroundColor = AppColor.Container.primary
         view.layer.cornerRadius  = 16
         view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         view.clipsToBounds       = true
         return view
-    }()
-    
-    private let calendarOverlayView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.white.withAlphaComponent(0.04)
-        view.isUserInteractionEnabled = false
-        return view
-    }()
-    
-    private let globalOverlayView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.white.withAlphaComponent(0.04)
-        view.isUserInteractionEnabled = false
-        return view
-    }()
-
-    private let scrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.showsVerticalScrollIndicator = false
-        sv.alwaysBounceVertical         = false
-        return sv
     }()
 
     private let detailContainer: UIView = {
@@ -92,25 +78,39 @@ final class HistoryViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        setupUI()
-        bind()
         viewModel.send(.viewDidLoad)
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        configureNavigationBarAppearance(backgroundColor: AppColor.Container.primary)
         viewModel.send(.refresh)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        configureNavigationBarAppearance(backgroundColor: AppColor.Background.primary)
     }
 
     // MARK: - Setup
 
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
-        view.backgroundColor  = AppColor.Background.primary
+        view.backgroundColor = AppColor.Background.primary
+
         calendarView.delegate = self
 
-        // detailView → detailContainer (좌우/상하 패딩)
+        // MARK: hierarchy
+
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+
+        contentView.addSubViews([
+            calendarView,
+            detailContainer
+        ])
+
+        // detailView inside container
         detailContainer.addSubview(detailView)
         detailView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(28)
@@ -118,57 +118,48 @@ final class HistoryViewController: BaseViewController {
             $0.bottom.equalToSuperview().inset(28)
         }
 
-        // scrollView 안에 detailContainer만 배치
-        scrollView.addSubview(detailContainer)
-        detailContainer.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-            $0.width.equalTo(scrollView)
-        }
+        // MARK: constraints
 
-        view.addSubViews([globalOverlayView, calendarView, scrollView])
-        calendarView.addSubview(calendarOverlayView)
-
-        calendarOverlayView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-        
-        // calendarView
-        calendarView.snp.makeConstraints {
-            $0.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
-        }
-        
-        globalOverlayView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(calendarView.snp.top)
-        }
-        
         // scrollView
         scrollView.snp.makeConstraints {
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        // contentView (⭐️ 중요)
+        contentView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.width.equalTo(scrollView) // vertical scroll 핵심
+        }
+
+        // calendarView
+        calendarView.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
+        }
+
+        // detailContainer
+        detailContainer.snp.makeConstraints {
             $0.top.equalTo(calendarView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.bottom.equalToSuperview()
         }
     }
+
+    // MARK: - Bind
 
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
-        
+
         viewModel.$state
-            .map { state -> Bool in
-                if case .loading = state { return true }
-                return false
-            }
+            .map { if case .loading = $0 { return true } else { return false } }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { isLoading in
-                if isLoading {
-                    LoadingManager.shared.show()
-                } else {
-                    LoadingManager.shared.hide()
-                }
+                isLoading
+                ? LoadingManager.shared.show()
+                : LoadingManager.shared.hide()
             }
             .store(in: &cancellables)
     }
@@ -182,20 +173,29 @@ private extension HistoryViewController {
         switch state {
         case .idle:
             break
+
         case .loading:
             break
+
         case .loaded(let days, let earnings):
             calendarView.updateCalendarDays(days)
             calendarView.updateWorkInfo(earnings)
-            // 수정/추가 후 돌아왔을 때 선택된 날짜가 있으면 티켓 패널 유지
+
             if let date = selectedDate {
                 viewModel.send(.selectDay(date))
             } else {
                 hideDetail()
             }
+
         case .dayDetail(let date, let workday, let isPayday, let salary):
-            detailView.configure(date: date, workday: workday, isPayday: isPayday, salary: salary)
+            detailView.configure(
+                date: date,
+                workday: workday,
+                isPayday: isPayday,
+                salary: salary
+            )
             showDetail()
+
         case .error(let error):
             handleError(error)
         }
@@ -208,8 +208,10 @@ private extension HistoryViewController {
 
     func showDetail() {
         guard detailContainer.isHidden else { return }
+
         detailContainer.isHidden = false
-        detailContainer.alpha    = 0
+        detailContainer.alpha = 0
+
         UIView.animate(withDuration: 0.25) {
             self.detailContainer.alpha = 1
         }
@@ -217,6 +219,7 @@ private extension HistoryViewController {
 
     func hideDetail() {
         guard !detailContainer.isHidden else { return }
+
         UIView.animate(withDuration: 0.2) {
             self.detailContainer.alpha = 0
         } completion: { _ in
@@ -231,13 +234,13 @@ private extension HistoryViewController {
 
     func handleError(_ error: HistoryError) {
         guard presentedViewController == nil else { return }
-        
+
         let msg: String
         switch error {
         case .network:       msg = "네트워크 오류가 발생했습니다."
         case .dataCorrupted: msg = "데이터를 불러올 수 없습니다."
         }
-        
+
         let vc = MoaAlertViewController(message: msg)
         present(vc, animated: true)
     }
@@ -259,8 +262,7 @@ extension HistoryViewController: CalendarViewDelegate {
     }
 
     func calendarViewDidTapAdd(_ view: CalendarView) {
-        // + 버튼 → 날짜 전달 없이 일정 추가
-        coordinatorDelegate?.historyViewControllerDidTapAdd(self, preselectedDate: nil)
+        coordinatorDelegate?.historyViewControllerDidTapAdd(self)
     }
 }
 

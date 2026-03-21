@@ -18,6 +18,9 @@ final class CalendarGridView: UIView {
     
     weak var delegate: CalendarGridViewDelegate?
     private var days: [CalendarDayEntity?] = []
+
+    /// .history: 기본 스타일 / .bottomSheet: 오늘=흰색, 선택=green 배경+검정 글자
+    private let calendarType: CalendarNavigationType
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -32,8 +35,9 @@ final class CalendarGridView: UIView {
         return cv
     }()
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(calendarType: CalendarNavigationType = .history) {
+        self.calendarType = calendarType
+        super.init(frame: .zero)
         addSubview(collectionView)
         collectionView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
@@ -64,7 +68,7 @@ extension CalendarGridView: UICollectionViewDataSource {
             withReuseIdentifier: CalendarDayCell.identifier, for: ip
         ) as! CalendarDayCell
         cell.delegate = self
-        cell.configure(with: days[ip.item])   // nil 또는 CalendarDay 전달
+        cell.configure(with: days[ip.item], calendarType: calendarType)
         return cell
     }
 }

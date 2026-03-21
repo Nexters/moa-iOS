@@ -48,8 +48,6 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         super.viewDidLoad()
         
         setupViews()
-        calendarView.delegate = self
-        confirmButton.isEnabled = false
     }
     
     // MARK: - Setup
@@ -94,14 +92,6 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         (parent as? BottomSheetViewController)?.animateDismiss()
     }
 }
-
-extension DatePickerCalendarBottomSheet: DatePickerCalendarViewDelegate {
-    
-    func datePickerCalendarView(_ view: DatePickerCalendarView, didSelectDate date: Date) {
-        confirmButton.isEnabled = true
-    }
-}
-
 
 @available(iOS 17.0)
 #Preview {

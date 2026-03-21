@@ -76,9 +76,12 @@ final class WorkViewController: BaseViewController {
         super.viewDidLoad()
         viewModel.send(.viewDidLoad)
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        viewModel.send(.refresh)
+        
         if case let .loaded(status, _) = viewModel.state,
            status == .working || status == .workFinished {
             startWorkingTimer()

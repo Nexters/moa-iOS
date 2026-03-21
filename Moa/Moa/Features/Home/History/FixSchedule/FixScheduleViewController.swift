@@ -153,9 +153,7 @@ final class FixScheduleViewController: BaseViewController {
     }
 
     // MARK: - Setup
-    // MARK: - Setup
-    // BaseViewController.viewDidLoad → setupUI() 자동 호출
-
+    
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
         replaceSystemBackButtonWithAppBackButton()
