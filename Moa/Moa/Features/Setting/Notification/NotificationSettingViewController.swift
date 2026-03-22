@@ -135,7 +135,7 @@ final class NotificationSettingViewController: BaseViewController {
     
     private func handleToggle(type: NotificationSettingType, isOn: Bool, view: NotificationToggleItemView) {
         // 낙관적 업데이트 없이 응답 올 때까지 토글 비활성화
-        view.isEnabled = false
+        view.setToggleInteractionEnabled(false)
         viewModel.updateNotificationSetting(type: type, checked: isOn)
     }
     
