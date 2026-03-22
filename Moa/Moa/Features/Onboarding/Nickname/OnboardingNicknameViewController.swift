@@ -19,6 +19,10 @@ final class OnboardingNicknameViewController: BaseViewController {
         static let randomChange = "랜덤변경"
         static let next = "다음"
         static let nicknameMaxLength: Int = 10
+        static let backButtonAlertTitle = "정말 그만 작성하실 건가요?"
+        static let backButtonAlertSubtitle = "뒤로 돌아가기를 누르면\n지금까지 작성한 정보가 사라져요"
+        static let yes = "네"
+        static let no = "아니오"
     }
     
     // MARK: - Dependencies
@@ -157,7 +161,18 @@ final class OnboardingNicknameViewController: BaseViewController {
     // MARK: - Setup
     
     override func setupUI() {
-        navigationItem.hidesBackButton = true
+        replaceSystemBackButtonWithAppBackButton {
+            AlertManager.show(
+                title: Constant.backButtonAlertTitle,
+                subtitle: Constant.backButtonAlertSubtitle,
+                leftButtonTitle: Constant.yes,
+                rightButtonTitle: Constant.no,
+                onLeftButtonTapped: { [weak self] in
+                    self?.viewModel.logout()
+                }
+            )
+        }
+        
         setupButton()
         setupSpacers()
         setupHierarchy()
@@ -181,6 +196,17 @@ final class OnboardingNicknameViewController: BaseViewController {
     }
     
     // MARK: - Actions
+    
+    override func bind() {
+        bindOutput(viewModel.outputs) { [weak self] output in
+            guard let self else { return }
+            
+            switch output {
+            case .logoutSucceed:
+                navigationController?.popViewController(animated: true)
+            }
+        }
+    }
     
     @objc private func textDidChange() {
         updateNextButtonState()

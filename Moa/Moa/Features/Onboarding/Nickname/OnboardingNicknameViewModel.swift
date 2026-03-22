@@ -7,7 +7,11 @@
 
 import Foundation
 
-final class OnboardingNicknameViewModel {
+enum OnboardingNicknameOutput {
+    case logoutSucceed
+}
+
+final class OnboardingNicknameViewModel: BaseViewModel<OnboardingNicknameOutput> {
     
     // MARK: - Dependencies
     
@@ -38,7 +42,19 @@ final class OnboardingNicknameViewModel {
         _ = try await usecase.updateNickname(to: nickname)
     }
     
-    func clearTokens() {
-        AuthSessionManager.shared.clearTokens()
+    func logout() {
+        // FIXME: 로그아웃시 fcmToken 필수값인지 확인 필요
+        guard let fcmToken = AuthSessionManager.shared.currentFcmToken() else {
+            return
+        }
+        
+        Task {
+            do {
+                try await usecase.logout(fcmDeviceToken: fcmToken)
+                self.send(.logoutSucceed)
+            } catch {
+                ToastManager.show(message: "로그아웃에 실패했습니다.")
+            }
+        }
     }
 }

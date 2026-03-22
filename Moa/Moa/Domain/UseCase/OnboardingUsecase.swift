@@ -11,12 +11,16 @@ final class OnboardingUsecase {
     private let onboardingRepository: OnboardingRepository
     private let authRepository: AuthRepository
     
+    private let userDefaults: UserDefaults
+    
     init(
         onboardingRepository: OnboardingRepository,
-        authRepository: AuthRepository
+        authRepository: AuthRepository,
+        userDefaults: UserDefaults = .standard
     ) {
         self.onboardingRepository = onboardingRepository
         self.authRepository = authRepository
+        self.userDefaults = userDefaults
     }
     
     func getOnboardingStatus() async throws -> OnboardingStatusEntity {
@@ -45,5 +49,14 @@ final class OnboardingUsecase {
     
     func updateTermsAgreement(to agreements: [AgreementEntity]) async throws -> TermsAgreementEntity {
         try await onboardingRepository.updateTermsAgreement(to: agreements)
+    }
+    
+    func logout(fcmDeviceToken: String) async throws {
+        try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
+        
+        AuthSessionManager.shared.clearTokens()
+        
+        userDefaults.removeObject(forKey: "payday")
+        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
 }

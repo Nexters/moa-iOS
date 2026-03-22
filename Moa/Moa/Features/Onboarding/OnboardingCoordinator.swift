@@ -30,8 +30,13 @@ final class OnboardingCoordinator {
         self.nav = parentNav
         let stack = buildInitialStack(startingAt: startStep, with: status)
         let currentStack = parentNav.viewControllers
-        
-        parentNav.setViewControllers(currentStack + stack, animated: animated)
+
+        guard let last = stack.last else { return }
+        let preceding = Array(stack.dropLast())
+        if !preceding.isEmpty {
+            parentNav.setViewControllers(currentStack + preceding, animated: false)
+        }
+        parentNav.pushViewController(last, animated: animated)
     }
 }
 
