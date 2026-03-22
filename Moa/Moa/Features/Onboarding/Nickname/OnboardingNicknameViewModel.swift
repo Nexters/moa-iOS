@@ -7,11 +7,7 @@
 
 import Foundation
 
-enum OnboardingNicknameOutput {
-    case logoutSucceed
-}
-
-final class OnboardingNicknameViewModel: BaseViewModel<OnboardingNicknameOutput> {
+final class OnboardingNicknameViewModel {
     
     // MARK: - Dependencies
     
@@ -43,18 +39,13 @@ final class OnboardingNicknameViewModel: BaseViewModel<OnboardingNicknameOutput>
     }
     
     func logout() {
-        // FIXME: 로그아웃시 fcmToken 필수값인지 확인 필요
-        guard let fcmToken = AuthSessionManager.shared.currentFcmToken() else {
-            return
-        }
-        
         Task {
-            do {
-                try await usecase.logout(fcmDeviceToken: fcmToken)
-                self.send(.logoutSucceed)
-            } catch {
-                ToastManager.show(message: "로그아웃에 실패했습니다.")
+            if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
+                try? await usecase.logout(fcmDeviceToken: fcmToken)
+            } else {
+                AuthSessionManager.shared.clearTokens()
             }
+            NotificationCenter.default.post(name: .didLogoutOrWithdrawal, object: nil)
         }
     }
 }

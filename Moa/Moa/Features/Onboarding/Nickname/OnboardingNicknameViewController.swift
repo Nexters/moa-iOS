@@ -197,17 +197,6 @@ final class OnboardingNicknameViewController: BaseViewController {
     
     // MARK: - Actions
     
-    override func bind() {
-        bindOutput(viewModel.outputs) { [weak self] output in
-            guard let self else { return }
-            
-            switch output {
-            case .logoutSucceed:
-                navigationController?.popViewController(animated: true)
-            }
-        }
-    }
-    
     @objc private func textDidChange() {
         updateNextButtonState()
     }

@@ -69,8 +69,6 @@ final class WithdrawalReasonRowView: UIView {
         checkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         rowStack.snp.makeConstraints { make in
-//            make.leading.trailing.equalToSuperview()
-//            make.top.bottom.equalToSuperview().inset(12)
             make.edges.equalToSuperview()
         }
         
