@@ -344,7 +344,7 @@ private extension OnboardingPayrollViewController {
         errorStackView.isHidden = !hasError
         koreanAmountLabel.isHidden = hasError
 
-        nextButton.isEnabled = amount > 0
+        nextButton.isEnabled = amount >= 10_000
     }
     
     func setupGesture() {

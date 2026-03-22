@@ -354,7 +354,7 @@ private extension PayrollEditViewController {
         errorStackView.isHidden = !hasError
         koreanAmountLabel.isHidden = hasError
 
-        completeButton.isEnabled = amount > 0
+        completeButton.isEnabled = amount >= 10_000
     }
     
     func setupGesture() {
