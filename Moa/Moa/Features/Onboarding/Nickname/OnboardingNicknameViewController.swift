@@ -100,7 +100,7 @@ final class OnboardingNicknameViewController: BaseViewController {
         
         config.imagePlacement = .leading
         config.imagePadding = 4
-        config.background.backgroundColor = AppColor.Container.secondary
+        config.background.backgroundColor = AppColor.Container.primary
         config.background.cornerRadius = 8
         config.contentInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12)
         
