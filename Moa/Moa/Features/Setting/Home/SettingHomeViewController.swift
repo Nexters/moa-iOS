@@ -85,6 +85,7 @@ final class SettingHomeViewController: BaseViewController {
         title.foregroundColor = AppColor.IconAndText.mediumEmphasis
         config.attributedTitle = title
         config.titleAlignment = .trailing
+        config.contentInsets = .zero
         
         let button = UIButton(configuration: config)
         return button
@@ -97,6 +98,7 @@ final class SettingHomeViewController: BaseViewController {
         title.foregroundColor = AppColor.IconAndText.mediumEmphasis
         config.attributedTitle = title
         config.titleAlignment = .leading
+        config.contentInsets = .zero
         
         let button = UIButton(configuration: config)
         return button
