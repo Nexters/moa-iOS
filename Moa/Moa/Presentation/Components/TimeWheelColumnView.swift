@@ -8,17 +8,20 @@
 import UIKit
 import SnapKit
 
-// MARK: - TimeWheelColumnView
-
 final class TimeWheelColumnView: UIView {
 
     // MARK: - Constants
 
-    private let cellHeight: CGFloat  = 44
-    private let visibleRows: Int     = 5      // picker에 보이는 행 수
-    private let repeatCount: Int     = 1_000
+    private let cellHeight: CGFloat = 44
+    private let visibleRows: Int = 5
+    private let repeatCount: Int = 1_000
 
-    /// index N 셀을 중앙에 놓기 위한 contentOffset 보정값
+    /// 중앙 기준 index
+    private var centerIndex: Int {
+        (repeatCount / 2) * values.count
+    }
+
+    /// 중앙 정렬 offset 보정
     private var midOffset: CGFloat {
         collectionView.contentInset.top
     }
@@ -29,26 +32,29 @@ final class TimeWheelColumnView: UIView {
     private let alignment: NSTextAlignment
     private var collectionView: UICollectionView!
 
-    /// collectionView 전체 아이템 기준 절대 인덱스
+    /// 전체 index
     private var absoluteIndex: Int = 0
 
-    /// 외부 노출용 실제 값 인덱스 (0 ..< values.count)
-    var selectedIndex: Int { absoluteIndex % values.count }
+    /// 외부 노출 index
+    var selectedIndex: Int {
+        let mod = absoluteIndex % values.count
+        return mod >= 0 ? mod : mod + values.count
+    }
 
     var onValueChanged: (() -> Void)?
 
     // MARK: - Init
 
     init(values: [String], initialIndex: Int = 0, alignment: NSTextAlignment = .center) {
-        self.values    = values
+        self.values = values
         self.alignment = alignment
-        self.absoluteIndex = (repeatCount / 2) * values.count + max(0, initialIndex)
+        self.absoluteIndex = (repeatCount / 2) * values.count + initialIndex
         super.init(frame: .zero)
         setupCollectionView()
     }
 
     required init?(coder: NSCoder) { fatalError() }
-    
+
     override func layoutSubviews() {
         super.layoutSubviews()
 
@@ -62,32 +68,27 @@ final class TimeWheelColumnView: UIView {
     func scrollToIndexSilently(_ realIndex: Int, animated: Bool = false) {
         guard realIndex >= 0, realIndex < values.count else { return }
 
-        let currentBlock = absoluteIndex / values.count
-        var newAbsolute  = currentBlock * values.count + realIndex
-        let diff         = newAbsolute - absoluteIndex
-        if diff >  values.count / 2 { newAbsolute -= values.count }
-        if diff < -(values.count / 2) { newAbsolute += values.count }
-
+        let newAbsolute = centerIndex + realIndex
         absoluteIndex = newAbsolute
+
         collectionView.setContentOffset(
-            CGPoint(x: 0, y: snapOffset(for: absoluteIndex)),
+            CGPoint(x: 0, y: snapOffset(for: newAbsolute)),
             animated: animated
         )
+
         collectionView.reloadData()
     }
 
-    // MARK: - Private helpers
+    // MARK: - Core Logic
 
-    /// index N의 셀이 picker 중앙에 오도록 하는 contentOffset.y
     private func snapOffset(for index: Int) -> CGFloat {
         CGFloat(index) * cellHeight - midOffset
     }
 
-    /// 현재 contentOffset에서 중앙에 위치한 절대 인덱스
+    /// clamp 제거 → 진짜 무한 index
     private func centeredAbsoluteIndex() -> Int {
         let rawIndex = (collectionView.contentOffset.y + midOffset) / cellHeight
-        let idx      = Int(rawIndex.rounded())
-        return max(0, min(idx, values.count * repeatCount - 1))
+        return Int(rawIndex.rounded())
     }
 
     private func snapToCurrent(animated: Bool = true) {
@@ -101,31 +102,50 @@ final class TimeWheelColumnView: UIView {
         let newAbsolute = centeredAbsoluteIndex()
         guard newAbsolute != absoluteIndex else { return }
 
-        let oldReal   = absoluteIndex % values.count
-        let newReal   = newAbsolute   % values.count
+        let oldReal = selectedIndex
         absoluteIndex = newAbsolute
+        let newReal = selectedIndex
 
         for cell in collectionView.visibleCells.compactMap({ $0 as? TimeWheelCell }) {
             guard let ip = collectionView.indexPath(for: cell) else { continue }
-            cell.setSelectedStyle(ip.item % values.count == newReal)
+            let realIndex = ip.item % values.count
+            cell.setSelectedStyle(realIndex == newReal)
         }
 
-        if oldReal != newReal { onValueChanged?() }
+        if oldReal != newReal {
+            onValueChanged?()
+        }
+    }
+
+    /// ⭐ 핵심: 중앙으로 재배치 (무한 스크롤 유지)
+    private func recenterIfNeeded() {
+        let threshold = values.count * repeatCount / 4
+
+        if absoluteIndex < threshold || absoluteIndex > values.count * repeatCount - threshold {
+            let newIndex = centerIndex + selectedIndex
+            absoluteIndex = newIndex
+
+            collectionView.setContentOffset(
+                CGPoint(x: 0, y: snapOffset(for: newIndex)),
+                animated: false
+            )
+        }
     }
 
     // MARK: - Setup
 
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection    = .vertical
+        layout.scrollDirection = .vertical
         layout.minimumLineSpacing = 0
 
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.showsVerticalScrollIndicator = false
         collectionView.decelerationRate = .fast
-        collectionView.backgroundColor  = .clear
+        collectionView.backgroundColor = .clear
         collectionView.dataSource = self
-        collectionView.delegate   = self
+        collectionView.delegate = self
+
         collectionView.register(
             TimeWheelCell.self,
             forCellWithReuseIdentifier: TimeWheelCell.identifier
@@ -134,9 +154,9 @@ final class TimeWheelColumnView: UIView {
         addSubview(collectionView)
         collectionView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
-        // bounds가 확정된 후 초기 위치 설정
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+
             self.collectionView.setContentOffset(
                 CGPoint(x: 0, y: self.snapOffset(for: self.absoluteIndex)),
                 animated: false
@@ -146,7 +166,7 @@ final class TimeWheelColumnView: UIView {
     }
 }
 
-// MARK: - UICollectionViewDataSource
+// MARK: - DataSource
 
 extension TimeWheelColumnView: UICollectionViewDataSource {
 
@@ -157,30 +177,29 @@ extension TimeWheelColumnView: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+
         let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: TimeWheelCell.identifier,
             for: indexPath
         ) as! TimeWheelCell
+
         let realIndex = indexPath.item % values.count
         cell.configure(text: values[realIndex], alignment: alignment)
         cell.setSelectedStyle(realIndex == selectedIndex)
+
         return cell
     }
 }
 
-// MARK: - UICollectionViewDelegate
+// MARK: - Delegate
 
 extension TimeWheelColumnView: UICollectionViewDelegate {
 
-    // 셀 터치 → 해당 값으로 snap
     func collectionView(_ collectionView: UICollectionView,
                         didSelectItemAt indexPath: IndexPath) {
-        let tappedReal  = indexPath.item % values.count
-        let currentBlock = absoluteIndex / values.count
-        var newAbsolute  = currentBlock * values.count + tappedReal
-        let diff         = newAbsolute - absoluteIndex
-        if diff >  values.count / 2  { newAbsolute -= values.count }
-        if diff < -(values.count / 2) { newAbsolute += values.count }
+
+        let realIndex = indexPath.item % values.count
+        let newAbsolute = centerIndex + realIndex
 
         absoluteIndex = newAbsolute
         snapToCurrent(animated: true)
@@ -188,16 +207,17 @@ extension TimeWheelColumnView: UICollectionViewDelegate {
         onValueChanged?()
     }
 
-    // 손가락을 뗄 때 가장 가까운 셀로 snap
     func scrollViewWillEndDragging(_ scrollView: UIScrollView,
                                    withVelocity velocity: CGPoint,
                                    targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+
         let rawIdx = (targetContentOffset.pointee.y + midOffset) / cellHeight
         targetContentOffset.pointee.y = rawIdx.rounded() * cellHeight - midOffset
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateSelectionIfNeeded()
+        recenterIfNeeded()   // ⭐ 핵심
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -213,7 +233,7 @@ extension TimeWheelColumnView: UICollectionViewDelegate {
     }
 }
 
-// MARK: - UICollectionViewDelegateFlowLayout
+// MARK: - FlowLayout
 
 extension TimeWheelColumnView: UICollectionViewDelegateFlowLayout {
 
