@@ -18,11 +18,13 @@ struct TextStyle {
     
     func makeAttributedString(
         _ text: String,
-        alignment: NSTextAlignment
+        alignment: NSTextAlignment,
+        lineBreakMode: NSLineBreakMode = .byWordWrapping
     ) -> NSAttributedString {
         let paragraph = NSMutableParagraphStyle()
         paragraph.minimumLineHeight = typography.lineHeight
         paragraph.alignment = alignment
+        paragraph.lineBreakMode = lineBreakMode
 
         let baselineOffset = (typography.lineHeight - typography.fontSize) / 2
 

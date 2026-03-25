@@ -35,6 +35,6 @@ final class StyledLabel: UILabel {
     private func applyStyle() {
         guard let style = textStyle else { return }
         let content = rawText
-        attributedText = style.makeAttributedString(content, alignment: textAlignment)
+        attributedText = style.makeAttributedString(content, alignment: textAlignment, lineBreakMode: lineBreakMode)
     }
 }

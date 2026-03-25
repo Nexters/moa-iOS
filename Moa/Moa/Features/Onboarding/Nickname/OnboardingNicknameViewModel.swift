@@ -38,7 +38,14 @@ final class OnboardingNicknameViewModel {
         _ = try await usecase.updateNickname(to: nickname)
     }
     
-    func clearTokens() {
-        AuthSessionManager.shared.clearTokens()
+    func logout() {
+        Task {
+            if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
+                try? await usecase.logout(fcmDeviceToken: fcmToken)
+            } else {
+                AuthSessionManager.shared.clearTokens()
+            }
+            NotificationCenter.default.post(name: .didLogoutOrWithdrawal, object: nil)
+        }
     }
 }

@@ -18,6 +18,7 @@ final class OnboardingPayrollViewController: BaseViewController {
         static let amount = "금액"
         static let won = "원"
         static let next = "다음"
+        static let lessThanMinAmountErrorMessage = "금액은 1만원 이상 입력해 주세요"
     }
     
     // MARK: - Dependencies
@@ -115,6 +116,35 @@ final class OnboardingPayrollViewController: BaseViewController {
         )
         label.numberOfLines = 1
         return label
+    }()
+
+    private let errorIconView: UIImageView = {
+        let iv = UIImageView(image: UIImage(resource: .Icon.iconAttentionCircle))
+        iv.contentMode = .scaleAspectFit
+        iv.setContentHuggingPriority(.required, for: .horizontal)
+        iv.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return iv
+    }()
+
+    private let errorLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setText(
+            Constant.lessThanMinAmountErrorMessage,
+            style: .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.error
+            )
+        )
+        return label
+    }()
+
+    private lazy var errorStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [errorIconView, errorLabel])
+        stack.axis = .horizontal
+        stack.spacing = 4
+        stack.alignment = .center
+        stack.isHidden = true
+        return stack
     }()
     
     private let amountTextFieldStack: UIStackView = {
@@ -241,7 +271,7 @@ private extension OnboardingPayrollViewController {
         amountTextFieldStack.addArrangedSubViews([amountTextField, currencyLabel, trailingSpacer])
         ctaContainer.addSubview(nextButton)
         
-        view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, koreanAmountLabel, ctaContainer])
+        view.addSubViews([titleLabel, subTitleLabel, salaryTypeView, amountLabel, amountTextFieldStack, koreanAmountLabel, errorStackView, ctaContainer])
     }
     
     func setupLayout() {
@@ -274,6 +304,11 @@ private extension OnboardingPayrollViewController {
             make.top.equalTo(amountTextFieldStack.snp.bottom).offset(8)
             make.trailing.equalTo(amountTextFieldStack)
         }
+
+        errorStackView.snp.makeConstraints { make in
+            make.top.equalTo(amountTextFieldStack.snp.bottom).offset(8)
+            make.leading.equalTo(amountTextFieldStack)
+        }
         
         trailingSpacer.snp.makeConstraints { make in
             make.width.equalTo(20)
@@ -304,8 +339,12 @@ private extension OnboardingPayrollViewController {
     func updateNextButtonState() {
         let digits = (amountTextField.text ?? "").filter(\.isNumber)
         let amount = Int(digits) ?? 0
-        
-        nextButton.isEnabled = amount > 0
+
+        let hasError = amount > 0 && amount < 10_000
+        errorStackView.isHidden = !hasError
+        koreanAmountLabel.isHidden = hasError
+
+        nextButton.isEnabled = amount >= 10_000
     }
     
     func setupGesture() {

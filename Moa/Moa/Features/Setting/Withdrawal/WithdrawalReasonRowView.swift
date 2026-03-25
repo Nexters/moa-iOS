@@ -39,7 +39,7 @@ final class WithdrawalReasonRowView: UIView {
     private let rowStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 24
+        stack.spacing = 12
         stack.alignment = .center
         return stack
     }()
@@ -63,12 +63,12 @@ final class WithdrawalReasonRowView: UIView {
         addSubview(rowStack)
         
         checkImageView.snp.makeConstraints { make in
-            make.size.equalTo(24)
+            make.width.height.equalTo(32)
         }
+        checkImageView.setContentHuggingPriority(.required, for: .horizontal)
+        checkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         rowStack.snp.makeConstraints { make in
-//            make.leading.trailing.equalToSuperview()
-//            make.top.bottom.equalToSuperview().inset(12)
             make.edges.equalToSuperview()
         }
         
