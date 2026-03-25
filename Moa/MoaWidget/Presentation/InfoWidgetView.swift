@@ -35,13 +35,10 @@ struct InfoWidgetView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: AppColor.Container.primary))
+        .modifier(WidgetURLModifier())
     }
 
     // MARK: - Action Button
-    //
-    // iOS 17+: AppIntent 버튼 (앱 미실행 상태로 동작)
-    // iOS 16:  widgetURL을 통해 앱을 실행하는 링크 버튼
-    //          Button(intent:)는 iOS 17+에서만 지원되므로 반드시 분기 필요
 
     @ViewBuilder
     private func actionButton(text: String) -> some View {
@@ -52,16 +49,12 @@ struct InfoWidgetView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                // .lowPower → 앱 실행
                 Button(intent: OpenAppIntent()) {
                     buttonLabel(text)
                 }
                 .buttonStyle(.plain)
             }
         } else {
-            // iOS 16: widgetURL로 앱 딥링크 실행
-            // Link는 위젯에서 허용되지 않으므로 widgetURL을 뷰 전체에 걸고
-            // 버튼처럼 보이는 레이블만 렌더링
             buttonLabel(text)
         }
     }
@@ -77,5 +70,13 @@ struct InfoWidgetView: View {
                 Capsule()
                     .fill(Color(uiColor: AppColor.IconAndText.green))
             )
+    }
+}
+
+// MARK: - widgetURL Modifier
+
+private struct WidgetURLModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
     }
 }

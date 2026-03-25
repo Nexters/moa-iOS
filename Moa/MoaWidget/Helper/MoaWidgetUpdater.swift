@@ -6,29 +6,18 @@
 import Foundation
 import WidgetKit
 
-// MARK: - MoaWidgetUpdater
-//
-// 네트워크 체크를 제거한 이유:
-// - NWPathMonitor 비동기 콜백은 타이밍에 따라 저장이 완료되기 전에
-//   reloadAllTimelines()가 호출될 수 있어 skeleton이 보이는 문제 발생
-// - 이 함수가 호출되는 시점(WorkViewModel.publish())에
-//   이미 서버 통신이 완료된 상태이므로 네트워크 재확인 불필요
-
 enum MoaWidgetUpdater {
 
     // MARK: - 외부 진입점
 
-    /// WorkViewModel.publish() 직후 호출
-    /// @MainActor 환경에서 안전하게 동기 저장 후 위젯 reload
+    @MainActor
     static func sync(status: WorkStatusEntity, entity: HomeEntity) {
-        // 절전 모드
         if ProcessInfo.processInfo.isLowPowerModeEnabled {
             MoaWidgetData(status: .lowPower, displayAmount: 0, updatedAt: .now).save()
             WidgetCenter.shared.reloadAllTimelines()
             return
         }
 
-        // 동기 저장 완료 후 reload — 저장 전에 reload되는 타이밍 문제 해결
         let widgetData = resolve(status: status, entity: entity)
         widgetData.save()
         WidgetCenter.shared.reloadAllTimelines()
@@ -36,6 +25,7 @@ enum MoaWidgetUpdater {
 
     // MARK: - WorkStatusEntity → MoaWidgetData
 
+    @MainActor
     private static func resolve(
         status: WorkStatusEntity,
         entity: HomeEntity

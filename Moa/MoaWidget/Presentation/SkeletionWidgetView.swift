@@ -21,8 +21,6 @@ struct SkeletonWidgetView: View {
 
             Spacer()
         }
-        // iOS 17+: contentMarginsDisabled() 적용 시 수동 패딩 필요
-        // iOS 16:  시스템 마진 자동 적용되므로 추가 패딩 불필요
         .modifier(SkeletonPaddingModifier())
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: AppColor.Container.primary))
