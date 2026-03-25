@@ -24,7 +24,7 @@ final class SettingItemRowView: UIView {
     private let spacerView: UIView = {
         let v = UIView()
         v.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        v.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        v.setContentCompressionResistancePriority(UILayoutPriority(1), for: .horizontal)
         return v
     }()
     
@@ -75,6 +75,9 @@ final class SettingItemRowView: UIView {
             typography: AppTypography.b1_500,
             color: AppColor.IconAndText.green
         ))
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }()
     
@@ -153,6 +156,10 @@ final class SettingItemRowView: UIView {
         
         horizontalStackView.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+        
+        spacerView.snp.makeConstraints {
+            $0.width.greaterThanOrEqualTo(16)
         }
         
         chevronImage.snp.makeConstraints {

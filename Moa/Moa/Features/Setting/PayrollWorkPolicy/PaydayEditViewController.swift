@@ -68,6 +68,7 @@ final class PaydayEditViewController: BaseViewController {
     private let arrowDownIconView: UIButton = {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(resource: .Icon.iconArrowDown)
+        config.contentInsets = .zero
         
         let button = UIButton(configuration: config)
         button.isUserInteractionEnabled = false // 스택뷰 제스처가 받도록

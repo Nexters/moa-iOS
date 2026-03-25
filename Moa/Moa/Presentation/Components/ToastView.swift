@@ -49,6 +49,8 @@ final class ToastView: UIView {
 
 final class ToastManager {
     
+    private static var currentToast: ToastView?
+    
     static func show(message: String, duration: TimeInterval = 2.0) {
         guard let windowScene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
@@ -56,7 +58,12 @@ final class ToastManager {
               let window = windowScene.windows.first(where: { $0.isKeyWindow })
         else { return }
         
+        let hasExisting = currentToast != nil
+        currentToast?.layer.removeAllAnimations()
+        currentToast?.removeFromSuperview()
+        
         let toast = ToastView(message: message)
+        currentToast = toast
         window.addSubview(toast)
         
         toast.snp.makeConstraints { make in
@@ -66,15 +73,27 @@ final class ToastManager {
             make.trailing.lessThanOrEqualToSuperview().inset(44)
         }
         
-        toast.alpha = 0
-        UIView.animate(withDuration: 0.3) {
-            toast.alpha = 1
-        } completion: { _ in
+        // 기존 토스트가 있었으면 fade in 없이 바로 표시
+        toast.alpha = hasExisting ? 1 : 0
+        let showCompletion: (Bool) -> Void = { _ in
             UIView.animate(withDuration: 0.3, delay: duration) {
                 toast.alpha = 0
             } completion: { _ in
                 toast.removeFromSuperview()
+                if Self.currentToast === toast { Self.currentToast = nil }
             }
+        }
+        
+        if hasExisting {
+            showCompletion(true)
+        } else {
+            UIView.animate(
+                withDuration: 0.3,
+                animations: {
+                    toast.alpha = 1
+                },
+                completion: showCompletion
+            )
         }
     }
 }

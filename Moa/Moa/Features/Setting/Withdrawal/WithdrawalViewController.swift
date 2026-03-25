@@ -14,7 +14,7 @@ final class WithdrawalViewController: BaseViewController {
         static let navigationTitle = "회원 탈퇴"
         static let subtitle = "헤어지게 되어 아쉬워요.."
         static let title = "탈퇴 사유를 알려주시면\n더 나은 서비스를 제공하기 위해\n노력할게요."
-        static let withdrawalButton = "탈퇴 하기"
+        static let withdrawalButton = "탈퇴하기"
         static let reasons = [
             "앱 오류로 사용하기 불편해요",
             "원하는 기능이 부족해요",

@@ -17,6 +17,10 @@ final class NotificationToggleItemView: UIView {
     var isEnabled: Bool = true {
         didSet { updateEnabledState() }
     }
+
+    func setToggleInteractionEnabled(_ enabled: Bool) {
+        toggle.isEnabled = enabled
+    }
     
     var isOn: Bool {
         get { toggle.isOn }
@@ -78,12 +82,7 @@ final class NotificationToggleItemView: UIView {
     
     private func updateEnabledState() {
         toggle.isEnabled = isEnabled
-        let textColor = isEnabled ? AppColor.IconAndText.highEmphasis : AppColor.IconAndText.disabled
-        
-        titleLabel.setStyle(.init(
-            typography: AppTypography.b1_500,
-            color: textColor
-        ))
+        titleLabel.alpha = isEnabled ? 1.0 : 0.28
     }
     
     @objc private func toggleChanged(_ sender: UISwitch) {
