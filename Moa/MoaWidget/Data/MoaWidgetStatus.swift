@@ -3,31 +3,27 @@
 //  Moa
 //
 
-import UIKit
 import SwiftUI
 
 extension MoaWidgetStatus {
 
     // MARK: - 뱃지 텍스트
 
-    /// nil이면 뱃지 미표시
     var badgeTitle: String? {
         switch self {
         case .working:  return "근무 중"
         case .vacation: return "휴가"
         case .finished: return "완료"
-        case .offline:  return "오프라인"
-        case .lowPower: return "절전 모드"
-        case .skeleton: return nil
+        case .offline, .lowPower, .skeleton: return nil
         }
     }
 
     // MARK: - 금액 텍스트 색상
 
-    var moneyColor: UIColor? {
+    var moneyColor: Color? {
         switch self {
-        case .working, .finished: return AppColor.IconAndText.green
-        case .vacation: return AppColor.IconAndText.blue
+        case .working, .finished: return Color(uiColor: AppColor.IconAndText.green)
+        case .vacation:           return Color(uiColor: AppColor.IconAndText.blue)
         case .offline, .lowPower, .skeleton: return nil
         }
     }
@@ -59,7 +55,7 @@ extension MoaWidgetStatus {
         default:        return nil
         }
     }
-    
+
     var buttonText: String? {
         switch self {
         case .offline:  return "새로고침"

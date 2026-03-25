@@ -7,26 +7,25 @@ import SwiftUI
 
 struct MoneyDescriptionView: View {
 
-    let color: UIColor
+    let color: Color 
     let wage:  Int
 
-    // 매 렌더링마다 생성 방지
     private static let formatter: NumberFormatter = {
-        let f = NumberFormatter()
-        f.numberStyle       = .decimal
-        f.groupingSeparator = ","
-        return f
+        let formatter = NumberFormatter()
+        formatter.numberStyle       = .decimal
+        formatter.groupingSeparator = ","
+        return formatter
     }()
 
-    private var formatted: String {
+    private var formattedWage: String {
         Self.formatter.string(from: NSNumber(value: wage)) ?? "\(wage)"
     }
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 2) {
-            Text(formatted)
+            Text(formattedWage)
                 .font(Font(AppTypography.t3_700.font()))
-                .foregroundColor(Color(uiColor: color))
+                .foregroundColor(color)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
 
