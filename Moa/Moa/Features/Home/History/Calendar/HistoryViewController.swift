@@ -7,29 +7,21 @@ import UIKit
 import SnapKit
 import Combine
 
-// MARK: - Coordinator Delegate
-
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
-    func historyViewControllerDidTapAdd(
-        _ vc: HistoryViewController
-    )
-    func historyViewControllerDidTapEdit(
-        _ vc: HistoryViewController,
-        workday: WorkdayEntity,
-        date: Date
-    )
+    func historyViewControllerDidTapAdd(_ vc: HistoryViewController)
+    func historyViewControllerDidTapEdit(_ vc: HistoryViewController, workday: WorkdayEntity, date: Date)
 }
 
-// MARK: - HistoryViewController
-
 final class HistoryViewController: BaseViewController {
-
-    // MARK: - Properties
 
     private let viewModel: HistoryViewModel
     private var selectedDate: Date?
 
-    // MARK: - UI
+    private let topBackgroundView: UIView = {
+        let view = UIView()
+        view.backgroundColor = AppColor.Container.primary
+        return view
+    }()
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -38,15 +30,12 @@ final class HistoryViewController: BaseViewController {
         return sv
     }()
 
-    /// 스크롤 내부 컨테이너
     private let contentView = UIView()
 
     private let calendarView: CalendarView = {
         let view = CalendarView()
         view.backgroundColor = AppColor.Container.primary
-        view.layer.cornerRadius  = 16
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        view.clipsToBounds       = true
+        view.clipsToBounds = true
         return view
     }()
 
@@ -62,8 +51,6 @@ final class HistoryViewController: BaseViewController {
         return view
     }()
 
-    // MARK: - Init
-
     init(viewModel: HistoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -73,8 +60,6 @@ final class HistoryViewController: BaseViewController {
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     weak var coordinatorDelegate: HistoryViewControllerCoordinatorDelegate?
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -92,7 +77,15 @@ final class HistoryViewController: BaseViewController {
         configureNavigationBarAppearance(backgroundColor: AppColor.Background.primary)
     }
 
-    // MARK: - Setup
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        calendarView.layer.cornerRadius = 16
+        calendarView.layer.maskedCorners = [
+            .layerMinXMaxYCorner,
+            .layerMaxXMaxYCorner
+        ]
+    }
 
     override func setupUI() {
         replaceSystemBackButtonWithAppBackButton()
@@ -100,9 +93,9 @@ final class HistoryViewController: BaseViewController {
 
         calendarView.delegate = self
 
-        // MARK: hierarchy
-
+        view.addSubview(topBackgroundView)
         view.addSubview(scrollView)
+
         scrollView.addSubview(contentView)
 
         contentView.addSubViews([
@@ -110,41 +103,38 @@ final class HistoryViewController: BaseViewController {
             detailContainer
         ])
 
-        // detailView inside container
         detailContainer.addSubview(detailView)
-        detailView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(28)
-            $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalToSuperview().inset(28)
+
+        topBackgroundView.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
+            $0.height.equalTo(300)
         }
 
-        // MARK: constraints
-
-        // scrollView
         scrollView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
-        // contentView (⭐️ 중요)
         contentView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-            $0.width.equalTo(scrollView) // vertical scroll 핵심
+            $0.width.equalTo(scrollView)
         }
 
-        // calendarView
         calendarView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
         }
 
-        // detailContainer
         detailContainer.snp.makeConstraints {
             $0.top.equalTo(calendarView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
         }
-    }
 
-    // MARK: - Bind
+        detailView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(28)
+            $0.leading.trailing.equalToSuperview().inset(16)
+            $0.bottom.equalToSuperview().inset(28)
+        }
+    }
 
     override func bind() {
         viewModel.$state
@@ -163,13 +153,8 @@ final class HistoryViewController: BaseViewController {
             }
             .store(in: &cancellables)
     }
-}
 
-// MARK: - Render
-
-private extension HistoryViewController {
-
-    func render(_ state: HistoryViewState) {
+    private func render(_ state: HistoryViewState) {
         switch state {
         case .idle:
             break
@@ -200,13 +185,8 @@ private extension HistoryViewController {
             handleError(error)
         }
     }
-}
 
-// MARK: - Detail Show / Hide
-
-private extension HistoryViewController {
-
-    func showDetail() {
+    private func showDetail() {
         guard detailContainer.isHidden else { return }
 
         detailContainer.isHidden = false
@@ -217,7 +197,7 @@ private extension HistoryViewController {
         }
     }
 
-    func hideDetail() {
+    private func hideDetail() {
         guard !detailContainer.isHidden else { return }
 
         UIView.animate(withDuration: 0.2) {
@@ -226,13 +206,8 @@ private extension HistoryViewController {
             self.detailContainer.isHidden = true
         }
     }
-}
 
-// MARK: - Error
-
-private extension HistoryViewController {
-
-    func handleError(_ error: HistoryError) {
+    private func handleError(_ error: HistoryError) {
         guard presentedViewController == nil else { return }
 
         let msg: String
@@ -244,9 +219,14 @@ private extension HistoryViewController {
         let vc = MoaAlertViewController(message: msg)
         present(vc, animated: true)
     }
-}
 
-// MARK: - CalendarViewDelegate
+    private func presentPaydayBottomSheet() {
+        let currentPayday = UserDefaults.standard.integer(forKey: "payday")
+        let sheet = PaydaySelectionBottomSheet(initialPayday: currentPayday)
+        sheet.delegate = self
+        presentBottomSheet(sheet)
+    }
+}
 
 extension HistoryViewController: CalendarViewDelegate {
 
@@ -266,8 +246,6 @@ extension HistoryViewController: CalendarViewDelegate {
     }
 }
 
-// MARK: - WorkdayDetailViewDelegate
-
 extension HistoryViewController: WorkdayDetailViewDelegate {
 
     func workdayDetailView(
@@ -282,20 +260,6 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
         presentPaydayBottomSheet()
     }
 }
-
-// MARK: - Payday BottomSheet
-
-private extension HistoryViewController {
-
-    func presentPaydayBottomSheet() {
-        let currentPayday = UserDefaults.standard.integer(forKey: "payday")
-        let sheet = PaydaySelectionBottomSheet(initialPayday: currentPayday)
-        sheet.delegate = self
-        presentBottomSheet(sheet)
-    }
-}
-
-// MARK: - PaydaySelectionBottomSheetDelegate
 
 extension HistoryViewController: PaydaySelectionBottomSheetDelegate {
 
