@@ -34,7 +34,8 @@ final class TimeWheelColumnView: UIView {
 
     /// 전체 index
     private var absoluteIndex: Int = 0
-
+    private var hasInitialized = false
+    
     /// 외부 노출 index
     var selectedIndex: Int {
         let mod = absoluteIndex % values.count
@@ -61,6 +62,14 @@ final class TimeWheelColumnView: UIView {
         let inset = (bounds.height - cellHeight) / 2
         collectionView.contentInset.top = inset
         collectionView.contentInset.bottom = inset
+
+        guard !hasInitialized else { return }
+        hasInitialized = true
+
+        let offset = snapOffset(for: absoluteIndex)
+        collectionView.setContentOffset(CGPoint(x: 0, y: offset), animated: false)
+
+        collectionView.reloadData()
     }
 
     // MARK: - Public
@@ -99,6 +108,8 @@ final class TimeWheelColumnView: UIView {
     }
 
     private func updateSelectionIfNeeded() {
+        guard hasInitialized else { return }
+
         let newAbsolute = centeredAbsoluteIndex()
         guard newAbsolute != absoluteIndex else { return }
 
@@ -117,7 +128,6 @@ final class TimeWheelColumnView: UIView {
         }
     }
 
-    /// ⭐ 핵심: 중앙으로 재배치 (무한 스크롤 유지)
     private func recenterIfNeeded() {
         let threshold = values.count * repeatCount / 4
 
@@ -153,16 +163,6 @@ final class TimeWheelColumnView: UIView {
 
         addSubview(collectionView)
         collectionView.snp.makeConstraints { $0.edges.equalToSuperview() }
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-
-            self.collectionView.setContentOffset(
-                CGPoint(x: 0, y: self.snapOffset(for: self.absoluteIndex)),
-                animated: false
-            )
-            self.collectionView.reloadData()
-        }
     }
 }
 
@@ -217,7 +217,7 @@ extension TimeWheelColumnView: UICollectionViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateSelectionIfNeeded()
-        recenterIfNeeded()   // ⭐ 핵심
+        recenterIfNeeded()
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
