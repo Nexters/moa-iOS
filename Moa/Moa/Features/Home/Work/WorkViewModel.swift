@@ -22,11 +22,12 @@ final class WorkViewModel {
         case updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
         case requestVacation
         case changeRequestVacation
-        case startWork          // 일정 있는 날 출근하기 (idle → working)
-        case startWorkOnHoliday // 일정 없는 날(NONE) 쉬는날 출근하기
+        case startWork
+        case startWorkOnHoliday
         case endWork
         case extendWork(end: TimeIndicatorEntity)
         case editFinishedWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
+        case confirmWork
     }
     
     // MARK: - Dependencies
@@ -35,9 +36,9 @@ final class WorkViewModel {
     
     // MARK: - Private State
     
-    private var cancellables = Set<AnyCancellable>()
-    private var homeEntity: HomeEntity?
-    private var currentStatus: WorkStatusEntity = .idle
+    private var cancellables   = Set<AnyCancellable>()
+    private var homeEntity:      HomeEntity?
+    private var currentStatus:   WorkStatusEntity = .idle
     
     // MARK: - Init
     
@@ -74,6 +75,8 @@ extension WorkViewModel {
             handleExtendWork(end: end)
         case let .editFinishedWorkTime(start, end):
             handleEditFinishedWorkTime(start: start, end: end)
+        case .confirmWork:
+            handleConfirmWork()
         }
     }
 }
@@ -82,14 +85,12 @@ extension WorkViewModel {
 
 private extension WorkViewModel {
     
-    /// 최초 진입 — 로딩 인디케이터 표시
     func loadInitialData() {
         guard state != .loading else { return }
         state = .loading
         loadHomeData()
     }
 
-    /// 뒤로가기 후 재진입
     func refreshData() {
         loadHomeData()
     }
@@ -116,13 +117,14 @@ private extension WorkViewModel {
 
 private extension WorkViewModel {
     
-    /// type / 현재 시각 기준 자동 상태 결정
+    /// type / 현재 시각 / 오늘 확인 여부 기준 자동 상태 결정
     ///
-    /// - `.none`     → 시간 무관 항상 `.idle` (공휴일)
-    /// - `.vacation` → 시간 이후면 `.finished`(최종완료), 그 전이면 `.idle`
-    /// - `.work`     → now < inMin → `.idle`
-    ///                 inMin ≤ now < outMin → `.working`
-    ///                 now ≥ outMin → `.workFinished`(근무완료1)
+    /// - `.none`     → 항상 `.idle`
+    /// - `.vacation` → 시각 기준 idle / working / finished
+    /// - `.work`     → 오늘 이미 확인했으면 즉시 `.finished`
+    ///                 퇴근 시각 이후면 `.workFinished`
+    ///                 근무 중이면 `.working`
+    ///                 출근 전이면 `.idle`
     func resolveAutoStatus(for entity: HomeEntity) -> WorkStatusEntity {
         switch entity.type {
             
@@ -137,13 +139,9 @@ private extension WorkViewModel {
             let inMin  = clockIn.totalMinutes
             let outMin = clockOut.totalMinutes
             
-            if now < inMin {
-                return .idle
-            } else if now < outMin {
-                return .working
-            } else {
-                return .finished
-            }
+            if now < inMin        { return .idle }
+            else if now < outMin  { return .working }
+            else                  { return .finished }
             
         case .work:
             guard let clockIn  = entity.clockInTime,
@@ -158,9 +156,25 @@ private extension WorkViewModel {
             } else if now < outMin {
                 return .working
             } else {
+                // 퇴근 시각 이후 — 오늘 이미 "완료" 버튼을 탭했으면 즉시 .finished
+                if WorkConfirmStorage.isConfirmedToday {
+                    return .finished
+                }
                 return .workFinished
             }
         }
+    }
+}
+
+// MARK: - Confirm Work
+
+private extension WorkViewModel {
+
+    /// "완료" 버튼 탭 처리
+    func handleConfirmWork() {
+        WorkConfirmStorage.markConfirmedToday()
+        currentStatus = .finished
+        publish()
     }
 }
 
@@ -277,8 +291,8 @@ private extension WorkViewModel {
         let diff          = originalInMinutes - nowMinutes
         let newOutMinutes = max(originalOutMinutes - diff, nowMinutes)
         
-        let newClockIn  = TimeIndicatorEntity(hour: nowMinutes / 60,    minute: nowMinutes % 60)
-        let newClockOut = TimeIndicatorEntity(hour: newOutMinutes / 60,  minute: newOutMinutes % 60)
+        let newClockIn  = TimeIndicatorEntity(hour: nowMinutes / 60,   minute: nowMinutes % 60)
+        let newClockOut = TimeIndicatorEntity(hour: newOutMinutes / 60, minute: newOutMinutes % 60)
         
         Task { @MainActor in
             do {

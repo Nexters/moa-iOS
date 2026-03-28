@@ -36,14 +36,12 @@ final class WorkViewController: BaseViewController {
 
     private let navigationBarView = HomeNavigationBarView()
 
-    /// idle / 최종완료(finished) 상태 화면
     private lazy var workMainView: WorkMainContentView = {
         let view = WorkMainContentView()
         view.delegate = self
         return view
     }()
 
-    /// working / 근무완료1(workFinished) 상태 화면
     private lazy var workingContentView: WorkingContentView = {
         let view = WorkingContentView(workingType: .work)
         view.delegate = self
@@ -55,11 +53,6 @@ final class WorkViewController: BaseViewController {
         indicator.hidesWhenStopped = true
         return indicator
     }()
-
-    // MARK: - State
-
-    /// "완료" 탭 후 최종완료 페이지 여부
-    private var hasConfirmedWork = false
 
     // MARK: - Init
 
@@ -76,12 +69,11 @@ final class WorkViewController: BaseViewController {
         super.viewDidLoad()
         viewModel.send(.viewDidLoad)
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         viewModel.send(.refresh)
-        
+
         if case let .loaded(status, _) = viewModel.state,
            status == .working || status == .workFinished {
             startWorkingTimer()
@@ -120,7 +112,7 @@ final class WorkViewController: BaseViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
-        
+
         viewModel.$state
             .map { state -> Bool in
                 if case .loading = state { return true }
@@ -146,7 +138,7 @@ private extension WorkViewController {
     func setupHierarchy() {
         view.addSubViews([navigationBarView, workMainView, workingContentView, loadingIndicator])
     }
-    
+
     func setupConstraints() {
         navigationBarView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
@@ -193,28 +185,16 @@ private extension WorkViewController {
         loadingIndicator.stopAnimating()
 
         switch status {
-
         case .idle:
-            // 근무 전 / 공휴일(NONE) / 휴가(시간 전)
-            hasConfirmedWork = false
             renderIdleView(data: data)
-
         case .working:
-            // 근무 중
-            hasConfirmedWork = false
             renderActiveWork(status: status, data: data)
-
         case .workFinished:
-            // 근무완료 1 — WorkingContentView + WorkEndBottomIndicator 오버레이
             renderActiveWork(status: status, data: data)
-
         case .finished:
-            // 최종완료 — WorkMainContentView (status: .finished)
             renderFinalComplete(data: data)
         }
     }
-
-    // MARK: idle (근무 전 / 공휴일)
 
     func renderIdleView(data: HomeEntity) {
         stopWorkingTimer()
@@ -223,8 +203,6 @@ private extension WorkViewController {
         workingContentView.isHidden = true
         workMainView.configure(data: data, status: .idle)
     }
-
-    // MARK: working / workFinished
 
     func renderActiveWork(status: WorkStatusEntity, data: HomeEntity) {
         workMainView.isHidden       = true
@@ -247,12 +225,6 @@ private extension WorkViewController {
         startWorkingTimer()
     }
 
-    // MARK: 최종완료
-
-    /// "완료" 탭 후 → WorkMainContentView (status: .finished)
-    /// - MonthlySalaryView: imgFullMoney, 금액 녹색
-    /// - WorkMainSummaryView: dailyPay, 탭 불가, 휴가 시 "휴가"
-    /// - 하단 버튼: "이번달 근무 기록 확인하기"
     func renderFinalComplete(data: HomeEntity) {
         stopWorkingTimer()
         workingContentView.stopAnimations()
@@ -286,7 +258,6 @@ private extension WorkViewController {
         workingTimer = nil
     }
 
-    /// 매초 호출 — 퇴근 시각이 지났고 .working 상태면 자동으로 .workFinished 전환
     func checkAutoWorkFinish() {
         guard case let .loaded(status, data) = viewModel.state,
               status == .working,
@@ -296,8 +267,6 @@ private extension WorkViewController {
         let nowMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
 
         guard nowMinutes >= clockOut.totalMinutes else { return }
-
-        // 퇴근 시각 도달 → ViewModel에 종료 신호 → .workFinished 전환
         viewModel.send(.endWork)
     }
 }
@@ -329,7 +298,6 @@ private extension WorkViewController {
         presentBottomSheet(vc)
     }
 
-    /// idle: 출퇴근 시간 설정 (.setEstimateTime)
     func presentTimeSelectionBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -337,7 +305,6 @@ private extension WorkViewController {
         presentTimeSheet(type: .setEstimateTime, startTime: startTime, endTime: endTime)
     }
 
-    /// 근무완료 1 → "더 일할게요": 퇴근 시간 연장
     func presentExtendTimeBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -345,7 +312,6 @@ private extension WorkViewController {
         presentTimeSheet(type: .extendEndTime, startTime: startTime, endTime: endTime)
     }
 
-    /// 근무완료 1 → 근무시간 탭: 출퇴근 수정 (.changeWorkTime)
     func presentFinishedTimeEditBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -353,7 +319,6 @@ private extension WorkViewController {
         presentTimeSheet(type: .changeWorkTime, startTime: startTime, endTime: endTime)
     }
 
-    /// 근무 중 일정 변동 → 예상 출퇴근 시간 변경
     func presentWorkingScheduleAdjustBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
@@ -439,13 +404,10 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
 
         switch status {
         case .workFinished:
-            // 근무완료 1에서 시간 수정
             viewModel.send(.editFinishedWorkTime(start: startTime, end: endTime))
         case .working:
-            // 근무 중 일정 변경 / extendEndTime
             viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         default:
-            // idle: 예상 출퇴근 시간 설정
             viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         }
     }
@@ -462,10 +424,8 @@ extension WorkViewController: WorkMainContentViewDelegate {
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
         if data.type == .none {
-            // 일정 없는 날(NONE) → 쉬는날 출근하기
             viewModel.send(.startWorkOnHoliday)
         } else {
-            // 일정 있는 날 → 출근하기
             viewModel.send(.startWork)
         }
     }
@@ -498,14 +458,9 @@ extension WorkViewController: WorkingContentViewDelegate {
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView) {
         presentFinishedTimeEditBottomSheet()
     }
-
-    /// 근무완료 1 → "완료" 탭 → 최종완료 페이지
+    
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
-        hasConfirmedWork = true
-        guard case let .loaded(_, data) = viewModel.state else { return }
-        // ViewModel status를 .finished로 전환
-        // (현재는 .workFinished → hasConfirmedWork=true로 렌더 분기)
-        renderFinalComplete(data: data)
+        viewModel.send(.confirmWork)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
     }
 }
