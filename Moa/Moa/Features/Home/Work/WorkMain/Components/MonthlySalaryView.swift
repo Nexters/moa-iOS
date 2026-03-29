@@ -78,7 +78,8 @@ final class MonthlySalaryView: UIView {
     private var currentAmountColor: UIColor = AppColor.IconAndText.highEmphasis
 
     // MARK: - Animation State
-
+    
+    private var lastAnimatedAmount: Int?
     private var steps: [Int] = []
     private var currentStepIndex: Int = 0
     private var isAnimating = false
@@ -127,7 +128,17 @@ final class MonthlySalaryView: UIView {
             configureSubtitle(amount: config.workedEarnings, baseAmount: config.standardSalary)
         }
 
-        startCounterAnimation(targetAmount: config.workedEarnings)
+        let newAmount = config.workedEarnings
+
+        if lastAnimatedAmount == nil {
+            startCounterAnimation(targetAmount: newAmount)
+        } else if lastAnimatedAmount != newAmount {
+            startCounterAnimation(targetAmount: newAmount)
+        } else {
+            rollingAmountLabel.setText(formattedAmount(newAmount))
+        }
+
+        lastAnimatedAmount = newAmount
     }
 
     // MARK: - Private Helpers
@@ -217,10 +228,8 @@ private extension MonthlySalaryView {
 
         for i in 0...stepCount {
             let t = Double(i) / Double(stepCount)
-
-            let eased = 1 - pow(1 - t, 3)
-
-            let value = Int(Double(target) * eased)
+            
+            let value = Int(Double(target) * t)
 
             if value != last {
                 result.append(value)
