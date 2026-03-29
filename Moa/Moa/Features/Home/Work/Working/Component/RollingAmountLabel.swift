@@ -15,10 +15,11 @@ final class RollingAmountLabel: UIView {
     private let font:      UIFont
     private let textColor: UIColor
 
-    static let rollingDuration: TimeInterval = 0.08
+    static let rollingDuration: TimeInterval = 0.05
+    
     var animationDuration: TimeInterval { Self.rollingDuration }
 
-    private let digitDelay: TimeInterval = 0.001
+    private let digitDelay: TimeInterval = 0
 
     // MARK: - State
 
