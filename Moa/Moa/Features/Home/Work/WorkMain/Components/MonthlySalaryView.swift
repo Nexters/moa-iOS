@@ -28,11 +28,10 @@ final class MonthlySalaryView: UIView {
         return label
     }()
 
-    private let amountLabel: StyledLabel = {
-        let label = StyledLabel()
-        label.textAlignment = .right
-        return label
-    }()
+    private var rollingAmountLabel = RollingAmountLabel(
+        font:      AppTypography.h1_700.font(),
+        textColor: AppColor.IconAndText.highEmphasis
+    )
 
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
@@ -44,7 +43,7 @@ final class MonthlySalaryView: UIView {
     }()
 
     private lazy var amountStack: UIStackView = {
-        let stack = UIStackView(arrangedSubviews: [amountLabel, unitLabel])
+        let stack = UIStackView(arrangedSubviews: [rollingAmountLabel, unitLabel])
         stack.axis      = .horizontal
         stack.alignment = .center
         stack.spacing   = 4
@@ -76,12 +75,13 @@ final class MonthlySalaryView: UIView {
     // MARK: - State
 
     private var config: MonthlySalaryEntity?
+    private var currentAmountColor: UIColor = AppColor.IconAndText.highEmphasis
 
-    // MARK: - Animation
+    // MARK: - Animation State
 
-    private var displayLink: CADisplayLink?
-    private var animationStartTime: CFAbsoluteTime = 0
-    private let animationDuration: CGFloat = 1.5
+    private var steps: [Int] = []
+    private var currentStepIndex: Int = 0
+    private var isAnimating = false
 
     // MARK: - Init
 
@@ -91,7 +91,8 @@ final class MonthlySalaryView: UIView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
-    deinit { displayLink?.invalidate() }
+
+    deinit { stopAnimation() }
 
     // MARK: - Layout
 
@@ -110,14 +111,15 @@ final class MonthlySalaryView: UIView {
             ? UIImage(resource: .Image.imgFullMoney)
             : config.type.moneyImg
 
-        amountLabel.setStyle(.init(
-            typography: AppTypography.h1_700,
-            color: config.workStatus == .finished
-                ? AppColor.IconAndText.green
-                : config.type.amountLabelColor
-        ))
+        let newColor: UIColor = config.workStatus == .finished
+            ? AppColor.IconAndText.green
+            : config.type.amountLabelColor
 
-        // subtitle: 기본 월급보다 더 일한 경우에만 표시 (finished 상태에서는 숨김)
+        if newColor != currentAmountColor {
+            currentAmountColor = newColor
+            rebuildRollingLabel(color: newColor)
+        }
+
         let overworked = config.workedEarnings > config.standardSalary
             && config.workStatus != .finished
         subtitleLabel.isHidden = !overworked
@@ -125,20 +127,20 @@ final class MonthlySalaryView: UIView {
             configureSubtitle(amount: config.workedEarnings, baseAmount: config.standardSalary)
         }
 
-        configureAmount(amount: config.workedEarnings, shouldAnimate: true)
+        startCounterAnimation(targetAmount: config.workedEarnings)
     }
 
-    // MARK: - Private
+    // MARK: - Private Helpers
 
-    private func configureAmount(amount: Int, shouldAnimate: Bool) {
-        displayLink?.invalidate()
-        displayLink = nil
-
-        if shouldAnimate {
-            startCounterAnimation(targetAmount: amount)
-        } else {
-            amountLabel.setText(formattedAmount(amount))
-        }
+    private func rebuildRollingLabel(color: UIColor) {
+        let newLabel = RollingAmountLabel(
+            font:      AppTypography.h1_700.font(),
+            textColor: color
+        )
+        amountStack.removeArrangedSubview(rollingAmountLabel)
+        rollingAmountLabel.removeFromSuperview()
+        amountStack.insertArrangedSubview(newLabel, at: 0)
+        rollingAmountLabel = newLabel
     }
 
     private func configureSubtitle(amount: Int, baseAmount: Int) {
@@ -162,11 +164,9 @@ final class MonthlySalaryView: UIView {
         }
         subtitleLabel.attributedText = attributed
     }
-    
+
     private func formattedAmount(_ amount: Int) -> String {
-        let base = AppNumberFormatter.decimalString(from: amount)
-        
-        return base
+        AppNumberFormatter.decimalString(from: amount)
     }
 }
 
@@ -175,25 +175,68 @@ final class MonthlySalaryView: UIView {
 private extension MonthlySalaryView {
 
     func startCounterAnimation(targetAmount: Int) {
-        amountLabel.setText(formattedAmount(0))
-        animationStartTime = CACurrentMediaTime()
-        displayLink = CADisplayLink(target: self, selector: #selector(updateCounter))
-        displayLink?.add(to: .main, forMode: .common)
+        stopAnimation()
+
+        rollingAmountLabel.setText(formattedAmount(0))
+
+        guard targetAmount > 0 else { return }
+
+        let stepCount = 12
+        steps = buildSmoothSteps(target: targetAmount, stepCount: stepCount)
+
+        currentStepIndex = 0
+        isAnimating = true
+
+        animateNextStep()
     }
+    
+    private func animateNextStep() {
+        guard isAnimating else { return }
+        guard currentStepIndex < steps.count else {
+            stopAnimation()
+            return
+        }
 
-    @objc func updateCounter() {
-        guard let config else { return }
+        let value = steps[currentStepIndex]
+        currentStepIndex += 1
 
-        let elapsed  = CACurrentMediaTime() - animationStartTime
-        let progress = min(CGFloat(elapsed) / animationDuration, 1.0)
-        let eased    = progress * (2 - progress)
-        let current  = Int(CGFloat(config.workedEarnings) * eased)
+        let text = formattedAmount(value)
 
-        amountLabel.setText(formattedAmount(current))
+        rollingAmountLabel.rollTo(text)
 
-        guard progress >= 1.0 else { return }
-        displayLink?.invalidate()
-        displayLink = nil
-        amountLabel.setText(formattedAmount(config.workedEarnings))
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + rollingAmountLabel.animationDuration
+        ) { [weak self] in
+            self?.animateNextStep()
+        }
+    }
+    
+    private func buildSmoothSteps(target: Int, stepCount: Int) -> [Int] {
+        var result: [Int] = []
+        var last = -1
+
+        for i in 0...stepCount {
+            let t = Double(i) / Double(stepCount)
+
+            let eased = 1 - pow(1 - t, 3)
+
+            let value = Int(Double(target) * eased)
+
+            if value != last {
+                result.append(value)
+                last = value
+            }
+        }
+
+        if result.last != target {
+            result.append(target)
+        }
+
+        return result
+    }
+    
+    
+    func stopAnimation() {
+        isAnimating = false
     }
 }
