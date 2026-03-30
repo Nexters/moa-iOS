@@ -27,18 +27,11 @@ extension WorkdayRepositoryImpl {
         return response.toDomain()
     }
     
-    func fetchWorkday(date: String) async throws -> WorkdayEntity {
-        let response: WorkdayResponse = try await apiClient.request(
-            WorkdayAPI.getWorkday(date: date)
-        )
-        return response.toDomain()
-    }
-    
     func updateWorkdayAll(
         date: String,
         request: WorkdayUpdateRequest
-    ) async throws -> WorkdayEntity {
-        let response: WorkdayResponse = try await apiClient.request(
+    ) async throws -> CalendarScheduleEntity {
+        let response: ScheduleResponse = try await apiClient.request(
             WorkdayAPI.updateWorkdayAll(date: date, body: request)
         )
         
@@ -48,31 +41,9 @@ extension WorkdayRepositoryImpl {
     func updateClockOut(
         date: String,
         request: ClockEndRequest
-    ) async throws -> WorkdayEntity {
-        let response: WorkdayResponse = try await apiClient.request(
+    ) async throws -> CalendarScheduleEntity {
+        let response: ScheduleResponse = try await apiClient.request(
             WorkdayAPI.updateWorkdayClockEnd(date: date, body: request)
-        )
-        
-        return response.toDomain()
-    }
-    
-    func fetchHistory(
-        year: Int,
-        month: Int
-    ) async throws -> [HistoryEntity] {
-        let response: [HistoryResponse] = try await apiClient.request(
-            WorkdayAPI.getWorkdayList(year: year, month: month)
-        )
-        
-        return response.map { $0.toDomain() }
-    }
-    
-    func fetchEarnings(
-        year: Int,
-        month: Int
-    ) async throws -> EarningsEntity {
-        let response: EarningsResponse = try await apiClient.request(
-            WorkdayAPI.getTotalEarnings(year: year, month: month)
         )
         
         return response.toDomain()

@@ -254,13 +254,13 @@ private extension WorkViewModel {
         }
     }
     
-    func applyWorkdayUpdate(_ workday: WorkdayEntity, to entity: inout HomeEntity) {
+    func applyWorkdayUpdate(_ workday: CalendarScheduleEntity, to entity: inout HomeEntity) {
         entity = HomeEntity(
             workplace:      entity.workplace,
             workedEarnings: entity.workedEarnings,
             standardSalary: entity.standardSalary,
             dailyPay:       entity.dailyPay,
-            type:           workday.type,
+            type:           workday.contentType,
             clockInTime:    workday.clockInTime,
             clockOutTime:   workday.clockOutTime
         )

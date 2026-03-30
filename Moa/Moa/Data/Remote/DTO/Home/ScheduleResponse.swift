@@ -27,9 +27,9 @@ extension ScheduleResponse {
         
         return CalendarScheduleEntity(
             date:           date,
-            contentType:    CalendarScheduleType(rawValue: type) ?? .none,
+            contentType:    WorkdayType(rawValue: type) ?? .none,
             status:         CalendarScheduleStatus(rawValue: status)  ?? .none,
-            events:         events.compactMap { CalendarEvent(rawValue: $0) },
+            events:         events.compactMap { CalendarEventType(rawValue: $0) },
             dailyPay:       dailyPay,
             clockInTime:    TimeIndicatorEntity(from: clockInTime),
             clockOutTime:   TimeIndicatorEntity(from: clockOutTime),

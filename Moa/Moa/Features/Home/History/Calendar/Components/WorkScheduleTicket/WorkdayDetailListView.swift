@@ -2,11 +2,10 @@
 //  WorkdayDetailListView.swift
 //  Moa
 //
-//  캘린더 하단에 인라인으로 표시되는 날짜 상세 패널
-//  - 날짜 타이틀 ("2026.1.14")
-//  - WorkScheduleTicket 카드 세로 목록 (ScrollView 없이 stackView)
-//  - 티켓 탭 → delegate.didTapEdit
-//
+//  캘린더 하단 날짜 상세 패널
+//  - 날짜 타이틀
+//  - WorkScheduleTicket 목록
+//  - payday는 CalendarScheduleEntity.events에서 직접 판단
 
 import UIKit
 import SnapKit
@@ -15,7 +14,7 @@ import SnapKit
 
 protocol WorkdayDetailViewDelegate: AnyObject {
     /// 근무/휴가 티켓 탭 → 일정 수정 화면으로 이동
-    func workdayDetailView(_ view: WorkdayDetailView, didTapEdit workday: WorkdayEntity, date: Date)
+    func workdayDetailView(_ view: WorkdayDetailView, didTapEdit schedule: CalendarScheduleEntity)
     /// 월급 티켓 탭 → 월급날 수정 바텀시트
     func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView)
 }
@@ -30,10 +29,7 @@ final class WorkdayDetailView: UIView {
 
     // MARK: - Private State
 
-    private var currentWorkday: WorkdayEntity?
-    private var currentDate: Date?
-    private var currentIsPayday: Bool = false
-    private var currentSalary: Int = 0
+    private var currentSchedule: CalendarScheduleEntity?
 
     // MARK: - UI
 
@@ -47,14 +43,14 @@ final class WorkdayDetailView: UIView {
     }()
 
     private let ticketStack: UIStackView = {
-        let sv = UIStackView()
+        let sv     = UIStackView()
         sv.axis    = .vertical
         sv.spacing = 12
         return sv
     }()
 
     private let containerStack: UIStackView = {
-        let sv = UIStackView()
+        let sv     = UIStackView()
         sv.axis    = .vertical
         sv.spacing = 20
         return sv
@@ -74,26 +70,24 @@ final class WorkdayDetailView: UIView {
     private func setup() {
         containerStack.addArrangedSubview(dateLabel)
         containerStack.addArrangedSubview(ticketStack)
-
         addSubview(containerStack)
-        containerStack.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
+        containerStack.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
 
     // MARK: - Configure
+    //
+    // payday 여부는 schedule.events에서 직접 판단
+    // → UserDefaults.payday 의존 제거
+    // salary: 이번달 기본 월급 (ViewModel에서 CalendarEntity.earnings.standardSalary로 전달)
 
-    func configure(date: Date, workday: WorkdayEntity, isPayday: Bool = false, salary: Int = 0) {
-        currentWorkday    = workday
-        currentDate       = date
-        currentIsPayday   = isPayday
-        currentSalary     = salary
+    func configure(schedule: CalendarScheduleEntity, salary: Int) {
+        currentSchedule = schedule
 
-        dateLabel.setText(dateString(from: date))
+        dateLabel.setText(dateString(from: schedule.date))
 
         ticketStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
-        let tickets = makeTickets(from: workday, date: date, isPayday: isPayday, salary: salary)
+        let tickets = makeTickets(from: schedule, salary: salary)
 
         if tickets.isEmpty {
             let emptyLabel = StyledLabel()
@@ -113,18 +107,18 @@ final class WorkdayDetailView: UIView {
 
     // MARK: - Ticket Factory
 
-    private func makeTickets(from workday: WorkdayEntity, date: Date, isPayday: Bool, salary: Int) -> [WorkScheduleTicket] {
-        let type     = workday.type
-        let startStr = workday.clockInTime?.displayString  ?? "--:--"
-        let endStr   = workday.clockOutTime?.displayString ?? "--:--"
-        let today    = Date()
-
+    private func makeTickets(from schedule: CalendarScheduleEntity, salary: Int) -> [WorkScheduleTicket] {
         var tickets: [WorkScheduleTicket] = []
+        let today    = Date()
+        let calendar = Calendar.korea
 
-        switch type {
+        let startStr = schedule.clockInTime?.displayString  ?? "--:--"
+        let endStr   = schedule.clockOutTime?.displayString ?? "--:--"
+
+        switch schedule.contentType {
         case .work:
-            let isPastOrToday = Calendar.korea.compare(
-                date, to: today, toGranularity: .day
+            let isPastOrToday = calendar.compare(
+                schedule.date, to: today, toGranularity: .day
             ) != .orderedDescending
 
             let ticket: WorkScheduleTicket = isPastOrToday
@@ -133,34 +127,35 @@ final class WorkdayDetailView: UIView {
             tickets.append(ticket)
 
         case .vacation:
-            tickets.append(.vacation(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() })
+            tickets.append(
+                .vacation(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }
+            )
 
         case .none:
             break
         }
 
-        // 월급날이면 월급 티켓 추가
-        if isPayday {
-            let nf = NumberFormatter()
-            nf.numberStyle       = .decimal
-            nf.groupingSeparator = ","
-            let formatted = nf.string(from: NSNumber(value: salary)) ?? "\(salary)"
-            tickets.append(.payday(schedule: paydayScheduleString(), salary: formatted) { [weak self] in
-                self?.handlePaydayTicketTap()
-            })
+        // payday 티켓: events 배열에 .payday 포함 여부로 판단
+        // 기존 UserDefaults.payday 의존 방식에서 서버 데이터 기반으로 변경
+        if schedule.events.contains(.payday) {
+            let nf                  = NumberFormatter()
+            nf.numberStyle          = .decimal
+            nf.groupingSeparator    = ","
+            let formattedSalary     = nf.string(from: NSNumber(value: salary)) ?? "\(salary)"
+            let paydayDay           = calendar.component(.day, from: schedule.date)
+            tickets.append(
+                .payday(schedule: "\(paydayDay)", salary: formattedSalary) { [weak self] in
+                    self?.handlePaydayTicketTap()
+                }
+            )
         }
 
         return tickets
     }
 
-    private func paydayScheduleString() -> String {
-        let day = UserDefaults.standard.integer(forKey: "payday")
-        return day > 0 ? "\(day)" : "-"
-    }
-
     private func handleTicketTap() {
-        guard let workday = currentWorkday, let date = currentDate else { return }
-        delegate?.workdayDetailView(self, didTapEdit: workday, date: date)
+        guard let schedule = currentSchedule else { return }
+        delegate?.workdayDetailView(self, didTapEdit: schedule)
     }
 
     private func handlePaydayTicketTap() {

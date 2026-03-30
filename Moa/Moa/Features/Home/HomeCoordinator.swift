@@ -93,8 +93,8 @@ private extension HomeCoordinator {
         nav?.pushViewController(vc, animated: true)
     }
 
-    /// 일정 수정 — WorkdayEntity + 날짜로 기존 데이터 선입력
-    func showFixSchedule(workday: WorkdayEntity, date: Date) {
+    /// 일정 수정 — CalendarScheduleEntity + 날짜로 기존 데이터 선입력
+    func showFixSchedule(workday: CalendarScheduleEntity, date: Date) {
         let existing = FixScheduleViewModel.makeState(from: workday, date: date)
         let vc = makeFixScheduleViewController(viewType: .fix, existingSchedule: existing)
         nav?.pushViewController(vc, animated: true)
@@ -125,19 +125,18 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 // MARK: - HistoryViewControllerCoordinatorDelegate
 
 extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
+    func historyViewControllerDidTapEdit(
+        _ vc: HistoryViewController,
+        schedule: CalendarScheduleEntity
+    ) {
+        showFixSchedule(workday: schedule, date: schedule.date)
+    }
+    
 
     func historyViewControllerDidTapAdd(
         _ vc: HistoryViewController
     ) {
         showAddSchedule()
-    }
-
-    func historyViewControllerDidTapEdit(
-        _ vc: HistoryViewController,
-        workday: WorkdayEntity,
-        date: Date
-    ) {
-        showFixSchedule(workday: workday, date: date)
     }
 }
 

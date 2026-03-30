@@ -121,16 +121,16 @@ private extension FixScheduleViewModel {
     }
 }
 
-// MARK: - WorkdayEntity → FixScheduleViewState 변환 헬퍼
+// MARK: - CalendarScheduleEntity → FixScheduleViewState 변환 헬퍼
 
 extension FixScheduleViewModel {
 
-    static func makeState(from workday: WorkdayEntity, date: Date) -> FixScheduleViewState {
+    static func makeState(from workday: CalendarScheduleEntity, date: Date) -> FixScheduleViewState {
         var state = FixScheduleViewState()
 
         state.dateRange = ScheduleDateRangeEntity(single: date)
 
-        switch workday.type {
+        switch workday.contentType {
         case .vacation: state.scheduleType = .vacation
         case .work, .none: state.scheduleType = .workday
         }
