@@ -8,7 +8,11 @@
 import Foundation
 
 protocol WorkdayRepository {
+    
+    func fetchCalendarEvent(year: Int, month: Int) async throws -> CalendarEntity
+    
     func fetchWorkday(date: String) async throws -> WorkdayEntity
+    
     func updateWorkdayAll(
         date: String,
         request: WorkdayUpdateRequest

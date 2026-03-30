@@ -19,6 +19,14 @@ final class WorkdayRepositoryImpl: WorkdayRepository {
 
 extension WorkdayRepositoryImpl {
     
+    func fetchCalendarEvent(year: Int, month: Int) async throws -> CalendarEntity {
+        let response: CalendarResponse = try await apiClient.request(
+            CalendarAPI.getCalendarInfo(year: year, month: month)
+        )
+        
+        return response.toDomain()
+    }
+    
     func fetchWorkday(date: String) async throws -> WorkdayEntity {
         let response: WorkdayResponse = try await apiClient.request(
             WorkdayAPI.getWorkday(date: date)

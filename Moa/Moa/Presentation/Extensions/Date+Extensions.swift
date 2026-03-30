@@ -50,4 +50,7 @@ extension Date {
         return Calendar.korea.date(from: c) ?? Date()
     }
     
+    static func parseDate(_ string: String) -> Date? {
+        DateFormatter.yyyyMMdd.date(from: string)
+    }
 }
