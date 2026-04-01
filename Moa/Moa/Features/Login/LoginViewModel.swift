@@ -57,9 +57,8 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
         }
         
         Task { [weak self] in
-            guard let self,
-                  let fcmToken = AuthSessionManager.shared.currentFcmToken()
-            else { return }
+            guard let self else { return }
+            let fcmToken = AuthSessionManager.shared.currentFcmToken()
             do {
                 _ = try await self.authUsecase.loginWithKakaoTalk(
                     idToken: idToken,
@@ -75,9 +74,8 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
     
     func didReceiveInfoFromApple(idToken: String) {
         Task { [weak self] in
-            guard let self,
-                  let fcmToken = AuthSessionManager.shared.currentFcmToken()
-            else { return }
+            guard let self else { return }
+            let fcmToken = AuthSessionManager.shared.currentFcmToken()
             do {
                 let _ = try await self.authUsecase.loginWithApple(
                     idToken: idToken,
