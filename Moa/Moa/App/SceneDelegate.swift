@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
         
-        let navigationController = UINavigationController()
+        let navigationController = AppNavigationController()
         let container = AppContainer.shared
         
         let router = AppRouter(
