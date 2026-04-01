@@ -15,7 +15,9 @@ final class FixScheduleViewModel {
 
     @Published private(set) var state       = FixScheduleViewState()
     @Published private(set) var submitState = FixScheduleSubmitState.idle
-
+    @Published private(set) var canShowVacationOption = true // 휴가 옵션 표시 여부
+    private var schedules: [CalendarScheduleEntity] = []
+    
     // MARK: - Input
 
     enum Input {
@@ -48,6 +50,8 @@ final class FixScheduleViewModel {
         } else if let date = preselectedDate {
             state.dateRange = ScheduleDateRangeEntity(single: date)
         }
+
+        updateDerivedState()
     }
 
     deinit { cancellables.removeAll() }
@@ -59,8 +63,10 @@ extension FixScheduleViewModel {
 
     func send(_ input: Input) {
         switch input {
+
         case .selectDate(let date):
             state.dateRange = ScheduleDateRangeEntity(single: date)
+            updateDerivedState()
 
         case .selectScheduleType(let type):
             state.scheduleType = type
@@ -83,7 +89,11 @@ extension FixScheduleViewModel {
 // MARK: - Submit
 
 private extension FixScheduleViewModel {
-
+    func setSchedules(_ schedules: [CalendarScheduleEntity]) {
+        self.schedules = schedules
+        updateDerivedState()
+    }
+    
     func submitSchedule() {
         guard let dateRange = state.dateRange else { return }
 
@@ -139,5 +149,28 @@ extension FixScheduleViewModel {
         if let clockOut = workday.clockOutTime { state.endTime   = clockOut }
 
         return state
+    }
+    
+    private func updateVacationAvailability() {
+        guard let date = state.dateRange?.start else {
+            canShowVacationOption = false
+            return
+        }
+
+        let calendar = Calendar.korea
+
+        let schedule = schedules.first {
+            calendar.isDate($0.date, inSameDayAs: date)
+        }
+
+        if let schedule {
+            canShowVacationOption = (schedule.contentType == .work)
+        } else {
+            canShowVacationOption = true
+        }
+    }
+    
+    private func updateDerivedState() {
+        updateVacationAvailability()
     }
 }

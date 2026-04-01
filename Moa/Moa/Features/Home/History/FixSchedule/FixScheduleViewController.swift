@@ -165,6 +165,9 @@ final class FixScheduleViewController: BaseViewController {
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
+        
+        // 초기 휴가 옵션 표시 여부 설정
+        scheduleTypeOptionView.setVacationButtonVisible(viewModel.canShowVacationOption)
     }
 
     // BaseViewController.viewDidLoad → bind() 자동 호출
@@ -178,6 +181,13 @@ final class FixScheduleViewController: BaseViewController {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
+            .store(in: &cancellables)
+        
+        viewModel.$canShowVacationOption
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] canShow in
+                self?.scheduleTypeOptionView.setVacationButtonVisible(canShow)
+            }
             .store(in: &cancellables)
     }
 }
