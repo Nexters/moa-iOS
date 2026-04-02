@@ -10,7 +10,7 @@ import Foundation
 enum HistoryViewState: Equatable {
     case idle
     case loading
-    case loaded(schedules: [CalendarScheduleEntity], earnings: EarningsEntity)
+    case loaded(schedules: [CalendarScheduleEntity], earnings: EarningsEntity, joinedAt: Date)
     case dayDetail(schedule: CalendarScheduleEntity, salary: Int)
     case error(HistoryError)
 }

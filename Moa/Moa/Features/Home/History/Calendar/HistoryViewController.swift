@@ -10,10 +10,11 @@ import Combine
 // MARK: - CoordinatorDelegate
 
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController)
+    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?)
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity
+        schedule: CalendarScheduleEntity,
+        joinedAt: Date?
     )
 }
 
@@ -23,6 +24,8 @@ final class HistoryViewController: BaseViewController {
 
     private let viewModel: HistoryViewModel
     private var selectedDate: Date?
+    /// 가장 최근에 수신한 joinedAt — coordinatorDelegate 호출 시 전달
+    private var currentJoinedAt: Date?
 
     // MARK: - UI
 
@@ -163,7 +166,9 @@ final class HistoryViewController: BaseViewController {
         case .loading:
             break
 
-        case .loaded(let schedules, let earnings):
+        case .loaded(let schedules, let earnings, let joinedAt):
+            currentJoinedAt = joinedAt
+            calendarView.apply(joinedAt: joinedAt)
             calendarView.updateCalendarSchedules(schedules)
             calendarView.updateWorkInfo(earnings)
 
@@ -237,7 +242,7 @@ extension HistoryViewController: CalendarViewDelegate {
     }
 
     func calendarViewDidTapAdd(_ view: CalendarView) {
-        coordinatorDelegate?.historyViewControllerDidTapAdd(self)
+        coordinatorDelegate?.historyViewControllerDidTapAdd(self, joinedAt: currentJoinedAt)
     }
 }
 
@@ -246,7 +251,11 @@ extension HistoryViewController: CalendarViewDelegate {
 extension HistoryViewController: WorkdayDetailViewDelegate {
 
     func workdayDetailView(_ view: WorkdayDetailView, didTapEdit schedule: CalendarScheduleEntity) {
-        coordinatorDelegate?.historyViewControllerDidTapEdit(self, schedule: schedule)
+        coordinatorDelegate?.historyViewControllerDidTapEdit(
+            self,
+            schedule: schedule,
+            joinedAt: currentJoinedAt
+        )
     }
 
     func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView) {
