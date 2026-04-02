@@ -15,7 +15,10 @@ final class FixScheduleViewModel {
 
     @Published private(set) var state       = FixScheduleViewState()
     @Published private(set) var submitState = FixScheduleSubmitState.idle
-    @Published private(set) var canShowVacationOption = true // 휴가 옵션 표시 여부
+    @Published private(set) var canShowVacationOption = true
+    /// 날짜 선택 바텀시트에 전달할 가입일 — nil이면 제한 없음
+    @Published private(set) var joinedAt: Date? = nil
+
     private var schedules: [CalendarScheduleEntity] = []
     
     // MARK: - Input
@@ -40,10 +43,12 @@ final class FixScheduleViewModel {
         viewType: ScheduleTypeOptionViewType,
         historyUseCase: HistoryUseCase,
         preselectedDate: Date? = nil,
-        existingSchedule: FixScheduleViewState? = nil
+        existingSchedule: FixScheduleViewState? = nil,
+        joinedAt: Date? = nil
     ) {
         self.viewType       = viewType
         self.historyUseCase = historyUseCase
+        self.joinedAt       = joinedAt
 
         if let existing = existingSchedule {
             state = existing
@@ -89,11 +94,12 @@ extension FixScheduleViewModel {
 // MARK: - Submit
 
 private extension FixScheduleViewModel {
+
     func setSchedules(_ schedules: [CalendarScheduleEntity]) {
         self.schedules = schedules
         updateDerivedState()
     }
-    
+
     func submitSchedule() {
         guard let dateRange = state.dateRange else { return }
 
@@ -122,7 +128,6 @@ private extension FixScheduleViewModel {
         }
     }
 
-    /// ScheduleTypeOptionType → WorkdayType 변환
     func workdayType(from type: ScheduleTypeOptionType) -> WorkdayType {
         switch type {
         case .vacation: return .vacation
@@ -150,7 +155,7 @@ extension FixScheduleViewModel {
 
         return state
     }
-    
+
     private func updateVacationAvailability() {
         guard let date = state.dateRange?.start else {
             canShowVacationOption = false
@@ -169,7 +174,7 @@ extension FixScheduleViewModel {
             canShowVacationOption = true
         }
     }
-    
+
     private func updateDerivedState() {
         updateVacationAvailability()
     }

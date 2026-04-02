@@ -8,7 +8,8 @@
 import UIKit
 import SnapKit
 
-// MARK: - Simple Test Bottom Sheet Delegate
+// MARK: - Delegate
+
 protocol DatePickerCalendarBottomSheetDelegate: AnyObject {
     func calendarBottomSheet(_ sheet: DatePickerCalendarBottomSheet, didSelect date: Date)
 }
@@ -16,8 +17,9 @@ protocol DatePickerCalendarBottomSheetDelegate: AnyObject {
 final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresentable {
     
     // MARK: - Properties
+
     weak var delegate: DatePickerCalendarBottomSheetDelegate?
-    
+
     // MARK: - UI
 
     private let titleLabel: StyledLabel = {
@@ -40,13 +42,23 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         button.applyStyle(.primary())
         return button
     }()
-    
+
+    // MARK: - Init
+
+    /// - Parameter joinedAt: 가입일. 이 달보다 이전 달로 이동하지 않습니다. nil이면 제한 없음.
+    init(joinedAt: Date? = nil) {
+        super.init(nibName: nil, bundle: nil)
+        if let joinedAt {
+            calendarView.apply(joinedAt: joinedAt)
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
     
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupViews()
     }
     
@@ -79,11 +91,8 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         confirmButton.addTarget(self, action: #selector(didTapConfirmButton), for: .touchUpInside)
     }
     
-    
     @objc private func didTapConfirmButton() {
-        
         guard let selectedDate = calendarView.selectedDate else { return }
-        
         delegate?.calendarBottomSheet(self, didSelect: selectedDate)
         dismissBottomSheet()
     }

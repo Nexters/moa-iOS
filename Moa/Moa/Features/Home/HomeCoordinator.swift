@@ -25,7 +25,7 @@ final class HomeCoordinator {
     func start(from parentNav: UINavigationController, animated: Bool) {
         self.nav = parentNav
         parentNav.setViewControllers([makeWorkViewController()], animated: animated)
-        observeFcmTokenRefresh() // 이후 갱신 감지용은 유지
+        observeFcmTokenRefresh()
     }
 }
 
@@ -74,29 +74,35 @@ private extension HomeCoordinator {
     func makeFixScheduleViewController(
         viewType: ScheduleTypeOptionViewType,
         preselectedDate: Date? = nil,
-        existingSchedule: FixScheduleViewState? = nil
+        existingSchedule: FixScheduleViewState? = nil,
+        joinedAt: Date? = nil
     ) -> FixScheduleViewController {
         let vm = FixScheduleViewModel(
             viewType: viewType,
             historyUseCase: container.historyUseCase,
             preselectedDate: preselectedDate,
-            existingSchedule: existingSchedule
+            existingSchedule: existingSchedule,
+            joinedAt: joinedAt
         )
         let vc = FixScheduleViewController(viewModel: vm)
         vc.coordinatorDelegate = self
         return vc
     }
 
-    /// 일정 추가
-    func showAddSchedule() {
-        let vc = makeFixScheduleViewController(viewType: .add)
+    /// 일정 추가 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
+    func showAddSchedule(joinedAt: Date?) {
+        let vc = makeFixScheduleViewController(viewType: .add, joinedAt: joinedAt)
         nav?.pushViewController(vc, animated: true)
     }
 
-    /// 일정 수정 — CalendarScheduleEntity + 날짜로 기존 데이터 선입력
-    func showFixSchedule(workday: CalendarScheduleEntity, date: Date) {
+    /// 일정 수정 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
+    func showFixSchedule(workday: CalendarScheduleEntity, date: Date, joinedAt: Date?) {
         let existing = FixScheduleViewModel.makeState(from: workday, date: date)
-        let vc = makeFixScheduleViewController(viewType: .fix, existingSchedule: existing)
+        let vc = makeFixScheduleViewController(
+            viewType: .fix,
+            existingSchedule: existing,
+            joinedAt: joinedAt
+        )
         nav?.pushViewController(vc, animated: true)
     }
 
@@ -125,18 +131,17 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
 // MARK: - HistoryViewControllerCoordinatorDelegate
 
 extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
+
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity
+        schedule: CalendarScheduleEntity,
+        joinedAt: Date?
     ) {
-        showFixSchedule(workday: schedule, date: schedule.date)
+        showFixSchedule(workday: schedule, date: schedule.date, joinedAt: joinedAt)
     }
-    
 
-    func historyViewControllerDidTapAdd(
-        _ vc: HistoryViewController
-    ) {
-        showAddSchedule()
+    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?) {
+        showAddSchedule(joinedAt: joinedAt)
     }
 }
 
@@ -156,8 +161,10 @@ extension HomeCoordinator: FixScheduleViewControllerDelegate {
     }
 }
 
-//  MARK: - Fcm token
+// MARK: - FCM Token
+
 private extension HomeCoordinator {
+
     func observeFcmTokenRefresh() {
         NotificationCenter.default.addObserver(
             forName: .fcmTokenRefreshed,
@@ -167,7 +174,7 @@ private extension HomeCoordinator {
             guard let self,
                   let fcmToken = notification.userInfo?["fcmToken"] as? String
             else { return }
-            
+
             Task {
                 await self.container.authUseCase.updateFcmToken(to: fcmToken)
             }
