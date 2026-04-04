@@ -19,10 +19,8 @@ final class DatePickerCalendarView: UIView {
 
     weak var delegate: DatePickerCalendarViewDelegate?
 
-    /// 현재 선택된 날짜
     private(set) var selectedDate: Date? = Calendar.current.startOfDay(for: Date())
 
-    /// 현재 표시 중인 월
     var currentMonth: Date { dataSource.currentDate }
 
     // MARK: - Private
@@ -94,6 +92,7 @@ final class DatePickerCalendarView: UIView {
     private func reloadAll() {
         navBar.setTitle(dataSource.monthTitle(for: dataSource.currentDate))
         navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
         reloadGrid()
     }
 
@@ -106,6 +105,7 @@ final class DatePickerCalendarView: UIView {
 
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         if gesture.direction == .left {
+            guard dataSource.canMoveToNextMonth else { return }
             dataSource.moveToNextMonth()
             slide(.left)
         } else {
@@ -146,10 +146,10 @@ final class DatePickerCalendarView: UIView {
     }
 
     /// 가입일 적용 — DatePickerCalendarBottomSheet 초기화 시 호출
-    /// DataSource 내부에서 최초 1회만 실제 반영되므로 중복 호출해도 안전
     func apply(joinedAt: Date) {
         dataSource.applyJoinedAt(joinedAt)
         navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
     }
 }
 
@@ -164,6 +164,7 @@ extension DatePickerCalendarView: CalendarNavigationBarDelegate {
     }
 
     func navigationBarDidTapNext() {
+        guard dataSource.canMoveToNextMonth else { return }
         dataSource.moveToNextMonth()
         slide(.left)
     }

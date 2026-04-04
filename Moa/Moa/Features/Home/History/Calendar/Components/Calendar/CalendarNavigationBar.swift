@@ -113,16 +113,23 @@ final class CalendarNavigationBar: UIView {
     }
     
     // MARK: - Public
-    
+
     func setTitle(_ title: String) {
         monthLabel.setText(title)
     }
 
-    /// 이전 달 버튼 활성/비활성 업데이트
-    /// false이면 터치 불가 + 아이콘을 disabled 색상으로 표시
+    /// 이전 달 버튼 활성/비활성
     func setPrevButtonEnabled(_ enabled: Bool) {
         prevButton.isEnabled = enabled
         prevButton.tintColor = enabled
+            ? AppColor.IconAndText.highEmphasis
+            : AppColor.IconAndText.disabled
+    }
+
+    /// 다음 달 버튼 활성/비활성
+    func setNextButtonEnabled(_ enabled: Bool) {
+        nextButton.isEnabled = enabled
+        nextButton.tintColor = enabled
             ? AppColor.IconAndText.highEmphasis
             : AppColor.IconAndText.disabled
     }

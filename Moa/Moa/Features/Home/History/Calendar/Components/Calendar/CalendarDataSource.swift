@@ -10,8 +10,8 @@ final class CalendarDataSource {
     private(set) var currentDate: Date
     private let calendar: Calendar
 
-    /// 가입일 — 이 달의 월 시작보다 이전으로는 이동 불가
-    /// nil이면 제한 없음
+    /// 가입일 — 이 달보다 이전으로는 이동 불가, 이 달 + 12개월 이후로도 이동 불가
+    /// nil이면 양방향 제한 없음
     private var joinedAt: Date?
 
     /// 날짜 키 → CalendarScheduleEntity 매핑
@@ -72,10 +72,10 @@ final class CalendarDataSource {
         return Int(ceil(Double(leading + total) / 7.0))
     }
 
-    // MARK: - Navigation
+    // MARK: - Navigation Availability
 
-    /// 이전 달로 이동 가능한지 여부
-    /// joinedAt이 설정된 경우, 현재 달의 월 시작이 가입 달의 월 시작보다 클 때만 허용
+    /// 이전 달 이동 가능 여부
+    /// joinedAt이 있으면 현재 달이 가입 달보다 클 때만 허용
     var canMoveToPreviousMonth: Bool {
         guard let joinedAt else { return true }
         let currentMonthStart = startOfMonth(for: currentDate)
@@ -83,12 +83,21 @@ final class CalendarDataSource {
         return currentMonthStart > joinedMonthStart
     }
 
-    @discardableResult func moveToNextMonth() -> Date {
-        currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
-        return currentDate
+    /// 다음 달 이동 가능 여부
+    /// joinedAt이 있으면 현재 달이 가입 달 + 11개월(= 12번째 달) 미만일 때만 허용
+    var canMoveToNextMonth: Bool {
+        guard let joinedAt else { return true }
+        let currentMonthStart = startOfMonth(for: currentDate)
+        // 가입 달 기준 마지막 조회 가능 달: joinedAt + 11개월
+        guard let lastAllowedMonth = calendar.date(
+            byAdding: .month, value: 11, to: startOfMonth(for: joinedAt)
+        ) else { return true }
+        return currentMonthStart < lastAllowedMonth
     }
 
-    /// 이전 달로 이동. 가입 달이 설정된 경우 그 이전으로는 이동하지 않음.
+    // MARK: - Navigation
+
+    /// 이전 달로 이동. 가입 달 이전으로는 이동 안 함.
     /// - Returns: 실제 이동 여부
     @discardableResult func moveToPreviousMonth() -> Bool {
         guard canMoveToPreviousMonth else { return false }
@@ -96,9 +105,17 @@ final class CalendarDataSource {
         return true
     }
 
+    /// 다음 달로 이동. 가입 달 + 12개월 이후로는 이동 안 함.
+    /// - Returns: 이동 후 currentDate
+    @discardableResult func moveToNextMonth() -> Date {
+        guard canMoveToNextMonth else { return currentDate }
+        currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
+        return currentDate
+    }
+
     /// 가입일 설정 — CalendarEntity.joinedAt을 최초 loaded 시점에 한 번 전달
     func applyJoinedAt(_ date: Date) {
-        guard joinedAt == nil else { return }  // 최초 1회만 설정
+        guard joinedAt == nil else { return }   // 최초 1회만 설정
         joinedAt = date
     }
 

@@ -79,7 +79,7 @@ final class CalendarView: UIView {
             $0.top.equalTo(weekHeader.snp.bottom).offset(4)
             $0.leading.trailing.equalToSuperview().inset(8)
             gridHeightConstraint = $0.height.equalTo(cellHeight * 5).constraint
-            $0.bottom.equalToSuperview()
+            $0.bottom.equalToSuperview().inset(20).priority(.low)
         }
 
         navBar.delegate   = self
@@ -100,6 +100,7 @@ final class CalendarView: UIView {
     private func reloadAll() {
         navBar.setTitle(dataSource.monthTitle(for: dataSource.currentDate))
         navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
         reloadGrid()
     }
 
@@ -121,10 +122,10 @@ final class CalendarView: UIView {
 
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         if gesture.direction == .left {
+            guard dataSource.canMoveToNextMonth else { return }
             dataSource.moveToNextMonth()
             slide(.left)
         } else {
-            // 가입 달 이전으로 스와이프 불가
             guard dataSource.canMoveToPreviousMonth else { return }
             dataSource.moveToPreviousMonth()
             slide(.right)
@@ -166,14 +167,12 @@ final class CalendarView: UIView {
     var currentMonth: Date { dataSource.currentDate }
 
     /// 가입일 적용 — HistoryViewController의 render(.loaded)에서 호출
-    /// DataSource 내부에서 최초 1회만 실제 반영되므로 매 loaded마다 호출해도 안전
     func apply(joinedAt: Date) {
         dataSource.applyJoinedAt(joinedAt)
-        // joinedAt 적용 후 현재 달의 prev 버튼 상태 즉시 갱신
         navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
     }
 
-    /// API에서 받은 CalendarScheduleEntity 배열로 캘린더 갱신
     func updateCalendarSchedules(_ schedules: [CalendarScheduleEntity]) {
         dataSource.resetAndApply(schedules)
         reloadGrid()
@@ -199,13 +198,13 @@ final class CalendarView: UIView {
 extension CalendarView: CalendarNavigationBarDelegate {
 
     func navigationBarDidTapPrev() {
-        // 버튼이 disabled 상태여도 방어적으로 체크
         guard dataSource.canMoveToPreviousMonth else { return }
         dataSource.moveToPreviousMonth()
         slide(.right)
     }
 
     func navigationBarDidTapNext() {
+        guard dataSource.canMoveToNextMonth else { return }
         dataSource.moveToNextMonth()
         slide(.left)
     }
