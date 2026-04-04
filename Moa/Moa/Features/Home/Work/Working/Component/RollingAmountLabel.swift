@@ -16,8 +16,7 @@ final class RollingAmountLabel: UIView {
     private let textColor: UIColor
 
     static let rollingDuration: TimeInterval = 0.05
-    
-    var animationDuration: TimeInterval { Self.rollingDuration }
+    var animationDuration: TimeInterval
 
     private let digitDelay: TimeInterval = 0
 
@@ -40,17 +39,18 @@ final class RollingAmountLabel: UIView {
     }()
 
     // MARK: - Init
-
     init(
-        font:      UIFont  = AppTypography.h1_700.font(),
-        textColor: UIColor = AppColor.IconAndText.highEmphasis
+        font: UIFont  = AppTypography.h1_700.font(),
+        textColor: UIColor = AppColor.IconAndText.highEmphasis,
+        animationDuration: TimeInterval = 0.05
     ) {
-        // 모노스페이스 폰트 → 자릿수마다 너비 동일 → 레이아웃 안정
-        self.font      = UIFont.monospacedDigitSystemFont(
+        self.font = UIFont.monospacedDigitSystemFont(
             ofSize: font.pointSize,
             weight: .bold
         )
         self.textColor = textColor
+        self.animationDuration = animationDuration
+
         super.init(frame: .zero)
 
         addSubview(stackView)
