@@ -94,12 +94,6 @@ extension FixScheduleViewModel {
 // MARK: - Submit
 
 private extension FixScheduleViewModel {
-
-    func setSchedules(_ schedules: [CalendarScheduleEntity]) {
-        self.schedules = schedules
-        updateDerivedState()
-    }
-
     func submitSchedule() {
         guard let dateRange = state.dateRange else { return }
 
