@@ -10,8 +10,8 @@ final class CalendarDataSource {
     private(set) var currentDate: Date
     private let calendar: Calendar
 
-    /// 가입일 — 이 달보다 이전으로는 이동 불가, 이 달 + 12개월 이후로도 이동 불가
-    /// nil이면 양방향 제한 없음
+    /// 가입일 — 이 달보다 이전으로는 이동 불가
+    /// nil이면 하한 제한 없음
     private var joinedAt: Date?
 
     /// 날짜 키 → CalendarScheduleEntity 매핑
@@ -84,29 +84,25 @@ final class CalendarDataSource {
     }
 
     /// 다음 달 이동 가능 여부
-    /// joinedAt이 있으면 현재 달이 가입 달 + 11개월(= 12번째 달) 미만일 때만 허용
+    /// 상한: 오늘 기준 현재 달 + 12개월
     var canMoveToNextMonth: Bool {
-        guard let joinedAt else { return true }
         let currentMonthStart = startOfMonth(for: currentDate)
-        // 가입 달 기준 마지막 조회 가능 달: joinedAt + 11개월
-        guard let lastAllowedMonth = calendar.date(
-            byAdding: .month, value: 11, to: startOfMonth(for: joinedAt)
+        guard let upperBound = calendar.date(
+            byAdding: .month, value: 12, to: startOfMonth(for: Date())
         ) else { return true }
-        return currentMonthStart < lastAllowedMonth
+        return currentMonthStart < upperBound
     }
 
     // MARK: - Navigation
 
-    /// 이전 달로 이동. 가입 달 이전으로는 이동 안 함.
-    /// - Returns: 실제 이동 여부
+    /// 이전 달로 이동. 가입 달 이전으로는 이동하지 않음.
     @discardableResult func moveToPreviousMonth() -> Bool {
         guard canMoveToPreviousMonth else { return false }
         currentDate = calendar.date(byAdding: .month, value: -1, to: currentDate) ?? currentDate
         return true
     }
 
-    /// 다음 달로 이동. 가입 달 + 12개월 이후로는 이동 안 함.
-    /// - Returns: 이동 후 currentDate
+    /// 다음 달로 이동. 현재 달 + 12개월 이후로는 이동하지 않음.
     @discardableResult func moveToNextMonth() -> Date {
         guard canMoveToNextMonth else { return currentDate }
         currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
