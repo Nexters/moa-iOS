@@ -112,12 +112,11 @@ private extension WorkViewModel {
         publish()
     }
 
-    func reloadHomeData(then completion: (() -> Void)? = nil) {
+    func reloadHomeData() {
         Task { @MainActor in
             do {
                 let entity = try await homeUseCase.getHomeData()
                 apply(entity)
-                completion?()
             } catch {
                 state = .error(.network)
             }
