@@ -134,10 +134,10 @@ private extension FixScheduleViewModel {
 
 extension FixScheduleViewModel {
 
-    static func makeState(from workday: CalendarScheduleEntity, date: Date) -> FixScheduleViewState {
+    static func makeState(from workday: CalendarScheduleEntity) -> FixScheduleViewState {
         var state = FixScheduleViewState()
 
-        state.dateRange = ScheduleDateRangeEntity(single: date)
+        state.dateRange = ScheduleDateRangeEntity(single: workday.date)
 
         switch workday.contentType {
         case .vacation: state.scheduleType = .vacation

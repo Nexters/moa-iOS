@@ -96,8 +96,8 @@ private extension HomeCoordinator {
     }
 
     /// 일정 수정 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
-    func showFixSchedule(workday: CalendarScheduleEntity, date: Date, joinedAt: Date?) {
-        let existing = FixScheduleViewModel.makeState(from: workday, date: date)
+    func showFixSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
+        let existing = FixScheduleViewModel.makeState(from: workday)
         let vc = makeFixScheduleViewController(
             viewType: .fix,
             existingSchedule: existing,
@@ -137,7 +137,7 @@ extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
         schedule: CalendarScheduleEntity,
         joinedAt: Date?
     ) {
-        showFixSchedule(workday: schedule, date: schedule.date, joinedAt: joinedAt)
+        showFixSchedule(workday: schedule, joinedAt: joinedAt)
     }
 
     func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?) {
