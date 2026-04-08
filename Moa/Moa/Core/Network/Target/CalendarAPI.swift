@@ -1,42 +1,45 @@
 //
-//  VersionAPI.swift
+//  CalendarAPI.swift
 //  Moa
 //
-//  Created by mirim on 2/22/26.
+//  Created by 정도현 on 3/30/26.
 //
 
 import Foundation
 import Moya
 import Alamofire
 
-enum VersionAPI {
-    case getVersion(String)
+enum CalendarAPI {
+    case getCalendarInfo(year: Int, month: Int)
 }
 
-extension VersionAPI: TargetType {
-
+extension CalendarAPI: TargetType {
     var baseURL: URL {
         URL(string: Config.getPropertyValue(.baseURL))!
     }
 
     var path: String {
         switch self {
-        case .getVersion: "/api/v1/version"
+        case .getCalendarInfo:
+            return "/api/v1/calendar"
         }
     }
 
     var method: Moya.Method {
         switch self {
-        case .getVersion:
+        case .getCalendarInfo:
             return .get
         }
     }
 
     var task: Moya.Task {
         switch self {
-        case let .getVersion(osType):
+        case let .getCalendarInfo(year, month):
             return .requestParameters(
-                parameters: ["osType": osType],
+                parameters: [
+                    "year" : year,
+                    "month" : month
+                ],
                 encoding: URLEncoding.queryString
             )
         }
@@ -46,4 +49,3 @@ extension VersionAPI: TargetType {
         nil
     }
 }
-

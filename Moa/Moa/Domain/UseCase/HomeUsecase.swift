@@ -31,7 +31,7 @@ final class HomeUsecase {
         type: WorkdayType,
         clockInTime: TimeIndicatorEntity?,
         clockOutTime: TimeIndicatorEntity?
-    ) async throws -> WorkdayEntity {
+    ) async throws -> CalendarScheduleEntity {
         try await workdayRepository.updateWorkdayAll(
             date: date,
             request: WorkdayUpdateRequest(
@@ -46,7 +46,7 @@ final class HomeUsecase {
     func updateClockOutTime(
         date: String,
         clockOutTime: TimeIndicatorEntity
-    ) async throws -> WorkdayEntity {
+    ) async throws -> CalendarScheduleEntity {
         try await workdayRepository.updateClockOut(
             date: date,
             request: ClockEndRequest(

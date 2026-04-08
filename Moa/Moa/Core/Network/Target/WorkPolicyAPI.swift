@@ -17,7 +17,7 @@ enum WorkPolicyAPI {
 extension WorkPolicyAPI: TargetType {
     
     var baseURL: URL {
-        URL(string: "http://139.150.10.57:8080")!
+        URL(string: Config.getPropertyValue(.baseURL))!
     }
     
     var path: String {

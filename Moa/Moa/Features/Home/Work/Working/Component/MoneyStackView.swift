@@ -80,7 +80,7 @@ final class EarningsStackView: UIView {
     }()
 
     private let rollingLabel: RollingAmountLabel = {
-        let label = RollingAmountLabel()
+        let label = RollingAmountLabel(animationDuration: 0.2)
         label.transform = CGAffineTransform(translationX: 0, y: -2)
         return label
     }()

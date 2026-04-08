@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 
 protocol DatePickerCalendarDayCellDelegate: AnyObject {
-    func datePickerDayCell(_ cell: DatePickerCalendarDayCell, didTap day: CalendarDayEntity)
+    func datePickerDayCell(_ cell: DatePickerCalendarDayCell, didTap day: CalendarScheduleEntity)
 }
 
 /// 바텀시트용 날짜 선택 셀
@@ -18,7 +18,7 @@ final class DatePickerCalendarDayCell: UICollectionViewCell {
     static let identifier = "DatePickerCalendarDayCell"
     weak var delegate: DatePickerCalendarDayCellDelegate?
 
-    private var tappedDay: CalendarDayEntity?
+    private var tappedDay: CalendarScheduleEntity?
 
     // MARK: - UI
 
@@ -62,7 +62,7 @@ final class DatePickerCalendarDayCell: UICollectionViewCell {
 
     // MARK: - Configure
 
-    func configure(with day: CalendarDayEntity?) {
+    func configure(with day: CalendarScheduleEntity?) {
         reset()
         guard let day else { return }
 

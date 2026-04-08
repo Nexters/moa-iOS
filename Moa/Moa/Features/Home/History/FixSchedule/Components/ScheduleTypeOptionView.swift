@@ -34,6 +34,15 @@ final class ScheduleTypeOptionView: UIView {
         if notify { onChange?(type) }
     }
     
+    func setVacationButtonVisible(_ isVisible: Bool) {
+        vacationButton.isHidden = !isVisible
+        
+        // 휴가 버튼이 숨겨질 때 근무만 선택 가능하도록
+        if !isVisible && selected == .vacation {
+            setSelected(.workday, notify: true)
+        }
+    }
+    
     // MARK: - UI Components
     
     private let titleLabel: UILabel = {

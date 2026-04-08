@@ -165,9 +165,9 @@ final class FixScheduleViewController: BaseViewController {
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
+        scheduleTypeOptionView.setVacationButtonVisible(viewModel.canShowVacationOption)
     }
 
-    // BaseViewController.viewDidLoad → bind() 자동 호출
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
@@ -178,6 +178,13 @@ final class FixScheduleViewController: BaseViewController {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
+            .store(in: &cancellables)
+        
+        viewModel.$canShowVacationOption
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] canShow in
+                self?.scheduleTypeOptionView.setVacationButtonVisible(canShow)
+            }
             .store(in: &cancellables)
     }
 }
@@ -227,7 +234,7 @@ private extension FixScheduleViewController {
     }
 }
 
-// MARK: - Render (폼 상태)
+// MARK: - Render
 
 private extension FixScheduleViewController {
 
@@ -239,12 +246,10 @@ private extension FixScheduleViewController {
             end:   state.endTime.displayString
         )
 
-        // submitting 중이 아닐 때만 버튼 활성 여부 갱신
         if viewModel.submitState != .submitting {
             confirmButton.isEnabled = state.isConfirmEnabled
         }
 
-        // 휴가 선택 시 근무 시간 섹션 숨김
         workingHourSection.isHidden = (state.scheduleType == .vacation)
     }
 }
@@ -264,7 +269,6 @@ private extension FixScheduleViewController {
             cancelButton.isEnabled  = false
 
         case .success:
-            // ✅ coordinator 호출은 여기서만 → pop 1번
             coordinatorDelegate?.fixScheduleViewControllerDidConfirm(self, state: viewModel.state)
 
         case .failure(let message):
@@ -285,7 +289,8 @@ private extension FixScheduleViewController {
 private extension FixScheduleViewController {
 
     func presentDatePicker() {
-        let sheet = DatePickerCalendarBottomSheet()
+        // ViewModel에 저장된 joinedAt을 바텀시트로 전달
+        let sheet = DatePickerCalendarBottomSheet(joinedAt: viewModel.joinedAt)
         sheet.delegate = self
         presentBottomSheet(sheet)
     }

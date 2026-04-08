@@ -111,20 +111,23 @@ private extension WorkViewModel {
         currentStatus = resolveAutoStatus(for: entity)
         publish()
     }
+
+    func reloadHomeData() {
+        Task { @MainActor in
+            do {
+                let entity = try await homeUseCase.getHomeData()
+                apply(entity)
+            } catch {
+                state = .error(.network)
+            }
+        }
+    }
 }
 
 // MARK: - Auto Status Resolution
 
 private extension WorkViewModel {
     
-    /// type / 현재 시각 / 오늘 확인 여부 기준 자동 상태 결정
-    ///
-    /// - `.none`     → 항상 `.idle`
-    /// - `.vacation` → 시각 기준 idle / working / finished
-    /// - `.work`     → 오늘 이미 확인했으면 즉시 `.finished`
-    ///                 퇴근 시각 이후면 `.workFinished`
-    ///                 근무 중이면 `.working`
-    ///                 출근 전이면 `.idle`
     func resolveAutoStatus(for entity: HomeEntity) -> WorkStatusEntity {
         switch entity.type {
             
@@ -156,7 +159,6 @@ private extension WorkViewModel {
             } else if now < outMin {
                 return .working
             } else {
-                // 퇴근 시각 이후 — 오늘 이미 "완료" 버튼을 탭했으면 즉시 .finished
                 if WorkConfirmStorage.isConfirmedToday {
                     return .finished
                 }
@@ -170,7 +172,6 @@ private extension WorkViewModel {
 
 private extension WorkViewModel {
 
-    /// "완료" 버튼 탭 처리
     func handleConfirmWork() {
         WorkConfirmStorage.markConfirmedToday()
         currentStatus = .finished
@@ -223,7 +224,8 @@ private extension WorkViewModel {
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity = entity
-                apply(entity)
+                // 연장 후에도 workedEarnings 등 집계값을 서버 기준으로 갱신
+                reloadHomeData()
             } catch {
                 state = .error(.network)
             }
@@ -231,36 +233,35 @@ private extension WorkViewModel {
     }
     
     func handleEditFinishedWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity) {
-        guard var entity = homeEntity else {
-            state = .error(.dataCorrupted); return
-        }
         guard start.totalMinutes < end.totalMinutes else {
             state = .error(.invalidWorkTime); return
         }
+        guard homeEntity != nil else {
+            state = .error(.dataCorrupted); return
+        }
         Task { @MainActor in
             do {
-                let updated = try await homeUseCase.updateWorkday(
+                _ = try await homeUseCase.updateWorkday(
                     date: Date().dateString,
                     type: .work,
                     clockInTime: start,
                     clockOutTime: end
                 )
-                applyWorkdayUpdate(updated, to: &entity)
-                homeEntity = entity
-                apply(entity)
+                // 수정 완료 후 서버로부터 최신 HomeEntity(workedEarnings 포함) 재조회
+                reloadHomeData()
             } catch {
                 state = .error(.network)
             }
         }
     }
     
-    func applyWorkdayUpdate(_ workday: WorkdayEntity, to entity: inout HomeEntity) {
+    func applyWorkdayUpdate(_ workday: CalendarScheduleEntity, to entity: inout HomeEntity) {
         entity = HomeEntity(
             workplace:      entity.workplace,
             workedEarnings: entity.workedEarnings,
             standardSalary: entity.standardSalary,
             dailyPay:       entity.dailyPay,
-            type:           workday.type,
+            type:           workday.contentType,
             clockInTime:    workday.clockInTime,
             clockOutTime:   workday.clockOutTime
         )
@@ -358,8 +359,12 @@ private extension WorkViewModel {
                 )
                 applyWorkdayUpdate(updated, to: &entity)
                 homeEntity    = entity
+
+                // workFinished 상태를 먼저 빠르게 반영한 뒤,
+                // 서버로부터 workedEarnings가 포함된 최신 HomeEntity를 재조회하여 갱신
                 currentStatus = entity.type == .vacation ? .finished : .workFinished
                 publish()
+                reloadHomeData()
             } catch {
                 state = .error(.network)
             }

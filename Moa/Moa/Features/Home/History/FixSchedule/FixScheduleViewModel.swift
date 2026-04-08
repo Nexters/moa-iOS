@@ -15,7 +15,12 @@ final class FixScheduleViewModel {
 
     @Published private(set) var state       = FixScheduleViewState()
     @Published private(set) var submitState = FixScheduleSubmitState.idle
+    @Published private(set) var canShowVacationOption = true
+    /// 날짜 선택 바텀시트에 전달할 가입일 — nil이면 제한 없음
+    @Published private(set) var joinedAt: Date? = nil
 
+    private var schedules: [CalendarScheduleEntity] = []
+    
     // MARK: - Input
 
     enum Input {
@@ -38,16 +43,20 @@ final class FixScheduleViewModel {
         viewType: ScheduleTypeOptionViewType,
         historyUseCase: HistoryUseCase,
         preselectedDate: Date? = nil,
-        existingSchedule: FixScheduleViewState? = nil
+        existingSchedule: FixScheduleViewState? = nil,
+        joinedAt: Date? = nil
     ) {
         self.viewType       = viewType
         self.historyUseCase = historyUseCase
+        self.joinedAt       = joinedAt
 
         if let existing = existingSchedule {
             state = existing
         } else if let date = preselectedDate {
             state.dateRange = ScheduleDateRangeEntity(single: date)
         }
+
+        updateDerivedState()
     }
 
     deinit { cancellables.removeAll() }
@@ -59,8 +68,10 @@ extension FixScheduleViewModel {
 
     func send(_ input: Input) {
         switch input {
+
         case .selectDate(let date):
             state.dateRange = ScheduleDateRangeEntity(single: date)
+            updateDerivedState()
 
         case .selectScheduleType(let type):
             state.scheduleType = type
@@ -83,7 +94,6 @@ extension FixScheduleViewModel {
 // MARK: - Submit
 
 private extension FixScheduleViewModel {
-
     func submitSchedule() {
         guard let dateRange = state.dateRange else { return }
 
@@ -112,7 +122,6 @@ private extension FixScheduleViewModel {
         }
     }
 
-    /// ScheduleTypeOptionType → WorkdayType 변환
     func workdayType(from type: ScheduleTypeOptionType) -> WorkdayType {
         switch type {
         case .vacation: return .vacation
@@ -121,16 +130,16 @@ private extension FixScheduleViewModel {
     }
 }
 
-// MARK: - WorkdayEntity → FixScheduleViewState 변환 헬퍼
+// MARK: - CalendarScheduleEntity → FixScheduleViewState 변환 헬퍼
 
 extension FixScheduleViewModel {
 
-    static func makeState(from workday: WorkdayEntity, date: Date) -> FixScheduleViewState {
+    static func makeState(from workday: CalendarScheduleEntity) -> FixScheduleViewState {
         var state = FixScheduleViewState()
 
-        state.dateRange = ScheduleDateRangeEntity(single: date)
+        state.dateRange = ScheduleDateRangeEntity(single: workday.date)
 
-        switch workday.type {
+        switch workday.contentType {
         case .vacation: state.scheduleType = .vacation
         case .work, .none: state.scheduleType = .workday
         }
@@ -139,5 +148,28 @@ extension FixScheduleViewModel {
         if let clockOut = workday.clockOutTime { state.endTime   = clockOut }
 
         return state
+    }
+
+    private func updateVacationAvailability() {
+        guard let date = state.dateRange?.start else {
+            canShowVacationOption = false
+            return
+        }
+
+        let calendar = Calendar.korea
+
+        let schedule = schedules.first {
+            calendar.isDate($0.date, inSameDayAs: date)
+        }
+
+        if let schedule {
+            canShowVacationOption = (schedule.contentType == .work)
+        } else {
+            canShowVacationOption = true
+        }
+    }
+
+    private func updateDerivedState() {
+        updateVacationAvailability()
     }
 }

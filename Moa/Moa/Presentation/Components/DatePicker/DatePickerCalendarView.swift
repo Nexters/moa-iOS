@@ -9,7 +9,6 @@ import UIKit
 import SnapKit
 
 protocol DatePickerCalendarViewDelegate: AnyObject {
-    /// 날짜를 탭했을 때 호출 (선택된 Date 반환)
     func datePickerCalendarView(_ view: DatePickerCalendarView, didSelectDate date: Date)
 }
 
@@ -20,10 +19,8 @@ final class DatePickerCalendarView: UIView {
 
     weak var delegate: DatePickerCalendarViewDelegate?
 
-    /// 현재 선택된 날짜
     private(set) var selectedDate: Date? = Calendar.current.startOfDay(for: Date())
 
-    /// 현재 표시 중인 월
     var currentMonth: Date { dataSource.currentDate }
 
     // MARK: - Private
@@ -32,16 +29,15 @@ final class DatePickerCalendarView: UIView {
 
     // MARK: - Subviews
 
-    private let navBar      = CalendarNavigationBar(type: .bottomSheet)
-    private let weekHeader  = CalendarWeekdayHeader()
-    private let gridView    = CalendarGridView(calendarType: .bottomSheet)
+    private let navBar     = CalendarNavigationBar(type: .bottomSheet)
+    private let weekHeader = CalendarWeekdayHeader()
+    private let gridView   = CalendarGridView(calendarType: .bottomSheet)
 
     // MARK: - Init
 
     init(dataSource: CalendarDataSource = CalendarDataSource()) {
         self.dataSource = dataSource
         super.init(frame: .zero)
-        
         buildLayout()
         attachSwipeGestures()
         reloadAll()
@@ -95,6 +91,8 @@ final class DatePickerCalendarView: UIView {
 
     private func reloadAll() {
         navBar.setTitle(dataSource.monthTitle(for: dataSource.currentDate))
+        navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
         reloadGrid()
     }
 
@@ -107,9 +105,11 @@ final class DatePickerCalendarView: UIView {
 
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         if gesture.direction == .left {
+            guard dataSource.canMoveToNextMonth else { return }
             dataSource.moveToNextMonth()
             slide(.left)
         } else {
+            guard dataSource.canMoveToPreviousMonth else { return }
             dataSource.moveToPreviousMonth()
             slide(.right)
         }
@@ -144,19 +144,31 @@ final class DatePickerCalendarView: UIView {
         selectedDate = date
         reloadGrid()
     }
+
+    /// 가입일 적용 — DatePickerCalendarBottomSheet 초기화 시 호출
+    func apply(joinedAt: Date) {
+        dataSource.applyJoinedAt(joinedAt)
+        navBar.setPrevButtonEnabled(dataSource.canMoveToPreviousMonth)
+        navBar.setNextButtonEnabled(dataSource.canMoveToNextMonth)
+    }
 }
 
 // MARK: - CalendarNavigationBarDelegate
 
 extension DatePickerCalendarView: CalendarNavigationBarDelegate {
+
     func navigationBarDidTapPrev() {
+        guard dataSource.canMoveToPreviousMonth else { return }
         dataSource.moveToPreviousMonth()
         slide(.right)
     }
+
     func navigationBarDidTapNext() {
+        guard dataSource.canMoveToNextMonth else { return }
         dataSource.moveToNextMonth()
         slide(.left)
     }
+
     func navigationBarDidTapAdd() {
         // 날짜 선택 캘린더에서는 사용하지 않음
     }
@@ -165,9 +177,10 @@ extension DatePickerCalendarView: CalendarNavigationBarDelegate {
 // MARK: - CalendarGridViewDelegate
 
 extension DatePickerCalendarView: CalendarGridViewDelegate {
-    func gridView(_ grid: CalendarGridView, didTapDay day: CalendarDayEntity) {
-        selectedDate = day.date
+
+    func gridView(_ grid: CalendarGridView, didTapSchedule schedule: CalendarScheduleEntity) {
+        selectedDate = schedule.date
         reloadGrid()
-        delegate?.datePickerCalendarView(self, didSelectDate: day.date)
+        delegate?.datePickerCalendarView(self, didSelectDate: schedule.date)
     }
 }

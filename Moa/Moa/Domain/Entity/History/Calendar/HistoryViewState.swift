@@ -10,8 +10,7 @@ import Foundation
 enum HistoryViewState: Equatable {
     case idle
     case loading
-    case loaded(days: [CalendarDayEntity], earnings: EarningsEntity)
-    /// 날짜 탭 후 상세 표시
-    case dayDetail(date: Date, workday: WorkdayEntity, isPayday: Bool, salary: Int)
+    case loaded(schedules: [CalendarScheduleEntity], earnings: EarningsEntity, joinedAt: Date)
+    case dayDetail(schedule: CalendarScheduleEntity, salary: Int)
     case error(HistoryError)
 }

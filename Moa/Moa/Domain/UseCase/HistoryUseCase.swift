@@ -17,12 +17,8 @@ final class HistoryUseCase {
         self.workdayRepository = workdayRepository
     }
     
-    func getWorkdayList(year: Int, month: Int) async throws -> [HistoryEntity] {
-        try await workdayRepository.fetchHistory(year: year, month: month)
-    }
-    
-    func fetchWorkday(date: String) async throws -> WorkdayEntity {
-        try await workdayRepository.fetchWorkday(date: date)
+    func getCalendarData(year: Int, month: Int) async throws -> CalendarEntity {
+        try await workdayRepository.fetchCalendarEvent(year: year, month: month)
     }
 
     func updateWorkday(
@@ -30,7 +26,7 @@ final class HistoryUseCase {
         type: WorkdayType,
         clockInTime: TimeIndicatorEntity?,
         clockOutTime: TimeIndicatorEntity?
-    ) async throws -> WorkdayEntity {
+    ) async throws -> CalendarScheduleEntity {
         try await workdayRepository.updateWorkdayAll(
             date: date,
             request: WorkdayUpdateRequest(
@@ -39,9 +35,5 @@ final class HistoryUseCase {
                 clockOutTime: clockOutTime?.displayString
             )
         )
-    }
-    
-    func getEarningsInfo(year: Int, month: Int) async throws -> EarningsEntity {
-        try await workdayRepository.fetchEarnings(year: year, month: month)
     }
 }

@@ -8,24 +8,19 @@
 import Foundation
 
 protocol WorkdayRepository {
-    func fetchWorkday(date: String) async throws -> WorkdayEntity
+    
+    func fetchCalendarEvent(
+        year: Int,
+        month: Int
+    ) async throws -> CalendarEntity
+    
     func updateWorkdayAll(
         date: String,
         request: WorkdayUpdateRequest
-    ) async throws -> WorkdayEntity
+    ) async throws -> CalendarScheduleEntity
     
     func updateClockOut(
         date: String,
         request: ClockEndRequest
-    ) async throws -> WorkdayEntity
-    
-    func fetchHistory(
-        year: Int,
-        month: Int
-    ) async throws -> [HistoryEntity]
-    
-    func fetchEarnings(
-        year: Int,
-        month: Int
-    ) async throws -> EarningsEntity
+    ) async throws -> CalendarScheduleEntity
 }

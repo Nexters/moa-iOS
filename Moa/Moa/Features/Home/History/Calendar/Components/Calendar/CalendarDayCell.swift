@@ -2,97 +2,91 @@
 //  CalendarDayCell.swift
 //  Moa
 //
-//  Created by 정도현 on 2/19/26.
-//
 
 import UIKit
 import SnapKit
 
 protocol CalendarDayCellDelegate: AnyObject {
-    func dayCell(_ cell: CalendarDayCell, didTap day: CalendarDayEntity)
+    func dayCell(_ cell: CalendarDayCell, didTap schedule: CalendarScheduleEntity)
 }
 
 final class CalendarDayCell: UICollectionViewCell {
-    
+
     static let identifier = "CalendarDayCell"
     weak var delegate: CalendarDayCellDelegate?
-    
-    private var tappedDay: CalendarDayEntity?
-    
+
+    private var tappedSchedule: CalendarScheduleEntity?
+
     // MARK: - UI
-    
+
     private let dateContainer = UIView()
-    
+
     private let selectionCircle: UIView = {
-        let v = UIView()
-        v.backgroundColor = AppColor.Container.secondary
-        v.layer.cornerRadius = 14
-        v.isHidden = true
-        return v
+        let view = UIView()
+        view.backgroundColor   = AppColor.Container.secondary
+        view.layer.cornerRadius = 14
+        view.isHidden           = true
+        return view
     }()
-    
+
     private let dateLabel: StyledLabel = {
-        let l = StyledLabel()
-        l.textAlignment = .center
-        return l
+        let label           = StyledLabel()
+        label.textAlignment = .center
+        return label
     }()
-    
-    private let indicator = CalendarDayIndicatorView()
+
+    private let indicator          = CalendarDayIndicatorView()
     private var indicatorHeightConstraint: Constraint?
-    
+
     // MARK: - Init
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
         contentView.addSubViews([dateContainer, indicator])
         dateContainer.addSubViews([selectionCircle, dateLabel])
-        
+
         dateContainer.snp.makeConstraints {
             $0.top.equalToSuperview().offset(2)
             $0.width.height.equalTo(28)
             $0.centerX.equalToSuperview()
         }
-        
-        selectionCircle.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-        
+        selectionCircle.snp.makeConstraints { $0.edges.equalToSuperview() }
         dateLabel.snp.makeConstraints {
             $0.centerX.equalToSuperview()
             $0.centerY.equalToSuperview().offset(1)
         }
-        
         indicator.snp.makeConstraints {
             $0.top.equalTo(dateContainer.snp.bottom).offset(6)
             $0.centerX.equalToSuperview()
             indicatorHeightConstraint = $0.height.equalTo(0).constraint
         }
-        
+
         contentView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(handleTap))
         )
     }
-    
+
     required init?(coder: NSCoder) { fatalError() }
-    
+
     // MARK: - Configure
-    
-    func configure(with day: CalendarDayEntity?, calendarType: CalendarNavigationType = .history) {
-        
+
+    func configure(
+        with schedule: CalendarScheduleEntity?,
+        calendarType: CalendarNavigationType = .history
+    ) {
         reset()
-        guard let day else { return }
-        
-        tappedDay = day
-        let number = Calendar.current.component(.day, from: day.date)
-        
-        var textColor = day.isCurrentMonth
+        guard let schedule else { return }
+
+        tappedSchedule = schedule
+        let number     = Calendar.current.component(.day, from: schedule.date)
+
+        var textColor: UIColor = schedule.isCurrentMonth
             ? AppColor.IconAndText.highEmphasis
             : AppColor.IconAndText.disabled
-        
         var font = AppTypography.b1_400
-        
-        if day.isSelected {
+
+        if schedule.isSelected {
             selectionCircle.isHidden = false
             font = AppTypography.b1_600
 
@@ -105,55 +99,58 @@ final class CalendarDayCell: UICollectionViewCell {
                 textColor = AppColor.IconAndText.highEmphasis
             }
         }
-        
-        if day.isToday {
+
+        if schedule.isToday && !schedule.isSelected {
             switch calendarType {
-            case .bottomSheet:
-                break
             case .history:
                 textColor = AppColor.IconAndText.green
-                font = AppTypography.b1_500
+                font      = AppTypography.b1_500
+            case .bottomSheet:
+                break
             }
         }
-        
+
         dateLabel.setText(
             "\(number)",
             style: .init(typography: font, color: textColor)
         )
-        
-        switch day.contentType {
-        case .scheduled, .worked:
-            setIndicatorHeight(14)
-        case .dualLabel, .singleLabel:
+
+        // 인디케이터 높이 결정
+        //   월급/휴가 레이블이 있으면 18pt, 근무 점이면 14pt, 없으면 0
+        let hasLabel = schedule.events.contains(.payday) || schedule.contentType == .vacation
+        let hasDot   = schedule.contentType == .work && schedule.status != .none
+        if hasLabel {
             setIndicatorHeight(18)
-        case .none:
+        } else if hasDot {
+            setIndicatorHeight(14)
+        } else {
             setIndicatorHeight(0)
         }
-        
-        indicator.configure(type: day.contentType)
+
+        indicator.configure(schedule: schedule)
     }
-    
+
     // MARK: - Helpers
-    
+
     private func reset() {
-        tappedDay = nil
-        selectionCircle.isHidden = true
+        tappedSchedule                  = nil
+        selectionCircle.isHidden        = true
         selectionCircle.backgroundColor = AppColor.Container.secondary
-        dateLabel.text = nil
-        dateLabel.attributedText = nil
-        indicator.configure(type: .none)
+        dateLabel.text                  = nil
+        dateLabel.attributedText        = nil
+        indicator.configure(schedule: nil)
         setIndicatorHeight(0)
     }
-    
+
     private func setIndicatorHeight(_ height: CGFloat) {
         indicatorHeightConstraint?.update(offset: height)
     }
-    
+
     @objc private func handleTap() {
-        guard let day = tappedDay else { return }
-        delegate?.dayCell(self, didTap: day)
+        guard let schedule = tappedSchedule else { return }
+        delegate?.dayCell(self, didTap: schedule)
     }
-    
+
     override func prepareForReuse() {
         super.prepareForReuse()
         reset()
