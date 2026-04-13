@@ -78,7 +78,11 @@ final class MonthlySalaryView: UIView {
     private var currentAmountColor: UIColor = AppColor.IconAndText.highEmphasis
 
     // MARK: - Animation State
-    
+
+    /// 카운터 애니메이션에서 각 스텝 간 딜레이
+    /// RollingAmountLabel의 기본 animationDuration(0.05)과 동일하게 맞춥니다.
+    private let stepDuration: TimeInterval = 0.05
+
     private var lastAnimatedAmount: Int?
     private var steps: [Int] = []
     private var currentStepIndex: Int = 0
@@ -135,7 +139,7 @@ final class MonthlySalaryView: UIView {
         } else if lastAnimatedAmount != newAmount {
             startCounterAnimation(targetAmount: newAmount)
         } else {
-            rollingAmountLabel.setText(formattedAmount(newAmount))
+            rollingAmountLabel.setValue(newAmount, animated: false)
         }
 
         lastAnimatedAmount = newAmount
@@ -175,10 +179,6 @@ final class MonthlySalaryView: UIView {
         }
         subtitleLabel.attributedText = attributed
     }
-
-    private func formattedAmount(_ amount: Int) -> String {
-        AppNumberFormatter.decimalString(from: amount)
-    }
 }
 
 // MARK: - Counter Animation
@@ -188,22 +188,19 @@ private extension MonthlySalaryView {
     func startCounterAnimation(targetAmount: Int) {
         stopAnimation()
 
-        rollingAmountLabel.setText(formattedAmount(0))
+        rollingAmountLabel.setValue(0, animated: false)
 
         guard targetAmount > 0 else { return }
 
-        let stepCount = 12
-        steps = buildSmoothSteps(target: targetAmount, stepCount: stepCount)
-
+        steps = buildSmoothSteps(target: targetAmount, stepCount: 12)
         currentStepIndex = 0
         isAnimating = true
 
         animateNextStep()
     }
-    
-    private func animateNextStep() {
-        guard isAnimating else { return }
-        guard currentStepIndex < steps.count else {
+
+    func animateNextStep() {
+        guard isAnimating, currentStepIndex < steps.count else {
             stopAnimation()
             return
         }
@@ -211,40 +208,30 @@ private extension MonthlySalaryView {
         let value = steps[currentStepIndex]
         currentStepIndex += 1
 
-        let text = formattedAmount(value)
+        rollingAmountLabel.setValue(value, animated: true)
 
-        rollingAmountLabel.rollTo(text)
-
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + rollingAmountLabel.animationDuration
-        ) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + stepDuration) { [weak self] in
             self?.animateNextStep()
         }
     }
-    
-    private func buildSmoothSteps(target: Int, stepCount: Int) -> [Int] {
+
+    func buildSmoothSteps(target: Int, stepCount: Int) -> [Int] {
         var result: [Int] = []
         var last = -1
 
         for i in 0...stepCount {
-            let t = Double(i) / Double(stepCount)
-            
+            let t     = Double(i) / Double(stepCount)
             let value = Int(Double(target) * t)
-
             if value != last {
                 result.append(value)
                 last = value
             }
         }
 
-        if result.last != target {
-            result.append(target)
-        }
-
+        if result.last != target { result.append(target) }
         return result
     }
-    
-    
+
     func stopAnimation() {
         isAnimating = false
     }

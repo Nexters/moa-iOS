@@ -2,8 +2,6 @@
 //  RollingAmountLabel.swift
 //  Moa
 //
-//  숫자가 변경될 때 바뀐 자릿수만 아래→위 슬라이드되는 슬롯머신 롤링 애니메이션.
-//
 
 import UIKit
 import SnapKit
@@ -12,21 +10,21 @@ final class RollingAmountLabel: UIView {
 
     // MARK: - Config
 
-    private let font:      UIFont
-    private let textColor: UIColor
-
-    static let rollingDuration: TimeInterval = 0.05
-    var animationDuration: TimeInterval
-
-    private let digitDelay: TimeInterval = 0
+    private let font:              UIFont
+    private let textColor:         UIColor
+    private let animationDuration: TimeInterval
+    private let unit:              String?
 
     // MARK: - State
 
+    private var currentValue:    Int    = 0
+    private var currentText:     String = ""
+
     private var digitContainers: [UIView]  = []
     private var currentLabels:   [UILabel] = []
-    private var currentText:     String    = ""
-
     private var animatingLabels: Set<UILabel> = []
+
+    private let digitDelay: TimeInterval = 0
 
     // MARK: - Layout
 
@@ -39,17 +37,25 @@ final class RollingAmountLabel: UIView {
     }()
 
     // MARK: - Init
+
+    /// - Parameters:
+    ///   - font: 숫자 폰트 (기본: AppTypography.h1_700)
+    ///   - textColor: 숫자 색상 (기본: highEmphasis)
+    ///   - animationDuration: 한 자릿수 슬라이드 시간 (기본: 0.05)
+    ///   - unit: 숫자 뒤에 붙는 단위 문자열. nil이면 단위 없음 (예: "원", "시간")
     init(
-        font: UIFont  = AppTypography.h1_700.font(),
-        textColor: UIColor = AppColor.IconAndText.highEmphasis,
-        animationDuration: TimeInterval = 0.05
+        font:              UIFont      = AppTypography.h1_700.font(),
+        textColor:         UIColor     = AppColor.IconAndText.highEmphasis,
+        animationDuration: TimeInterval = 0.05,
+        unit:              String?     = nil
     ) {
         self.font = UIFont.monospacedDigitSystemFont(
             ofSize: font.pointSize,
             weight: .bold
         )
-        self.textColor = textColor
+        self.textColor         = textColor
         self.animationDuration = animationDuration
+        self.unit              = unit
 
         super.init(frame: .zero)
 
@@ -60,19 +66,54 @@ final class RollingAmountLabel: UIView {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    // MARK: - Public
+    // MARK: - Public Interface
 
-    /// 애니메이션 없이 즉시 세팅 (초기값 / 리셋)
-    func setText(_ text: String) {
+    /// 값을 설정합니다.
+    /// - Parameters:
+    ///   - amount: 표시할 정수 값
+    ///   - animated: true면 롤링 애니메이션, false면 즉시 반영 (기본: true)
+    func setValue(_ amount: Int, animated: Bool = true) {
+        let newText = formatted(amount)
+        currentValue = amount
+
+        if animated {
+            rollToText(newText)
+        } else {
+            setTextImmediate(newText)
+        }
+    }
+
+    // MARK: - Internal Text Control (MoneyStackView 등 내부 호환용)
+
+    /// 포매팅된 문자열을 직접 즉시 세팅 (내부 포매팅 우회가 필요한 경우)
+    func setRawText(_ text: String) {
+        setTextImmediate(text)
+    }
+
+    /// 포매팅된 문자열을 직접 롤링 (내부 포매팅 우회가 필요한 경우)
+    func rollToRawText(_ text: String) {
+        rollToText(text)
+    }
+
+    // MARK: - Formatting
+
+    private func formatted(_ amount: Int) -> String {
+        let number = AppNumberFormatter.decimalString(from: amount)
+        if let unit { return "\(number)\(unit)" }
+        return number
+    }
+
+    // MARK: - Private: Set Immediate
+
+    private func setTextImmediate(_ text: String) {
         cancelAllAnimations()
         currentText = text
         rebuildColumns(text, animated: false)
     }
 
-    /// 롤링 애니메이션으로 변경
-    /// - 자릿수 동일: 변경된 자리만 위로 슬라이드
-    /// - 자릿수 변경: 전체 재구성 + 슬라이드인 애니메이션
-    func rollTo(_ text: String) {
+    // MARK: - Private: Roll
+
+    private func rollToText(_ text: String) {
         guard text != currentText else { return }
 
         let old = currentText
@@ -124,9 +165,7 @@ final class RollingAmountLabel: UIView {
                 withDuration: animationDuration,
                 delay:        Double(index) * digitDelay,
                 options:      [.curveEaseOut, .allowUserInteraction],
-                animations: {
-                    label.transform = .identity
-                },
+                animations: { label.transform = .identity },
                 completion: { [weak self] finished in
                     guard let self else { return }
                     self.animatingLabels.remove(label)
@@ -150,8 +189,6 @@ final class RollingAmountLabel: UIView {
             let oldLabel = currentLabels[i]
             let newLabel = makeLabel(String(newArr[i]))
 
-            // 이전 애니메이션이 진행 중이면 presentationLayer 기준으로 현재 위치 확정
-            // → 잔상 없이 보이는 위치에서 자연스럽게 이어짐
             if animatingLabels.contains(oldLabel) {
                 if let presented = oldLabel.layer.presentation() {
                     oldLabel.layer.removeAllAnimations()
@@ -168,13 +205,9 @@ final class RollingAmountLabel: UIView {
             box.layoutIfNeeded()
 
             let offset = font.lineHeight
-
-            // 새 레이블: 아래서 올라옴
             newLabel.transform = CGAffineTransform(translationX: 0, y: offset)
             animatingLabels.insert(newLabel)
 
-            // currentLabels 즉시 교체
-            // → completion 전에 rollTo가 다시 불려도 올바른 oldLabel 참조 보장
             currentLabels[i] = newLabel
 
             let capturedOldLabel = oldLabel
@@ -191,7 +224,6 @@ final class RollingAmountLabel: UIView {
                     guard let self else { return }
                     self.animatingLabels.remove(newLabel)
                     if !finished { newLabel.transform = .identity }
-
                     capturedOldLabel.layer.removeAllAnimations()
                     capturedOldLabel.removeFromSuperview()
                 }
