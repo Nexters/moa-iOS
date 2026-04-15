@@ -117,13 +117,9 @@ final class WorkdayDetailView: UIView {
 
         switch schedule.contentType {
         case .work:
-            let isPastOrToday = calendar.compare(
-                schedule.date, to: today, toGranularity: .day
-            ) != .orderedDescending
-
-            let ticket: WorkScheduleTicket = isPastOrToday
-                ? .worked(startTime: startStr, endTime: endStr)    { [weak self] in self?.handleTicketTap() }
-                : .scheduled(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }
+            let ticket: WorkScheduleTicket = schedule.status == .scheduled
+                ? .scheduled(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }
+                : .worked(startTime: startStr, endTime: endStr) { [weak self] in self?.handleTicketTap() }
             tickets.append(ticket)
 
         case .vacation:
