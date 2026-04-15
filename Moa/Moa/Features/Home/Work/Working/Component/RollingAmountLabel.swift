@@ -2,8 +2,6 @@
 //  RollingAmountLabel.swift
 //  Moa
 //
-//  숫자가 변경될 때 바뀐 자릿수만 아래→위 슬라이드되는 슬롯머신 롤링 애니메이션.
-//
 
 import UIKit
 import SnapKit
@@ -12,21 +10,27 @@ final class RollingAmountLabel: UIView {
 
     // MARK: - Config
 
-    private let font:      UIFont
-    private let textColor: UIColor
-
-    static let rollingDuration: TimeInterval = 0.05
-    var animationDuration: TimeInterval
-
-    private let digitDelay: TimeInterval = 0
+    private let font:              UIFont
+    private let textColor:         UIColor
+    private let animationDuration: TimeInterval
+    private let unit:              String?
 
     // MARK: - State
 
-    private var digitContainers: [UIView]  = []
-    private var currentLabels:   [UILabel] = []
-    private var currentText:     String    = ""
+    private var currentValue: Int    = 0
+    private var currentText:  String = ""
 
-    private var animatingLabels: Set<UILabel> = []
+    /// 슬롯(자릿수) 배열
+    private var slots: [Slot] = []
+
+    // MARK: - Slot
+
+    /// 각 자릿수 슬롯
+    private struct Slot {
+        let container:     UIView
+        var activeLabel:   UILabel
+        var pendingLabels: [UILabel] = []
+    }
 
     // MARK: - Layout
 
@@ -39,17 +43,23 @@ final class RollingAmountLabel: UIView {
     }()
 
     // MARK: - Init
+
+    /// - Parameters:
+    ///   - animationDuration: 한 자릿수 슬라이드 시간 (기본: 0.05)
+    ///   - unit: 숫자 뒤에 붙는 단위 문자열. nil이면 단위 없음 (예: "원", "시간")
     init(
-        font: UIFont  = AppTypography.h1_700.font(),
-        textColor: UIColor = AppColor.IconAndText.highEmphasis,
-        animationDuration: TimeInterval = 0.05
+        font:              UIFont       = AppTypography.h1_700.font(),
+        textColor:         UIColor      = AppColor.IconAndText.highEmphasis,
+        animationDuration: TimeInterval = 0.05,
+        unit:              String?      = nil
     ) {
         self.font = UIFont.monospacedDigitSystemFont(
             ofSize: font.pointSize,
             weight: .bold
         )
-        self.textColor = textColor
+        self.textColor         = textColor
         self.animationDuration = animationDuration
+        self.unit              = unit
 
         super.init(frame: .zero)
 
@@ -60,150 +70,173 @@ final class RollingAmountLabel: UIView {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    // MARK: - Public
+    // MARK: - Public Interface
 
-    /// 애니메이션 없이 즉시 세팅 (초기값 / 리셋)
-    func setText(_ text: String) {
-        cancelAllAnimations()
-        currentText = text
-        rebuildColumns(text, animated: false)
+    /// 값을 설정합니다.
+    /// - Parameters:
+    ///   - amount: 표시할 정수 값
+    ///   - animated: true면 롤링 애니메이션, false면 즉시 반영 (기본: true)
+    func setValue(_ amount: Int, animated: Bool = true) {
+        let newText  = formatted(amount)
+        currentValue = amount
+
+        if animated {
+            rollToText(newText)
+        } else {
+            setTextImmediate(newText)
+        }
     }
 
-    /// 롤링 애니메이션으로 변경
-    /// - 자릿수 동일: 변경된 자리만 위로 슬라이드
-    /// - 자릿수 변경: 전체 재구성 + 슬라이드인 애니메이션
-    func rollTo(_ text: String) {
-        guard text != currentText else { return }
+    // MARK: - Formatting
 
+    private func formatted(_ amount: Int) -> String {
+        let number = AppNumberFormatter.decimalString(from: amount)
+        if let unit { return "\(number)\(unit)" }
+        return number
+    }
+
+    // MARK: - Immediate
+
+    private func setTextImmediate(_ text: String) {
+        guard text != currentText else { return }
+        currentText = text
+        cancelAllPendingAndRebuild(text)
+    }
+
+    // MARK: - Roll
+
+    private func rollToText(_ text: String) {
+        guard text != currentText else { return }
         let old = currentText
         currentText = text
 
         if old.count != text.count {
-            rebuildColumns(text, animated: true)
+            // 자릿수 변경: 전체 재구성
+            cancelAllPendingAndRebuild(text, animated: true)
         } else {
-            rollChangedDigits(from: old, to: text)
+            // 자릿수 동일: 변경된 슬롯만 롤링
+            rollChangedSlots(from: old, to: text)
         }
     }
 
-    // MARK: - Cancel
+    // MARK: - Cancel All & Rebuild
 
-    private func cancelAllAnimations() {
-        for label in animatingLabels {
-            label.layer.removeAllAnimations()
-            label.transform = .identity
+    /// 모든 진행 중인 애니메이션을 즉시 종료하고 슬롯을 재구성합니다.
+    private func cancelAllPendingAndRebuild(_ text: String, animated: Bool = false) {
+        // 모든 슬롯의 pending 레이블 즉시 제거
+        for slot in slots {
+            for label in slot.pendingLabels {
+                label.layer.removeAllAnimations()
+                label.removeFromSuperview()
+            }
+            slot.activeLabel.layer.removeAllAnimations()
+            slot.activeLabel.transform = .identity
         }
-        animatingLabels.removeAll()
-    }
-
-    // MARK: - Rebuild (자릿수 변경 or 초기 세팅)
-
-    private func rebuildColumns(_ text: String, animated: Bool) {
-        cancelAllAnimations()
-
+        slots.removeAll()
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        digitContainers.removeAll()
-        currentLabels.removeAll()
 
+        buildSlots(for: text, animated: animated)
+    }
+
+    // MARK: - Build Slots
+
+    private func buildSlots(for text: String, animated: Bool) {
         for (index, char) in text.enumerated() {
-            let label = makeLabel(String(char))
-            let box   = makeContainer(label: label)
+            let label     = makeLabel(String(char))
+            let container = makeContainer(label: label)
+            let slot      = Slot(container: container, activeLabel: label)
 
-            stackView.addArrangedSubview(box)
-            digitContainers.append(box)
-            currentLabels.append(label)
+            stackView.addArrangedSubview(container)
+            slots.append(slot)
 
             guard animated else { continue }
 
-            box.layoutIfNeeded()
+            container.layoutIfNeeded()
 
-            let offset = font.lineHeight
-            label.transform = CGAffineTransform(translationX: 0, y: offset)
-            animatingLabels.insert(label)
+            // 아래에서 위로 슬라이드인
+            label.transform = CGAffineTransform(translationX: 0, y: font.lineHeight)
 
             UIView.animate(
                 withDuration: animationDuration,
-                delay:        Double(index) * digitDelay,
+                delay:        0,
                 options:      [.curveEaseOut, .allowUserInteraction],
-                animations: {
-                    label.transform = .identity
-                },
-                completion: { [weak self] finished in
-                    guard let self else { return }
-                    self.animatingLabels.remove(label)
+                animations:   { label.transform = .identity },
+                completion:   { finished in
                     if !finished { label.transform = .identity }
                 }
             )
+
+            _ = index  // delay 없이 동시 슬라이드
         }
     }
 
-    // MARK: - Roll (자릿수 동일, 변경된 자리만)
+    // MARK: - Roll Changed Slots
 
-    private func rollChangedDigits(from old: String, to new: String) {
+    private func rollChangedSlots(from old: String, to new: String) {
         let oldArr = Array(old)
         let newArr = Array(new)
         let count  = min(oldArr.count, newArr.count)
 
         for i in 0..<count {
-            guard oldArr[i] != newArr[i], i < digitContainers.count else { continue }
-
-            let box      = digitContainers[i]
-            let oldLabel = currentLabels[i]
-            let newLabel = makeLabel(String(newArr[i]))
-
-            // 이전 애니메이션이 진행 중이면 presentationLayer 기준으로 현재 위치 확정
-            // → 잔상 없이 보이는 위치에서 자연스럽게 이어짐
-            if animatingLabels.contains(oldLabel) {
-                if let presented = oldLabel.layer.presentation() {
-                    oldLabel.layer.removeAllAnimations()
-                    oldLabel.transform = CATransform3DGetAffineTransform(presented.transform)
-                } else {
-                    oldLabel.layer.removeAllAnimations()
-                    oldLabel.transform = .identity
-                }
-                animatingLabels.remove(oldLabel)
-            }
-
-            box.addSubview(newLabel)
-            newLabel.snp.makeConstraints { $0.edges.equalToSuperview() }
-            box.layoutIfNeeded()
-
-            let offset = font.lineHeight
-
-            // 새 레이블: 아래서 올라옴
-            newLabel.transform = CGAffineTransform(translationX: 0, y: offset)
-            animatingLabels.insert(newLabel)
-
-            // currentLabels 즉시 교체
-            // → completion 전에 rollTo가 다시 불려도 올바른 oldLabel 참조 보장
-            currentLabels[i] = newLabel
-
-            let capturedOldLabel = oldLabel
-
-            UIView.animate(
-                withDuration: animationDuration,
-                delay:        Double(i) * digitDelay,
-                options:      [.curveEaseOut, .allowUserInteraction],
-                animations: {
-                    newLabel.transform         = .identity
-                    capturedOldLabel.transform = CGAffineTransform(translationX: 0, y: -offset)
-                },
-                completion: { [weak self] finished in
-                    guard let self else { return }
-                    self.animatingLabels.remove(newLabel)
-                    if !finished { newLabel.transform = .identity }
-
-                    capturedOldLabel.layer.removeAllAnimations()
-                    capturedOldLabel.removeFromSuperview()
-                }
-            )
+            guard oldArr[i] != newArr[i], i < slots.count else { continue }
+            rollSlot(at: i, newChar: String(newArr[i]))
         }
+    }
+
+    private func rollSlot(at index: Int, newChar: String) {
+        let container = slots[index].container
+        let oldLabel  = slots[index].activeLabel
+
+        slots[index].pendingLabels.append(oldLabel)
+        slots[index].activeLabel = makeLabel(newChar)
+
+        let newLabel = slots[index].activeLabel
+
+        if let presented = oldLabel.layer.presentation() {
+            oldLabel.layer.removeAllAnimations()
+            oldLabel.layer.transform = presented.transform
+        } else {
+            oldLabel.layer.removeAllAnimations()
+        }
+
+        container.addSubview(newLabel)
+        newLabel.snp.makeConstraints { $0.edges.equalToSuperview() }
+        container.layoutIfNeeded()
+
+        newLabel.transform = CGAffineTransform(translationX: 0, y: font.lineHeight)
+
+        let offset       = font.lineHeight
+        let capturedOld  = oldLabel
+
+        UIView.animate(
+            withDuration: animationDuration,
+            delay:        0,
+            options:      [.curveEaseOut, .allowUserInteraction],
+            animations: {
+                newLabel.transform    = .identity
+                capturedOld.transform = CGAffineTransform(translationX: 0, y: -offset)
+            },
+            completion: { [weak self] finished in
+                guard let self else { return }
+
+                if !finished { newLabel.transform = .identity }
+
+                // pending에서 완전히 제거
+                capturedOld.layer.removeAllAnimations()
+                capturedOld.removeFromSuperview()
+
+                if let idx = self.slots[index].pendingLabels.firstIndex(of: capturedOld) {
+                    self.slots[index].pendingLabels.remove(at: idx)
+                }
+            }
+        )
     }
 
     // MARK: - Factories
 
     private func makeContainer(label: UILabel) -> UIView {
         let box = UIView()
-        box.clipsToBounds = true
+        box.clipsToBounds = true   // 슬라이드 중 넘치는 부분을 잘라냄
         box.addSubview(label)
 
         label.sizeToFit()

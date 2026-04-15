@@ -12,13 +12,9 @@ final class EarningsStackView: UIView {
     // MARK: - Constants
 
     private enum Constants {
-        /// 고점 간격 — workStartedAt + N * peakInterval 이 N번째 고점 시각
         static let peakInterval: TimeInterval        = 30 * 60
-        /// 고점 도달 후 유지 시간
         static let peakHoldDuration: TimeInterval    = 2.0
-        /// 하강 시간
         static let dropDuration: TimeInterval        = 1.2
-        /// peakHold + drop 이후 다음 growing 시작까지의 오프셋
         static var postPeakDuration: TimeInterval    { peakHoldDuration + dropDuration }
 
         static let minHeightRatio: CGFloat           = 0.30
@@ -79,11 +75,8 @@ final class EarningsStackView: UIView {
         return label
     }()
 
-    private let rollingLabel: RollingAmountLabel = {
-        let label = RollingAmountLabel(animationDuration: 0.2)
-        label.transform = CGAffineTransform(translationX: 0, y: -2)
-        return label
-    }()
+    // animationDuration 0.2s — 1초 tick 간격 안에서 충분히 완료되는 속도
+    private let rollingLabel = RollingAmountLabel(animationDuration: 0.2)
 
     private let unitLabel: StyledLabel = {
         let label = StyledLabel()
@@ -129,36 +122,15 @@ final class EarningsStackView: UIView {
     private var isStopped = false
     private var currentPhase: Phase = .growing
 
-    /// 근무 시작 절대 시각
-    /// N번째 고점 시각 = workStartedAt + N * peakInterval  (N = 1, 2, 3 ...)
-    private var workStartedAt: Date = Date()
-
-    /// 현재 사이클 인덱스 (1-based: 첫 고점 = index 1)
-    /// 현재 growing 중인 목표 고점 시각 = workStartedAt + peakIndex * peakInterval
-    private var peakIndex: Int = 1
-
-    /// 현재 growing 시작 시각
-    /// - 첫 사이클: workStartedAt (이미 경과분 반영)
-    /// - 이후 사이클: 이전 drop 완료 시각
-    private var growingStartDate: Date = Date()
-
-    /// 현재 growing 종료(= 고점) 시각
-    /// = workStartedAt + peakIndex * peakInterval
-    private var peakDate: Date = Date()
-
-    /// growing 시작 시점의 ratio (이전 사이클 drop 완료 = minHeightRatio)
+    private var workStartedAt:    Date    = Date()
+    private var peakIndex:        Int     = 1
+    private var growingStartDate: Date    = Date()
+    private var peakDate:         Date    = Date()
     private var growingStartRatio: CGFloat = Constants.minHeightRatio
-
-    /// drop 시작 시각
-    private var dropStartDate: Date = Date()
-
-    /// drop 시작 시점의 ratio
-    private var dropStartRatio: CGFloat = Constants.maxHeightRatio
-
-    /// 마지막으로 렌더링된 ratio
+    private var dropStartDate:    Date    = Date()
+    private var dropStartRatio:   CGFloat = Constants.maxHeightRatio
     private var lastRenderedRatio: CGFloat = Constants.minHeightRatio
-
-    private var displayLink: CADisplayLink?
+    private var displayLink:      CADisplayLink?
     private var hasAppliedInitialPosition = false
 
     // MARK: - Tooltip State
@@ -281,7 +253,8 @@ final class EarningsStackView: UIView {
         tooltipKindIndex = 0
         workStartedAt    = startedAt
 
-        rollingLabel.setText(formatted(amount))
+        // 즉시 값 세팅 (애니메이션 없이)
+        rollingLabel.setValue(amount, animated: false)
         layoutIfNeeded()
 
         if isFinished {
@@ -311,17 +284,6 @@ final class EarningsStackView: UIView {
     }
 
     // MARK: - Phase Resolution
-    //
-    // 타임라인 (workStartedAt 기준):
-    //
-    //   고점 시각(N) = workStartedAt + N * peakInterval  (N = 1, 2, 3...)
-    //
-    //   ┌── growing ──┬── peakHold ──┬── dropping ──┬── growing ──┬ ...
-    //   0s           10s            12s           13.2s          20s
-    //
-    //   현재 시각이 어느 구간에 있는지 역산해서 페이즈와 ratio를 결정.
-    //   growing 시작 시각(growingStartDate)과 목표 고점 시각(peakDate)을
-    //   정확히 세팅하면 tick()은 항상 올바른 위치를 계산함.
 
     private func resolveCurrentPhaseAndRatio() {
         let now              = Date()
@@ -330,23 +292,15 @@ final class EarningsStackView: UIView {
         let dropDuration     = Constants.dropDuration
         let postPeakDuration = Constants.postPeakDuration
 
-        // 가장 최근 고점 시각을 역산
-        // 예) startedAt=9:00, now=9:00:25 → 최근 고점 = 9:00:20 (N=2)
         let totalElapsed        = max(0, now.timeIntervalSince(workStartedAt))
         let latestPeakIndex     = max(1, Int(totalElapsed / peakInterval))
         let latestPeakDate      = workStartedAt.addingTimeInterval(Double(latestPeakIndex) * peakInterval)
-
-        // 최근 고점 이후 경과 시간
         let elapsedSinceLatestPeak = now.timeIntervalSince(latestPeakDate)
 
         if elapsedSinceLatestPeak < 0 {
-            // ── 아직 첫 고점 전 → Growing ──
-            // now < latestPeakDate: 현재 growing 중
-            peakIndex        = latestPeakIndex
-            peakDate         = latestPeakDate
+            peakIndex = latestPeakIndex
+            peakDate  = latestPeakDate
 
-            // growing 시작 시각: 이전 drop 완료 시각
-            // 첫 사이클이면 workStartedAt, 이후면 (N-1)번째 고점 + postPeak
             let previousDropEndDate: Date
             if latestPeakIndex == 1 {
                 previousDropEndDate = workStartedAt
@@ -358,7 +312,6 @@ final class EarningsStackView: UIView {
             growingStartDate  = previousDropEndDate
             growingStartRatio = Constants.minHeightRatio
 
-            // 현재 growing 진행률 계산
             let growingDuration = peakDate.timeIntervalSince(growingStartDate)
             let growingElapsed  = now.timeIntervalSince(growingStartDate)
             let growingProgress = CGFloat(max(0, min(growingElapsed / growingDuration, 1.0)))
@@ -368,14 +321,12 @@ final class EarningsStackView: UIView {
             currentPhase = .growing
 
         } else if elapsedSinceLatestPeak < peakHoldDuration {
-            // ── PeakHold 구간 ──
             peakIndex         = latestPeakIndex
             peakDate          = latestPeakDate
             lastRenderedRatio = Constants.maxHeightRatio
             currentPhase      = .peakHold
 
         } else if elapsedSinceLatestPeak < postPeakDuration {
-            // ── Dropping 구간 (중간 진입) ──
             peakIndex = latestPeakIndex
             peakDate  = latestPeakDate
 
@@ -385,14 +336,12 @@ final class EarningsStackView: UIView {
                 + (Constants.minHeightRatio - Constants.maxHeightRatio)
                 * easeInOutCubic(dropProgress)
 
-            // dropStartDate 역산: tick()이 이 시각부터 경과 시간 계산
             dropStartDate     = now.addingTimeInterval(-dropElapsed)
             dropStartRatio    = Constants.maxHeightRatio
             lastRenderedRatio = currentRatio
             currentPhase      = .dropping
 
         } else {
-            // ── drop 완료 후 다음 growing 시작 ──
             peakIndex = latestPeakIndex + 1
             peakDate  = workStartedAt.addingTimeInterval(Double(peakIndex) * peakInterval)
 
@@ -414,11 +363,9 @@ final class EarningsStackView: UIView {
 
     func updateAmount(_ amount: Int) {
         guard amount != currentAmount else { return }
-        let oldFormatted = formatted(currentAmount)
-        let newFormatted = formatted(amount)
         currentAmount = amount
-        if oldFormatted.count == newFormatted.count { rollingLabel.rollTo(newFormatted) }
-        else                                        { rollingLabel.setText(newFormatted) }
+        // 자릿수 변화 여부에 관계없이 setValue가 내부에서 처리
+        rollingLabel.setValue(amount, animated: true)
     }
 
     func updateContext(_ context: TooltipContextEntity) {
@@ -463,9 +410,6 @@ final class EarningsStackView: UIView {
     }
 
     // MARK: - Tick
-    //
-    // 고점 시각(peakDate) = workStartedAt + peakIndex * peakInterval
-    // 모든 구간 계산은 절대 시각 기준이므로 오차 누적 없음
 
     @objc private func tick() {
         guard !isStopped else { return }
@@ -476,10 +420,8 @@ final class EarningsStackView: UIView {
 
         switch currentPhase {
 
-        // ── Growing ──────────────────────────────────────────────
         case .growing:
             if now >= peakDate {
-                // 정확히 고점 도달
                 applyPosition(ratio: Constants.maxHeightRatio)
                 currentPhase = .peakHold
                 playConfeti()
@@ -493,7 +435,6 @@ final class EarningsStackView: UIView {
                 applyPosition(ratio: ratio)
             }
 
-        // ── PeakHold ─────────────────────────────────────────────
         case .peakHold:
             let elapsedSincePeak = now.timeIntervalSince(peakDate)
             if elapsedSincePeak >= peakHoldDuration {
@@ -501,9 +442,7 @@ final class EarningsStackView: UIView {
                 dropStartRatio = lastRenderedRatio
                 currentPhase   = .dropping
             }
-            // 위치 고정
 
-        // ── Dropping ─────────────────────────────────────────────
         case .dropping:
             let dropElapsed  = now.timeIntervalSince(dropStartDate)
             let dropProgress = CGFloat(min(dropElapsed / dropDuration, 1.0))
@@ -513,14 +452,12 @@ final class EarningsStackView: UIView {
             applyPosition(ratio: ratio)
 
             if dropProgress >= 1.0 {
-                // drop 완료 → 다음 사이클 growing 시작
                 applyPosition(ratio: Constants.minHeightRatio)
-
-                peakIndex       += 1
-                peakDate         = workStartedAt.addingTimeInterval(Double(peakIndex) * Constants.peakInterval)
-                growingStartDate = now
+                peakIndex        += 1
+                peakDate          = workStartedAt.addingTimeInterval(Double(peakIndex) * Constants.peakInterval)
+                growingStartDate  = now
                 growingStartRatio = Constants.minHeightRatio
-                currentPhase     = .growing
+                currentPhase      = .growing
             }
         }
     }
@@ -552,20 +489,14 @@ final class EarningsStackView: UIView {
     // MARK: - Easing
 
     private func easeOutCubic(_ progress: CGFloat) -> CGFloat {
-        let inversedProgress = progress - 1
-        return inversedProgress * inversedProgress * inversedProgress + 1
+        let p = progress - 1
+        return p * p * p + 1
     }
 
     private func easeInOutCubic(_ progress: CGFloat) -> CGFloat {
         if progress < 0.5 { return 4 * progress * progress * progress }
-        let inversedProgress = -2 * progress + 2
-        return 1 - inversedProgress * inversedProgress * inversedProgress / 2
-    }
-
-    // MARK: - Helpers
-
-    private func formatted(_ amount: Int) -> String {
-        AppNumberFormatter.decimalString(from: amount)
+        let p = -2 * progress + 2
+        return 1 - p * p * p / 2
     }
 
     // MARK: - Tooltip Scheduling
@@ -585,7 +516,6 @@ final class EarningsStackView: UIView {
     private func showCurrentTooltip() {
         guard !isStopped, let context = tooltipContext else { return }
 
-        // 메시지가 없거나 빈 문자열이면 표시하지 않고 다음으로 넘어감
         guard let message = makeMessage(for: context), !message.isEmpty else {
             advanceTooltipKind()
             scheduleNextTooltip(delay: Constants.tooltipGap)
@@ -636,15 +566,12 @@ final class EarningsStackView: UIView {
         }
 
         switch tooltipKinds[tooltipKindIndex] {
-
         case .monthlyGoal:
             let formattedAmount = AppNumberFormatter.decimalString(from: context.workedEarnings)
             return "이번달에 쌓은 월급 \(formattedAmount)원"
-
         case .buyable:
             guard let item = Self.buyableItem(for: currentAmount) else { return nil }
             return "지금까지 번 돈으로 \(item) 살 수 있어요"
-
         case .cheer:
             return cheerMessage(endTime: context.endTime)
         }
