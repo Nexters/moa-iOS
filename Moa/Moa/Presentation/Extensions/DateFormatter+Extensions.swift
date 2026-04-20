@@ -26,4 +26,12 @@ extension DateFormatter {
         formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
         return formatter
     }()
+    
+    static let hourMinuteFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.locale     = Locale(identifier: "ko_KR")
+        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
+        return formatter
+    }()
 }
