@@ -165,7 +165,6 @@ final class FixScheduleViewController: BaseViewController {
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
-        scheduleTypeOptionView.setVacationButtonVisible(viewModel.canShowVacationOption)
     }
 
     override func bind() {
@@ -178,13 +177,6 @@ final class FixScheduleViewController: BaseViewController {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
-            .store(in: &cancellables)
-        
-        viewModel.$canShowVacationOption
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] canShow in
-                self?.scheduleTypeOptionView.setVacationButtonVisible(canShow)
-            }
             .store(in: &cancellables)
     }
 }

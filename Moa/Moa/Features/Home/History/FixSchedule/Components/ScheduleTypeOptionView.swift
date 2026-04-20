@@ -102,14 +102,6 @@ final class ScheduleTypeOptionView: UIView {
         if notify { onChange?(type) }
     }
     
-    func setVacationButtonVisible(_ isVisible: Bool) {
-        buttons[.vacation]?.isHidden = !isVisible
-        
-        if !isVisible && selected == .vacation {
-            setSelected(.workday, notify: true)
-        }
-    }
-    
     // MARK: - UI Update
     
     private func applySelection() {
