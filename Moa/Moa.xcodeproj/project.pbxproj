@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 8D1A50692F38EAB6002A78C4 /* KakaoSDK */; };
+		8D2457AF2F966C33007492DF /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 8D2457AE2F966C33007492DF /* PostHog */; };
 		8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8D3FA17F2F23DF9A00EAE229 /* SnapKit */; };
 		8DB775362F4CCB150014BCE0 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8DB775352F4CCB150014BCE0 /* FirebaseMessaging */; };
 		8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */; };
@@ -127,6 +128,7 @@
 				CD2DE8192F279DA800CC8D17 /* CombineMoya in Frameworks */,
 				8D1A506A2F38EAB6002A78C4 /* KakaoSDK in Frameworks */,
 				8DB775362F4CCB150014BCE0 /* FirebaseMessaging in Frameworks */,
+				8D2457AF2F966C33007492DF /* PostHog in Frameworks */,
 				8D3FA1802F23DF9A00EAE229 /* SnapKit in Frameworks */,
 				8DFB12342F3A1D6600F0334A /* FirebaseAnalytics in Frameworks */,
 				CD2DE81B2F279DA800CC8D17 /* Moya in Frameworks */,
@@ -206,6 +208,7 @@
 				8DFB12332F3A1D6600F0334A /* FirebaseAnalytics */,
 				CDCDC1662F4C861E000F2D8F /* Lottie */,
 				8DB775352F4CCB150014BCE0 /* FirebaseMessaging */,
+				8D2457AE2F966C33007492DF /* PostHog */,
 			);
 			productName = Moa;
 			productReference = 8DAC508D2F20FF7100FAA818 /* Moa.app */;
@@ -267,6 +270,7 @@
 				8D1A50682F38EAB6002A78C4 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				8DFB12322F3A1D6600F0334A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				CDCDC1652F4C861E000F2D8F /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				8D2457AD2F966C33007492DF /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DAC508E2F20FF7100FAA818 /* Products */;
@@ -672,6 +676,14 @@
 				minimumVersion = 2.27.2;
 			};
 		};
+		8D2457AD2F966C33007492DF /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.54.0;
+			};
+		};
 		8D3FA17E2F23DF9A00EAE229 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -711,6 +723,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8D1A50682F38EAB6002A78C4 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
 			productName = KakaoSDK;
+		};
+		8D2457AE2F966C33007492DF /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8D2457AD2F966C33007492DF /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 		8D3FA17F2F23DF9A00EAE229 /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;
