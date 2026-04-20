@@ -14,6 +14,15 @@ protocol WorkViewControllerCoordinatorDelegate: AnyObject {
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController)
     func workViewControllerDidTapSetting(_ viewController: WorkViewController)
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController)
+    /// 근무 중 "일정 조정" → FixScheduleViewController push
+    /// - Parameters:
+    ///   - workday: 현재 근무 일정 (오늘 날짜 + clockIn/Out 포함)
+    ///   - joinedAt: 캘린더 이전 달 이동 제한용 가입일
+    func workViewControllerDidTapChangeSchedule(
+        _ viewController: WorkViewController,
+        workday: CalendarScheduleEntity,
+        joinedAt: Date?
+    )
 }
 
 // MARK: - WorkViewController
@@ -208,7 +217,7 @@ private extension WorkViewController {
         workMainView.isHidden       = true
         workingContentView.isHidden = false
 
-        let workingType: WorkingType = data.type == .vacation ? .vacation : .work
+        let workingType: WorkingType = (data.type == .vacation) ? .vacation : .work
         let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
         let endTime   = data.clockOutTime ?? TimeIndicatorEntity(hour: 18, minute: 0)
         let startedAt = makeDate(hour: startTime.hour, minute: startTime.minute)
@@ -222,6 +231,11 @@ private extension WorkViewController {
             status:      status,
             data:        data
         )
+
+        if status == .working {
+            workingContentView.startAnimations()
+        }
+
         startWorkingTimer()
     }
 
@@ -319,13 +333,6 @@ private extension WorkViewController {
         presentTimeSheet(type: .changeWorkTime, startTime: startTime, endTime: endTime)
     }
 
-    func presentWorkingScheduleAdjustBottomSheet() {
-        guard case let .loaded(_, data) = viewModel.state else { return }
-        let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
-        let endTime   = data.clockOutTime ?? TimeIndicatorEntity(hour: 18, minute: 0)
-        presentTimeSheet(type: .setEstimateTime, startTime: startTime, endTime: endTime)
-    }
-
     private func presentTimeSheet(
         type:      TimeSelectionBottomSheetCase,
         startTime: TimeIndicatorEntity,
@@ -370,6 +377,23 @@ private extension WorkViewController {
         var c = Calendar.korea.dateComponents([.year, .month, .day], from: Date())
         c.hour = hour; c.minute = minute; c.second = 0
         return Calendar.korea.date(from: c) ?? Date()
+    }
+
+    /// 현재 근무 상태 데이터를 CalendarScheduleEntity로 변환
+    /// FixScheduleViewController에 오늘 일정을 넘기기 위해 사용
+    func makeScheduleEntity(from data: HomeEntity) -> CalendarScheduleEntity {
+        CalendarScheduleEntity(
+            date:           Calendar.korea.startOfDay(for: Date()),
+            contentType:    data.type,
+            status:         .scheduled,
+            events:         [],
+            dailyPay:       data.dailyPay,
+            clockInTime:    data.clockInTime,
+            clockOutTime:   data.clockOutTime,
+            isToday:        true,
+            isSelected:     false,
+            isCurrentMonth: true
+        )
     }
 }
 
@@ -458,7 +482,7 @@ extension WorkViewController: WorkingContentViewDelegate {
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView) {
         presentFinishedTimeEditBottomSheet()
     }
-    
+
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
         viewModel.send(.confirmWork)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
@@ -475,10 +499,23 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
     ) {
         switch type {
         case .endWork:
-            dismiss(animated: true) { [weak self] in self?.viewModel.send(.endWork) }
-        case .changeSchedule:
             dismiss(animated: true) { [weak self] in
-                self?.presentWorkingScheduleAdjustBottomSheet()
+                self?.viewModel.send(.endWork)
+            }
+
+        case .changeSchedule:
+            // 바텀시트를 닫은 뒤 FixScheduleViewController로 push
+            dismiss(animated: true) { [weak self] in
+                guard let self,
+                      case let .loaded(_, data) = self.viewModel.state
+                else { return }
+
+                let workday = self.makeScheduleEntity(from: data)
+                self.coordinatorDelegate?.workViewControllerDidTapChangeSchedule(
+                    self,
+                    workday:  workday,
+                    joinedAt: nil
+                )
             }
         }
     }

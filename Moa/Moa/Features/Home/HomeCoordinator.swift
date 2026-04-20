@@ -14,6 +14,10 @@ final class HomeCoordinator {
     private let container: AppContainer
     private weak var nav: UINavigationController?
 
+    /// HistoryViewController에서 받은 joinedAt을 캐싱
+    /// WorkViewController의 "일정 조정" 플로우에서도 동일하게 활용
+    private var cachedJoinedAt: Date?
+
     // MARK: - Init
 
     init(container: AppContainer) {
@@ -89,14 +93,25 @@ private extension HomeCoordinator {
         return vc
     }
 
-    /// 일정 추가 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
+    /// 일정 추가
     func showAddSchedule(joinedAt: Date?) {
         let vc = makeFixScheduleViewController(viewType: .add, joinedAt: joinedAt)
         nav?.pushViewController(vc, animated: true)
     }
 
-    /// 일정 수정 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
+    /// 일정 수정 (HistoryViewController → 캘린더 날짜 탭)
     func showFixSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
+        let existing = FixScheduleViewModel.makeState(from: workday)
+        let vc = makeFixScheduleViewController(
+            viewType: .fix,
+            existingSchedule: existing,
+            joinedAt: joinedAt
+        )
+        nav?.pushViewController(vc, animated: true)
+    }
+
+    /// 근무 중 "일정 조정" → 오늘 날짜 일정을 FixScheduleViewController로 push
+    func showChangeSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
         let existing = FixScheduleViewModel.makeState(from: workday)
         let vc = makeFixScheduleViewController(
             viewType: .fix,
@@ -126,6 +141,16 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController) {
         // WorkViewController 내부에서 처리 — Coordinator 추가 작업 없음
     }
+
+    func workViewControllerDidTapChangeSchedule(
+        _ viewController: WorkViewController,
+        workday: CalendarScheduleEntity,
+        joinedAt: Date?
+    ) {
+        // joinedAt은 WorkViewController에서 nil로 전달되므로
+        // coordinator가 캐싱한 값을 우선 사용
+        showChangeSchedule(workday: workday, joinedAt: joinedAt ?? cachedJoinedAt)
+    }
 }
 
 // MARK: - HistoryViewControllerCoordinatorDelegate
@@ -137,10 +162,13 @@ extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
         schedule: CalendarScheduleEntity,
         joinedAt: Date?
     ) {
+        // HistoryViewController에서 받은 joinedAt을 캐싱 — 이후 Work 플로우에서 재사용
+        if let joinedAt { cachedJoinedAt = joinedAt }
         showFixSchedule(workday: schedule, joinedAt: joinedAt)
     }
 
     func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?) {
+        if let joinedAt { cachedJoinedAt = joinedAt }
         showAddSchedule(joinedAt: joinedAt)
     }
 }
