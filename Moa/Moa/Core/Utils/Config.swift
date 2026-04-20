@@ -12,6 +12,8 @@ public enum Config {
         public enum Plist: String {
             case baseURL = "BASE_URL"
             case kakaoAppKey = "KAKAO_NATIVE_APP_KEY"
+            case postHogApiKey = "POSTHOG_API_KEY"
+            case postHogHost = "POSTHOG_HOST"
         }
     }
     
