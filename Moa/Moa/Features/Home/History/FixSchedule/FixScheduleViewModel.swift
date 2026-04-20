@@ -126,6 +126,7 @@ private extension FixScheduleViewModel {
         switch type {
         case .vacation: return .vacation
         case .workday:  return .work
+        case .none: return .none
         }
     }
 }

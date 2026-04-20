@@ -250,7 +250,7 @@ private extension FixScheduleViewController {
             confirmButton.isEnabled = state.isConfirmEnabled
         }
 
-        workingHourSection.isHidden = (state.scheduleType == .vacation)
+        workingHourSection.isHidden = (state.scheduleType != .workday)
     }
 }
 
