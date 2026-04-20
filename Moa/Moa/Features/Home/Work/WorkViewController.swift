@@ -474,8 +474,6 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
         didConfirm type: WorkScheduleChangeType
     ) {
         switch type {
-        case .vacation:
-            dismiss(animated: true) { [weak self] in self?.viewModel.send(.changeRequestVacation) }
         case .endWork:
             dismiss(animated: true) { [weak self] in self?.viewModel.send(.endWork) }
         case .changeSchedule:
