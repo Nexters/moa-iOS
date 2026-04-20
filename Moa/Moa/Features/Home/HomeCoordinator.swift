@@ -79,14 +79,16 @@ private extension HomeCoordinator {
         viewType: ScheduleTypeOptionViewType,
         preselectedDate: Date? = nil,
         existingSchedule: FixScheduleViewState? = nil,
-        joinedAt: Date? = nil
+        joinedAt: Date? = nil,
+        isDateSelectable: Bool = true
     ) -> FixScheduleViewController {
         let vm = FixScheduleViewModel(
             viewType: viewType,
             historyUseCase: container.historyUseCase,
             preselectedDate: preselectedDate,
             existingSchedule: existingSchedule,
-            joinedAt: joinedAt
+            joinedAt: joinedAt,
+            isDateSelectable: isDateSelectable
         )
         let vc = FixScheduleViewController(viewModel: vm)
         vc.coordinatorDelegate = self
@@ -116,7 +118,8 @@ private extension HomeCoordinator {
         let vc = makeFixScheduleViewController(
             viewType: .fix,
             existingSchedule: existing,
-            joinedAt: joinedAt
+            joinedAt: joinedAt,
+            isDateSelectable: false
         )
         nav?.pushViewController(vc, animated: true)
     }

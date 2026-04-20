@@ -178,6 +178,13 @@ final class FixScheduleViewController: BaseViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
             .store(in: &cancellables)
+
+        viewModel.$isDateSelectable
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                self?.dateRangeCardView.isUserInteractionEnabled = isEnabled
+            }
+            .store(in: &cancellables)
     }
 }
 

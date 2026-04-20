@@ -17,7 +17,7 @@ final class FixScheduleViewModel {
     @Published private(set) var submitState = FixScheduleSubmitState.idle
     /// 날짜 선택 바텀시트에 전달할 가입일 — nil이면 제한 없음
     @Published private(set) var joinedAt: Date? = nil
-
+    @Published private(set) var isDateSelectable: Bool = true
     private var schedules: [CalendarScheduleEntity] = []
     
     // MARK: - Input
@@ -43,12 +43,14 @@ final class FixScheduleViewModel {
         historyUseCase: HistoryUseCase,
         preselectedDate: Date? = nil,
         existingSchedule: FixScheduleViewState? = nil,
-        joinedAt: Date? = nil
+        joinedAt: Date? = nil,
+        isDateSelectable: Bool = true
     ) {
         self.viewType       = viewType
         self.historyUseCase = historyUseCase
         self.joinedAt       = joinedAt
-
+        self.isDateSelectable = isDateSelectable
+        
         if let existing = existingSchedule {
             state = existing
         } else if let date = preselectedDate {
