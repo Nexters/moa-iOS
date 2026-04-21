@@ -15,7 +15,7 @@ struct ScheduleDateRangeEntity: Equatable {
 
     private static let formatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
+        formatter.dateFormat = "yyyy년 M월 d일"
         return formatter
     }()
 

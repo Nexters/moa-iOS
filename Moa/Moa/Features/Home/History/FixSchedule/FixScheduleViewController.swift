@@ -69,10 +69,7 @@ final class FixScheduleViewController: BaseViewController {
 
     private lazy var dateRangeCardView: ScheduleDateRangeCardView = {
         let view = ScheduleDateRangeCardView()
-        view.onTap = { [weak self] in
-            guard let self, self.viewModel.isDateSelectable else { return }
-            self.presentDatePicker()
-        }
+        view.onTap = { [weak self] in self?.presentDatePicker() }
         return view
     }()
 
@@ -168,9 +165,6 @@ final class FixScheduleViewController: BaseViewController {
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
-
-        // 날짜 고정 모드일 때 카드를 시각적으로 비활성 처리
-        dateRangeCardView.isUserInteractionEnabled = viewModel.isDateSelectable
     }
 
     override func bind() {
@@ -214,7 +208,6 @@ private extension FixScheduleViewController {
         dateRangeCardView.snp.makeConstraints {
             $0.top.equalTo(dateSectionLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.height.equalTo(60)
         }
         scheduleTypeOptionView.snp.makeConstraints {
             $0.top.equalTo(dateRangeCardView.snp.bottom).offset(32)
@@ -237,7 +230,11 @@ private extension FixScheduleViewController {
 private extension FixScheduleViewController {
 
     func render(_ state: FixScheduleViewState) {
-        dateRangeCardView.configure(dateRange: state.dateRange)
+        // readonly 여부를 함께 전달 — 카드 스타일과 탭 가능 여부 동시 처리
+        dateRangeCardView.configure(
+            dateRange: state.dateRange,
+            readonly:  !viewModel.isDateSelectable
+        )
         scheduleTypeOptionView.setSelected(state.scheduleType)
         workingTimeRangeRowView.configure(
             start: state.startTime.displayString,
