@@ -177,7 +177,7 @@ final class EarningsStackView: UIView {
 
         confetiView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
-            $0.height.equalToSuperview().multipliedBy(0.5)
+            $0.height.equalToSuperview()
         }
 
         stackContainer.addSubViews([floatingInfoContainer, stackImageView])
