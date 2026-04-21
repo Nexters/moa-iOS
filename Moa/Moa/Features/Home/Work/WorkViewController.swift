@@ -14,10 +14,7 @@ protocol WorkViewControllerCoordinatorDelegate: AnyObject {
     func workViewControllerDidTapCalendar(_ viewController: WorkViewController)
     func workViewControllerDidTapSetting(_ viewController: WorkViewController)
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController)
-    /// 근무 중 "일정 조정" → FixScheduleViewController push
-    /// - Parameters:
-    ///   - workday: 현재 근무 일정 (오늘 날짜 + clockIn/Out 포함)
-    ///   - joinedAt: 캘린더 이전 달 이동 제한용 가입일
+    /// 일정 조정 / idle 근무시간 수정 → FixScheduleViewController push
     func workViewControllerDidTapChangeSchedule(
         _ viewController: WorkViewController,
         workday: CalendarScheduleEntity,
@@ -130,11 +127,7 @@ final class WorkViewController: BaseViewController {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { isLoading in
-                if isLoading {
-                    LoadingManager.shared.show()
-                } else {
-                    LoadingManager.shared.hide()
-                }
+                isLoading ? LoadingManager.shared.show() : LoadingManager.shared.hide()
             }
             .store(in: &cancellables)
     }
@@ -285,6 +278,37 @@ private extension WorkViewController {
     }
 }
 
+// MARK: - Navigation to FixScheduleViewController
+
+private extension WorkViewController {
+
+    /// 현재 HomeEntity를 오늘 날짜 기준 CalendarScheduleEntity로 변환
+    func makeScheduleEntity(from data: HomeEntity) -> CalendarScheduleEntity {
+        CalendarScheduleEntity(
+            date:           Calendar.korea.startOfDay(for: Date()),
+            contentType:    data.type,
+            status:         .scheduled,
+            events:         [],
+            dailyPay:       data.dailyPay,
+            clockInTime:    data.clockInTime,
+            clockOutTime:   data.clockOutTime,
+            isToday:        true,
+            isSelected:     false,
+            isCurrentMonth: true
+        )
+    }
+
+    /// FixScheduleViewController push — 날짜 변경 불가(오늘 고정)
+    func pushFixSchedule(from data: HomeEntity) {
+        let workday = makeScheduleEntity(from: data)
+        coordinatorDelegate?.workViewControllerDidTapChangeSchedule(
+            self,
+            workday:  workday,
+            joinedAt: nil   // Coordinator가 캐싱한 joinedAt 사용
+        )
+    }
+}
+
 // MARK: - Bottom Sheet Presentation
 
 private extension WorkViewController {
@@ -310,13 +334,6 @@ private extension WorkViewController {
         let vc = WorkAlarmBottomSheet()
         vc.delegate = self
         presentBottomSheet(vc)
-    }
-
-    func presentTimeSelectionBottomSheet() {
-        guard case let .loaded(_, data) = viewModel.state else { return }
-        let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
-        let endTime   = data.clockOutTime ?? TimeIndicatorEntity(hour: 18, minute: 0)
-        presentTimeSheet(type: .setEstimateTime, startTime: startTime, endTime: endTime)
     }
 
     func presentExtendTimeBottomSheet() {
@@ -378,23 +395,6 @@ private extension WorkViewController {
         c.hour = hour; c.minute = minute; c.second = 0
         return Calendar.korea.date(from: c) ?? Date()
     }
-
-    /// 현재 근무 상태 데이터를 CalendarScheduleEntity로 변환
-    /// FixScheduleViewController에 오늘 일정을 넘기기 위해 사용
-    func makeScheduleEntity(from data: HomeEntity) -> CalendarScheduleEntity {
-        CalendarScheduleEntity(
-            date:           Calendar.korea.startOfDay(for: Date()),
-            contentType:    data.type,
-            status:         .scheduled,
-            events:         [],
-            dailyPay:       data.dailyPay,
-            clockInTime:    data.clockInTime,
-            clockOutTime:   data.clockOutTime,
-            isToday:        true,
-            isSelected:     false,
-            isCurrentMonth: true
-        )
-    }
 }
 
 // MARK: - WorkAlarmBottomSheetDelegate
@@ -416,6 +416,7 @@ extension WorkViewController: WorkAlarmBottomSheetDelegate {
 }
 
 // MARK: - TimeSelectionBottomSheetDelegate
+// workFinished 상태에서 완료 후 실제 근무 시간 수정 시에만 사용
 
 extension WorkViewController: TimeSelectionBottomSheetDelegate {
 
@@ -425,12 +426,9 @@ extension WorkViewController: TimeSelectionBottomSheetDelegate {
         endTime: TimeIndicatorEntity
     ) {
         guard case let .loaded(status, _) = viewModel.state else { return }
-
         switch status {
         case .workFinished:
             viewModel.send(.editFinishedWorkTime(start: startTime, end: endTime))
-        case .working:
-            viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         default:
             viewModel.send(.updateWorkTime(start: startTime, end: endTime))
         }
@@ -458,8 +456,10 @@ extension WorkViewController: WorkMainContentViewDelegate {
         viewModel.send(.requestVacation)
     }
 
+    /// idle 상태에서 근무 시간 탭 → 바텀시트 대신 FixScheduleViewController push
     func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView) {
-        presentTimeSelectionBottomSheet()
+        guard case let .loaded(_, data) = viewModel.state else { return }
+        pushFixSchedule(from: data)
     }
 
     func workMainContentViewDidTapWorkHistory(_ view: WorkMainContentView) {
@@ -471,8 +471,19 @@ extension WorkViewController: WorkMainContentViewDelegate {
 
 extension WorkViewController: WorkingContentViewDelegate {
 
+    /// 근무 중 "일정 조정" 탭
+    /// - vacation 타입: 바텀시트 없이 바로 FixScheduleViewController push
+    /// - work 타입:     기존대로 WorkScheduleChangeBottomSheet 표시
     func workingContentViewDidTapScheduleAdjust(_ view: WorkingContentView) {
-        presentScheduleChangeBottomSheet()
+        guard case let .loaded(_, data) = viewModel.state else { return }
+
+        if data.type == .vacation {
+            // 휴가 중 일정 조정 — 바텀시트 없이 직접 FixSchedule push
+            pushFixSchedule(from: data)
+        } else {
+            // 일반 근무 중 일정 조정 — 종료 / 조정 선택 바텀시트
+            presentScheduleChangeBottomSheet()
+        }
     }
 
     func workingContentViewDidTapExtendWork(_ view: WorkingContentView) {
@@ -490,6 +501,7 @@ extension WorkViewController: WorkingContentViewDelegate {
 }
 
 // MARK: - WorkScheduleChangeBottomSheetDelegate
+// work 타입 근무 중 일정 조정 시에만 진입
 
 extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
 
@@ -504,18 +516,11 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
             }
 
         case .changeSchedule:
-            // 바텀시트를 닫은 뒤 FixScheduleViewController로 push
             dismiss(animated: true) { [weak self] in
                 guard let self,
                       case let .loaded(_, data) = self.viewModel.state
                 else { return }
-
-                let workday = self.makeScheduleEntity(from: data)
-                self.coordinatorDelegate?.workViewControllerDidTapChangeSchedule(
-                    self,
-                    workday:  workday,
-                    joinedAt: nil
-                )
+                self.pushFixSchedule(from: data)
             }
         }
     }

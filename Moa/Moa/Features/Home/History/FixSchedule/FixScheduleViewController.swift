@@ -69,7 +69,10 @@ final class FixScheduleViewController: BaseViewController {
 
     private lazy var dateRangeCardView: ScheduleDateRangeCardView = {
         let view = ScheduleDateRangeCardView()
-        view.onTap = { [weak self] in self?.presentDatePicker() }
+        view.onTap = { [weak self] in
+            guard let self, self.viewModel.isDateSelectable else { return }
+            self.presentDatePicker()
+        }
         return view
     }()
 
@@ -153,7 +156,7 @@ final class FixScheduleViewController: BaseViewController {
     }
 
     // MARK: - Setup
-    
+
     override func setupUI() {
         view.backgroundColor = AppColor.Background.primary
         replaceSystemBackButtonWithAppBackButton()
@@ -165,6 +168,9 @@ final class FixScheduleViewController: BaseViewController {
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
+
+        // 날짜 고정 모드일 때 카드를 시각적으로 비활성 처리
+        dateRangeCardView.isUserInteractionEnabled = viewModel.isDateSelectable
     }
 
     override func bind() {
@@ -177,13 +183,6 @@ final class FixScheduleViewController: BaseViewController {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
-            .store(in: &cancellables)
-
-        viewModel.$isDateSelectable
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isEnabled in
-                self?.dateRangeCardView.isUserInteractionEnabled = isEnabled
-            }
             .store(in: &cancellables)
     }
 }
@@ -288,7 +287,6 @@ private extension FixScheduleViewController {
 private extension FixScheduleViewController {
 
     func presentDatePicker() {
-        // ViewModel에 저장된 joinedAt을 바텀시트로 전달
         let sheet = DatePickerCalendarBottomSheet(joinedAt: viewModel.joinedAt)
         sheet.delegate = self
         presentBottomSheet(sheet)

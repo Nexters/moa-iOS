@@ -17,9 +17,11 @@ final class FixScheduleViewModel {
     @Published private(set) var submitState = FixScheduleSubmitState.idle
     /// 날짜 선택 바텀시트에 전달할 가입일 — nil이면 제한 없음
     @Published private(set) var joinedAt: Date? = nil
-    @Published private(set) var isDateSelectable: Bool = true
+    /// false면 날짜 선택 카드 탭 비활성 (오늘 날짜 고정 케이스)
+    let isDateSelectable: Bool
+
     private var schedules: [CalendarScheduleEntity] = []
-    
+
     // MARK: - Input
 
     enum Input {
@@ -46,11 +48,11 @@ final class FixScheduleViewModel {
         joinedAt: Date? = nil,
         isDateSelectable: Bool = true
     ) {
-        self.viewType       = viewType
-        self.historyUseCase = historyUseCase
-        self.joinedAt       = joinedAt
+        self.viewType         = viewType
+        self.historyUseCase   = historyUseCase
+        self.joinedAt         = joinedAt
         self.isDateSelectable = isDateSelectable
-        
+
         if let existing = existingSchedule {
             state = existing
         } else if let date = preselectedDate {
@@ -69,6 +71,7 @@ extension FixScheduleViewModel {
         switch input {
 
         case .selectDate(let date):
+            guard isDateSelectable else { return }
             state.dateRange = ScheduleDateRangeEntity(single: date)
 
         case .selectScheduleType(let type):
@@ -92,6 +95,7 @@ extension FixScheduleViewModel {
 // MARK: - Submit
 
 private extension FixScheduleViewModel {
+
     func submitSchedule() {
         guard let dateRange = state.dateRange else { return }
 
@@ -111,7 +115,6 @@ private extension FixScheduleViewModel {
                     clockOutTime: workdayType == .vacation ? nil : endTime
                 )
                 submitState = .success
-
             } catch {
                 let message = (error as? LocalizedError)?.errorDescription
                     ?? "일정을 저장하지 못했습니다. 다시 시도해주세요."
@@ -124,7 +127,7 @@ private extension FixScheduleViewModel {
         switch type {
         case .vacation: return .vacation
         case .workday:  return .work
-        case .none: return .none
+        case .none:     return .none
         }
     }
 }
@@ -139,7 +142,7 @@ extension FixScheduleViewModel {
         state.dateRange = ScheduleDateRangeEntity(single: workday.date)
 
         switch workday.contentType {
-        case .vacation: state.scheduleType = .vacation
+        case .vacation:    state.scheduleType = .vacation
         case .work, .none: state.scheduleType = .workday
         }
 

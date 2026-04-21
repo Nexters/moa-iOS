@@ -112,14 +112,15 @@ private extension HomeCoordinator {
         nav?.pushViewController(vc, animated: true)
     }
 
-    /// 근무 중 "일정 조정" → 오늘 날짜 일정을 FixScheduleViewController로 push
+    /// 근무 중 "일정 조정" / idle "근무 시간 수정"
+    /// → 오늘 날짜 고정(isDateSelectable: false)으로 FixScheduleViewController push
     func showChangeSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
         let existing = FixScheduleViewModel.makeState(from: workday)
         let vc = makeFixScheduleViewController(
             viewType: .fix,
             existingSchedule: existing,
             joinedAt: joinedAt,
-            isDateSelectable: false
+            isDateSelectable: false  // 오늘 날짜 고정, 날짜 선택 UI 비활성
         )
         nav?.pushViewController(vc, animated: true)
     }
@@ -150,8 +151,6 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
         workday: CalendarScheduleEntity,
         joinedAt: Date?
     ) {
-        // joinedAt은 WorkViewController에서 nil로 전달되므로
-        // coordinator가 캐싱한 값을 우선 사용
         showChangeSchedule(workday: workday, joinedAt: joinedAt ?? cachedJoinedAt)
     }
 }
@@ -165,7 +164,6 @@ extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
         schedule: CalendarScheduleEntity,
         joinedAt: Date?
     ) {
-        // HistoryViewController에서 받은 joinedAt을 캐싱 — 이후 Work 플로우에서 재사용
         if let joinedAt { cachedJoinedAt = joinedAt }
         showFixSchedule(workday: schedule, joinedAt: joinedAt)
     }
