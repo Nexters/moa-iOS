@@ -185,6 +185,10 @@ final class CalendarView: UIView {
     func updateWorkInfo(_ info: EarningsEntity) {
         infoCard.update(with: info)
     }
+    
+    func selectDate(_ date: Date?) {
+        selectedDate = date
+    }
 
     // MARK: - Helpers
 
