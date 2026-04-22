@@ -17,11 +17,11 @@ protocol DatePickerCalendarBottomSheetDelegate: AnyObject {
 final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresentable {
     
     // MARK: - Properties
-
+    
     weak var delegate: DatePickerCalendarBottomSheetDelegate?
-
+    
     // MARK: - UI
-
+    
     private let titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
@@ -33,7 +33,7 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         label.numberOfLines = 1
         return label
     }()
-
+    
     private let calendarView = DatePickerCalendarView()
     
     private lazy var confirmButton: AppButton = {
@@ -42,17 +42,21 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
         button.applyStyle(.primary())
         return button
     }()
-
+    
+    private let selectedDate: Date?
+    
     // MARK: - Init
-
+    
     /// - Parameter joinedAt: 가입일. 이 달보다 이전 달로 이동하지 않습니다. nil이면 제한 없음.
-    init(joinedAt: Date? = nil) {
+    init(joinedAt: Date? = nil, selectedDate: Date? = nil) {
+        self.selectedDate = selectedDate
         super.init(nibName: nil, bundle: nil)
+        
         if let joinedAt {
             calendarView.apply(joinedAt: joinedAt)
         }
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
     
     // MARK: - Lifecycle
@@ -60,6 +64,10 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
+        
+        if let selectedDate {
+            calendarView.setSelectedDate(selectedDate)
+        }
     }
     
     // MARK: - Setup
@@ -87,7 +95,7 @@ final class DatePickerCalendarBottomSheet: UIViewController, BottomSheetPresenta
             make.height.equalTo(64)
             make.bottom.equalToSuperview().inset(24)
         }
-
+        
         confirmButton.addTarget(self, action: #selector(didTapConfirmButton), for: .touchUpInside)
     }
     
