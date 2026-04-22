@@ -9,7 +9,11 @@ import SnapKit
 protocol CalendarViewDelegate: AnyObject {
     func calendarView(_ view: CalendarView, didSelectSchedule schedule: CalendarScheduleEntity)
     func calendarView(_ view: CalendarView, didChangeToDate date: Date)
-    func calendarViewDidTapAdd(_ view: CalendarView)
+    func calendarViewDidTapAdd(
+        _ view: CalendarView,
+        selectedDate: Date?,
+        schedule: CalendarScheduleEntity?
+    )
 }
 
 final class CalendarView: UIView {
@@ -210,7 +214,17 @@ extension CalendarView: CalendarNavigationBarDelegate {
     }
 
     func navigationBarDidTapAdd() {
-        delegate?.calendarViewDidTapAdd(self)
+
+        let schedule: CalendarScheduleEntity? = {
+            guard let selectedDate else { return nil }
+            return dataSource.rawSchedule(for: selectedDate)
+        }()
+
+        delegate?.calendarViewDidTapAdd(
+            self,
+            selectedDate: selectedDate,
+            schedule: schedule
+        )
     }
 }
 

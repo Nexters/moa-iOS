@@ -96,8 +96,12 @@ private extension HomeCoordinator {
     }
 
     /// 일정 추가
-    func showAddSchedule(joinedAt: Date?) {
-        let vc = makeFixScheduleViewController(viewType: .add, joinedAt: joinedAt)
+    func showAddSchedule(selectedDate: Date?, joinedAt: Date?) {
+        let vc = makeFixScheduleViewController(
+            viewType: .add,
+            preselectedDate: selectedDate,
+            joinedAt: joinedAt
+        )
         nav?.pushViewController(vc, animated: true)
     }
 
@@ -161,16 +165,20 @@ extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
 
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity,
+        schedule: CalendarScheduleEntity?,
+        selectedDate: Date?,
         joinedAt: Date?
     ) {
         if let joinedAt { cachedJoinedAt = joinedAt }
-        showFixSchedule(workday: schedule, joinedAt: joinedAt)
-    }
-
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?) {
-        if let joinedAt { cachedJoinedAt = joinedAt }
-        showAddSchedule(joinedAt: joinedAt)
+        
+        if let schedule {
+            showFixSchedule(workday: schedule, joinedAt: joinedAt)
+        } else {
+            showAddSchedule(
+                selectedDate: selectedDate,
+                joinedAt: joinedAt
+            )
+        }
     }
 }
 

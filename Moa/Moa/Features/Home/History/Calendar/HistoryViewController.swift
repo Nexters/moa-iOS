@@ -10,10 +10,10 @@ import Combine
 // MARK: - CoordinatorDelegate
 
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?)
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity,
+        schedule: CalendarScheduleEntity?,
+        selectedDate: Date?,
         joinedAt: Date?
     )
 }
@@ -241,8 +241,17 @@ extension HistoryViewController: CalendarViewDelegate {
         viewModel.send(.changeMonth(date))
     }
 
-    func calendarViewDidTapAdd(_ view: CalendarView) {
-        coordinatorDelegate?.historyViewControllerDidTapAdd(self, joinedAt: currentJoinedAt)
+    func calendarViewDidTapAdd(
+        _ view: CalendarView,
+        selectedDate: Date?,
+        schedule: CalendarScheduleEntity?
+    ) {
+        coordinatorDelegate?.historyViewControllerDidTapEdit(
+            self,
+            schedule: schedule,
+            selectedDate: selectedDate,
+            joinedAt: currentJoinedAt
+        )
     }
 }
 
@@ -254,6 +263,7 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
         coordinatorDelegate?.historyViewControllerDidTapEdit(
             self,
             schedule: schedule,
+            selectedDate: schedule.date,
             joinedAt: currentJoinedAt
         )
     }
