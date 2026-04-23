@@ -21,7 +21,6 @@ final class WorkViewModel {
         case refresh
         case updateWorkTime(start: TimeIndicatorEntity, end: TimeIndicatorEntity)
         case requestVacation
-        case changeRequestVacation
         case startWork
         case startWorkOnHoliday
         case endWork
@@ -63,8 +62,6 @@ extension WorkViewModel {
             handleUpdateWorkTime(start: start, end: end)
         case .requestVacation:
             handleRequestVacation()
-        case .changeRequestVacation:
-            changeRequestVacation()
         case .startWork:
             handleStartWork()
         case .startWorkOnHoliday:
@@ -365,31 +362,6 @@ private extension WorkViewModel {
                 currentStatus = entity.type == .vacation ? .finished : .workFinished
                 publish()
                 reloadHomeData()
-            } catch {
-                state = .error(.network)
-            }
-        }
-    }
-    
-    func changeRequestVacation() {
-        guard currentStatus == .working,
-              var entity = homeEntity,
-              let originalIn  = entity.clockInTime,
-              let originalOut = entity.clockOutTime
-        else { return }
-        
-        Task { @MainActor in
-            do {
-                let updated = try await homeUseCase.updateWorkday(
-                    date: Date().dateString,
-                    type: .vacation,
-                    clockInTime: originalIn,
-                    clockOutTime: originalOut
-                )
-                applyWorkdayUpdate(updated, to: &entity)
-                homeEntity    = entity
-                currentStatus = .working
-                publish()
             } catch {
                 state = .error(.network)
             }

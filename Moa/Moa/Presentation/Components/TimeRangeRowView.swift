@@ -12,6 +12,13 @@ final class TimeRangeRowView: UIControl {
     
     // MARK: - UI
     
+    private lazy var rootStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [stackView, durationStackView])
+        stack.axis = .vertical
+        stack.spacing = 8
+        return stack
+    }()
+    
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -19,6 +26,34 @@ final class TimeRangeRowView: UIControl {
         stack.layer.masksToBounds = true
         stack.backgroundColor = AppColor.Container.primary
         return stack
+    }()
+    
+    private lazy var durationStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [clockImageView, durationLabel])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 4
+        return stack
+    }()
+    
+    private let durationLabel: StyledLabel = {
+        let label = StyledLabel()
+        label.setStyle(
+            .init(
+                typography: AppTypography.b2_500,
+                color: AppColor.IconAndText.green
+            )
+        )
+        return label
+    }()
+    
+    private let clockImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(resource: .Icon.iconClock)
+            .withRenderingMode(.alwaysTemplate)
+        iv.tintColor = AppColor.IconAndText.green
+        iv.contentMode = .scaleAspectFit
+        return iv
     }()
     
     private lazy var startTimeLabel: StyledLabel = {
@@ -72,52 +107,75 @@ final class TimeRangeRowView: UIControl {
     func configure(start: String, end: String) {
         startTimeLabel.setText(start)
         endTimeLabel.setText(end)
+
+        let text = makeDurationText(start: start, end: end)
+        durationLabel.setText(text)
+
+        durationStackView.isHidden = text.isEmpty
     }
     
     // MARK: - Private
     
     private func setupUI() {
-        addSubview(stackView)
-        
-        stackView.snp.makeConstraints { make in
+        addSubview(rootStackView)
+
+        rootStackView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.greaterThanOrEqualTo(60)
+        }
+
+        stackView.snp.makeConstraints {
+            $0.height.greaterThanOrEqualTo(60)
+        }
+
+        durationStackView.snp.makeConstraints {
+            $0.top.equalTo(stackView.snp.bottom).offset(8)
+            $0.centerX.equalToSuperview()
+        }
+
+        clockImageView.snp.makeConstraints {
+            $0.size.equalTo(16)
         }
         
+        clockImageView.transform = CGAffineTransform(translationX: 0, y: -1)
+
+        setupTimeRowLayout()
+    }
+    
+    private func setupTimeRowLayout() {
         stackView.addLayoutGuide(leftArea)
         stackView.addLayoutGuide(rightArea)
         
         stackView.addSubViews([startTimeLabel, arrowImageView, endTimeLabel])
         
-        arrowImageView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(24)
+        arrowImageView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.size.equalTo(24)
         }
         
-        leftArea.snp.makeConstraints { make in
-            make.leading.top.bottom.equalToSuperview()
-            make.trailing.equalTo(arrowImageView.snp.leading)
+        leftArea.snp.makeConstraints {
+            $0.leading.top.bottom.equalToSuperview()
+            $0.trailing.equalTo(arrowImageView.snp.leading)
         }
         
-        rightArea.snp.makeConstraints { make in
-            make.leading.equalTo(arrowImageView.snp.trailing)
-            make.top.bottom.trailing.equalToSuperview()
+        rightArea.snp.makeConstraints {
+            $0.leading.equalTo(arrowImageView.snp.trailing)
+            $0.top.bottom.trailing.equalToSuperview()
         }
         
         leftArea.widthAnchor.constraint(equalTo: rightArea.widthAnchor).isActive = true
         
-        startTimeLabel.snp.makeConstraints { make in
-            make.centerX.equalTo(leftArea.snp.centerX)
-            make.leading.equalToSuperview().inset(20)
-            make.trailing.lessThanOrEqualTo(leftArea.snp.trailing).inset(10)
-            make.centerY.equalToSuperview()
+        startTimeLabel.snp.makeConstraints {
+            $0.centerX.equalTo(leftArea.snp.centerX)
+            $0.leading.equalToSuperview().inset(20)
+            $0.trailing.lessThanOrEqualTo(leftArea.snp.trailing).inset(10)
+            $0.centerY.equalToSuperview()
         }
         
-        endTimeLabel.snp.makeConstraints { make in
-            make.centerX.equalTo(rightArea.snp.centerX)
-            make.trailing.equalToSuperview().inset(20)
-            make.leading.greaterThanOrEqualTo(rightArea.snp.leading).inset(10)
-            make.centerY.equalToSuperview()
+        endTimeLabel.snp.makeConstraints {
+            $0.centerX.equalTo(rightArea.snp.centerX)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.leading.greaterThanOrEqualTo(rightArea.snp.leading).inset(10)
+            $0.centerY.equalToSuperview()
         }
     }
     
@@ -129,5 +187,30 @@ final class TimeRangeRowView: UIControl {
     
     @objc private func rowTapped() {
         sendActions(for: .touchUpInside)
+    }
+}
+
+private extension TimeRangeRowView {
+    private func makeDurationText(start: String, end: String) -> String {
+        let formatter = DateFormatter.hourMinuteFormatter
+
+        guard
+            let startDate = formatter.date(from: start),
+            let endDate   = formatter.date(from: end)
+        else {
+            return ""
+        }
+
+        let diff = Int(endDate.timeIntervalSince(startDate))
+        if diff <= 0 { return "" }
+
+        let hours = diff / 3600
+        let minutes = (diff % 3600) / 60
+
+        if minutes == 0 {
+            return "총 \(hours)시간 근무해요."
+        } else {
+            return "총 \(hours)시간 \(minutes)분 근무해요."
+        }
     }
 }

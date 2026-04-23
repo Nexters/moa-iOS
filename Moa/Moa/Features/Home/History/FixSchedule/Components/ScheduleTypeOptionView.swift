@@ -12,43 +12,22 @@ final class ScheduleTypeOptionView: UIView {
     
     private let type: ScheduleTypeOptionType
     
-    // MARK: - Constants
-    
-    private enum Constant {
-        static let scheduleType = "어떤 일정인가요?"
-        static let vacation = "휴가"
-        static let workday = "근무"
-    }
-    
     // MARK: - Public
     
     var onChange: ((ScheduleTypeOptionType) -> Void)?
     
-    private var selected: ScheduleTypeOptionType = .workday  {
+    private var selected: ScheduleTypeOptionType = .workday {
         didSet { applySelection() }
     }
     
-    func setSelected(_ type: ScheduleTypeOptionType, notify: Bool = false) {
-        guard selected != type else { return }
-        selected = type
-        if notify { onChange?(type) }
-    }
+    private var buttons: [ScheduleTypeOptionType: OptionChipButton] = [:]
     
-    func setVacationButtonVisible(_ isVisible: Bool) {
-        vacationButton.isHidden = !isVisible
-        
-        // 휴가 버튼이 숨겨질 때 근무만 선택 가능하도록
-        if !isVisible && selected == .vacation {
-            setSelected(.workday, notify: true)
-        }
-    }
-    
-    // MARK: - UI Components
+    // MARK: - UI
     
     private let titleLabel: UILabel = {
         let label = StyledLabel()
         label.setText(
-            Constant.scheduleType,
+            "어떤 일정인가요?",
             style: .init(
                 typography: AppTypography.b2_500,
                 color: AppColor.IconAndText.mediumEmphasis
@@ -57,14 +36,10 @@ final class ScheduleTypeOptionView: UIView {
         return label
     }()
     
-    private let vacationButton = OptionChipButton(title: Constant.vacation)
-    private let workButton = OptionChipButton(title: Constant.workday)
-    
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 12.0
-        stack.alignment = .fill
+        stack.spacing = 12
         stack.distribution = .fillEqually
         return stack
     }()
@@ -76,52 +51,63 @@ final class ScheduleTypeOptionView: UIView {
         super.init(frame: .zero)
         
         setupUI()
-        setupActions()
+        setupButtons()
         applySelection()
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    // MARK: - Actions
-    
-    @objc private func vacationTapped() {
-        guard selected != .vacation else { return }
-        setSelected(.vacation, notify: true)
-    }
-    
-    @objc private func workdayTapped() {
-        guard selected != .workday else { return }
-        setSelected(.workday, notify: true)
-    }
+    required init?(coder: NSCoder) { fatalError() }
     
     // MARK: - Setup
     
     private func setupUI() {
         addSubViews([titleLabel, stackView])
-        stackView.addArrangedSubViews([vacationButton, workButton])
         
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
+        titleLabel.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
         }
         
-        stackView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.leading.trailing.bottom.equalToSuperview()
+        stackView.snp.makeConstraints {
+            $0.top.equalTo(titleLabel.snp.bottom).offset(8)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
     }
     
-    private func setupActions() {
-        vacationButton.addTarget(self, action: #selector(vacationTapped), for: .touchUpInside)
-        workButton.addTarget(self, action: #selector(workdayTapped), for: .touchUpInside)
+    private func setupButtons() {
+        let types: [ScheduleTypeOptionType] = [.workday, .vacation, .none]
+        
+        types.forEach { type in
+            let button = OptionChipButton(title: type.title)
+            button.addTarget(self, action: #selector(didTapButton(_:)), for: .touchUpInside)
+            
+            stackView.addArrangedSubview(button)
+            buttons[type] = button
+        }
     }
+    
+    // MARK: - Actions
+    
+    @objc private func didTapButton(_ sender: UIButton) {
+        guard let (type, _) = buttons.first(where: { $0.value == sender }) else { return }
+        guard selected != type else { return }
+        
+        selected = type
+        onChange?(type)
+    }
+    
+    // MARK: - Public
+    
+    func setSelected(_ type: ScheduleTypeOptionType, notify: Bool = false) {
+        guard selected != type else { return }
+        selected = type
+        if notify { onChange?(type) }
+    }
+    
+    // MARK: - UI Update
     
     private func applySelection() {
-        vacationButton.isSelected = (selected == .vacation)
-        workButton.isSelected = (selected == .workday)
-        
-        vacationButton.setNeedsUpdateConfiguration()
-        workButton.setNeedsUpdateConfiguration()
+        buttons.forEach { type, button in
+            button.isSelected = (type == selected)
+            button.setNeedsUpdateConfiguration()
+        }
     }
 }

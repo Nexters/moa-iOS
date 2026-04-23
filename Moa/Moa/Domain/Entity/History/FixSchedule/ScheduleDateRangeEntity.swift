@@ -13,20 +13,7 @@ struct ScheduleDateRangeEntity: Equatable {
     let start: Date
     let end:   Date
 
-    private static let formatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
-        return formatter
-    }()
-
-    private static let serverFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone   = TimeZone(identifier: "Asia/Seoul")
-        return formatter
-    }()
-
-    func formatted(_ date: Date) -> String { Self.formatter.string(from: date) }
+    func formatted(_ date: Date) -> String { DateFormatter.koreanDateLong.string(from: date) }
 
     var displayString: String {
         if Calendar.current.isDate(start, inSameDayAs: end) {
@@ -36,7 +23,7 @@ struct ScheduleDateRangeEntity: Equatable {
     }
 
     /// API 전송용 "yyyy-MM-dd" 문자열
-    var startDateString: String { Self.serverFormatter.string(from: start) }
+    var startDateString: String { DateFormatter.yyyyMMdd.string(from: start) }
 
     init(single date: Date)      { self.start = date; self.end = date }
     init(start: Date, end: Date) { self.start = start; self.end = end }

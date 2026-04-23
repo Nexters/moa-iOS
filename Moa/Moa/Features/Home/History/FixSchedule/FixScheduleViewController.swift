@@ -20,7 +20,7 @@ protocol FixScheduleViewControllerDelegate: AnyObject {
 enum ScheduleTypeOptionViewType {
     case add
     case fix
-
+    
     var title: String {
         switch self {
         case .add: return "추가"
@@ -32,14 +32,14 @@ enum ScheduleTypeOptionViewType {
 // MARK: - FixScheduleViewController
 
 final class FixScheduleViewController: BaseViewController {
-
+    
     // MARK: - Properties
-
+    
     private let viewModel: FixScheduleViewModel
     weak var coordinatorDelegate: FixScheduleViewControllerDelegate?
-
+    
     // MARK: - UI — 타이틀
-
+    
     private lazy var titleLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
@@ -52,9 +52,9 @@ final class FixScheduleViewController: BaseViewController {
         label.numberOfLines = 2
         return label
     }()
-
+    
     // MARK: - UI — 날짜 구간 섹션
-
+    
     private let dateSectionLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
@@ -66,15 +66,15 @@ final class FixScheduleViewController: BaseViewController {
         )
         return label
     }()
-
+    
     private lazy var dateRangeCardView: ScheduleDateRangeCardView = {
         let view = ScheduleDateRangeCardView()
         view.onTap = { [weak self] in self?.presentDatePicker() }
         return view
     }()
-
+    
     // MARK: - UI — 일정 타입 섹션
-
+    
     private lazy var scheduleTypeOptionView: ScheduleTypeOptionView = {
         let view = ScheduleTypeOptionView(type: .vacation)
         view.onChange = { [weak self] type in
@@ -82,9 +82,9 @@ final class FixScheduleViewController: BaseViewController {
         }
         return view
     }()
-
+    
     // MARK: - UI — 근무 시간 섹션
-
+    
     private let timeSectionLabel: StyledLabel = {
         let label = StyledLabel()
         label.setText(
@@ -96,22 +96,22 @@ final class FixScheduleViewController: BaseViewController {
         )
         return label
     }()
-
+    
     private lazy var workingTimeRangeRowView: TimeRangeRowView = {
         let view = TimeRangeRowView()
         view.addTarget(self, action: #selector(didTapTimeRange), for: .touchUpInside)
         return view
     }()
-
+    
     private lazy var workingHourSection: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [timeSectionLabel, workingTimeRangeRowView])
         sv.axis    = .vertical
         sv.spacing = 8
         return sv
     }()
-
+    
     // MARK: - UI — 하단 버튼
-
+    
     private lazy var cancelButton: AppButton = {
         let btn = AppButton()
         btn.setTitle("취소", for: .normal)
@@ -119,7 +119,7 @@ final class FixScheduleViewController: BaseViewController {
         btn.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
         return btn
     }()
-
+    
     private lazy var confirmButton: AppButton = {
         let btn = AppButton()
         btn.setTitle("확인", for: .normal)
@@ -128,7 +128,7 @@ final class FixScheduleViewController: BaseViewController {
         btn.addTarget(self, action: #selector(didTapConfirm), for: .touchUpInside)
         return btn
     }()
-
+    
     private lazy var bottomButtonStack: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [cancelButton, confirmButton])
         sv.axis         = .horizontal
@@ -136,22 +136,22 @@ final class FixScheduleViewController: BaseViewController {
         sv.distribution = .fillEqually
         return sv
     }()
-
+    
     // MARK: - Init
-
+    
     init(viewModel: FixScheduleViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
-
+    
     // MARK: - Lifecycle
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
     }
-
+    
     // MARK: - Setup
     
     override func setupUI() {
@@ -159,32 +159,24 @@ final class FixScheduleViewController: BaseViewController {
         replaceSystemBackButtonWithAppBackButton()
         setupHierarchy()
         setupConstraints()
-
+        
         let s = viewModel.state
         workingTimeRangeRowView.configure(
             start: s.startTime.displayString,
             end:   s.endTime.displayString
         )
-        scheduleTypeOptionView.setVacationButtonVisible(viewModel.canShowVacationOption)
     }
-
+    
     override func bind() {
         viewModel.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.render($0) }
             .store(in: &cancellables)
-
+        
         viewModel.$submitState
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.handleSubmitState($0) }
-            .store(in: &cancellables)
-        
-        viewModel.$canShowVacationOption
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] canShow in
-                self?.scheduleTypeOptionView.setVacationButtonVisible(canShow)
-            }
             .store(in: &cancellables)
     }
 }
@@ -192,7 +184,7 @@ final class FixScheduleViewController: BaseViewController {
 // MARK: - Layout
 
 private extension FixScheduleViewController {
-
+    
     func setupHierarchy() {
         view.addSubViews([
             titleLabel,
@@ -203,7 +195,7 @@ private extension FixScheduleViewController {
             bottomButtonStack,
         ])
     }
-
+    
     func setupConstraints() {
         titleLabel.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
@@ -216,7 +208,6 @@ private extension FixScheduleViewController {
         dateRangeCardView.snp.makeConstraints {
             $0.top.equalTo(dateSectionLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            $0.height.equalTo(60)
         }
         scheduleTypeOptionView.snp.makeConstraints {
             $0.top.equalTo(dateRangeCardView.snp.bottom).offset(32)
@@ -237,47 +228,51 @@ private extension FixScheduleViewController {
 // MARK: - Render
 
 private extension FixScheduleViewController {
-
+    
     func render(_ state: FixScheduleViewState) {
-        dateRangeCardView.configure(dateRange: state.dateRange)
+        // readonly 여부를 함께 전달 — 카드 스타일과 탭 가능 여부 동시 처리
+        dateRangeCardView.configure(
+            dateRange: state.dateRange,
+            readonly:  !viewModel.isDateSelectable
+        )
         scheduleTypeOptionView.setSelected(state.scheduleType)
         workingTimeRangeRowView.configure(
             start: state.startTime.displayString,
             end:   state.endTime.displayString
         )
-
+        
         if viewModel.submitState != .submitting {
             confirmButton.isEnabled = state.isConfirmEnabled
         }
-
-        workingHourSection.isHidden = (state.scheduleType == .vacation)
+        
+        workingHourSection.isHidden = (state.scheduleType != .workday)
     }
 }
 
 // MARK: - Submit State
 
 private extension FixScheduleViewController {
-
+    
     func handleSubmitState(_ submitState: FixScheduleSubmitState) {
         switch submitState {
-
+            
         case .idle:
             break
-
+            
         case .submitting:
             confirmButton.isEnabled = false
             cancelButton.isEnabled  = false
-
+            
         case .success:
             coordinatorDelegate?.fixScheduleViewControllerDidConfirm(self, state: viewModel.state)
-
+            
         case .failure(let message):
             confirmButton.isEnabled = viewModel.state.isConfirmEnabled
             cancelButton.isEnabled  = true
             showErrorAlert(message: message)
         }
     }
-
+    
     func showErrorAlert(message: String) {
         let vc = MoaAlertViewController(message: "저장 실패")
         present(vc, animated: true)
@@ -287,14 +282,19 @@ private extension FixScheduleViewController {
 // MARK: - Bottom Sheet Presentation
 
 private extension FixScheduleViewController {
-
+    
     func presentDatePicker() {
-        // ViewModel에 저장된 joinedAt을 바텀시트로 전달
-        let sheet = DatePickerCalendarBottomSheet(joinedAt: viewModel.joinedAt)
+        let selectedDate = viewModel.state.dateRange?.start
+        
+        let sheet = DatePickerCalendarBottomSheet(
+            joinedAt: viewModel.joinedAt,
+            selectedDate: selectedDate
+        )
+        
         sheet.delegate = self
         presentBottomSheet(sheet)
     }
-
+    
     func presentTimeSelection() {
         let sheet = TimeSelectionBottomSheet(
             type: .setEstimateTime,
@@ -309,19 +309,19 @@ private extension FixScheduleViewController {
 // MARK: - Actions
 
 extension FixScheduleViewController {
-
+    
     @objc func didTapBack() {
         coordinatorDelegate?.fixScheduleViewControllerDidCancel(self)
     }
-
+    
     @objc private func didTapCancel() {
         coordinatorDelegate?.fixScheduleViewControllerDidCancel(self)
     }
-
+    
     @objc private func didTapConfirm() {
         viewModel.send(.confirmTapped)
     }
-
+    
     @objc private func didTapTimeRange() {
         presentTimeSelection()
     }
@@ -330,7 +330,7 @@ extension FixScheduleViewController {
 // MARK: - DatePickerCalendarBottomSheetDelegate
 
 extension FixScheduleViewController: DatePickerCalendarBottomSheetDelegate {
-
+    
     func calendarBottomSheet(_ sheet: DatePickerCalendarBottomSheet, didSelect date: Date) {
         viewModel.send(.selectDate(date))
     }
@@ -339,7 +339,7 @@ extension FixScheduleViewController: DatePickerCalendarBottomSheetDelegate {
 // MARK: - TimeSelectionBottomSheetDelegate
 
 extension FixScheduleViewController: TimeSelectionBottomSheetDelegate {
-
+    
     func timeSelectionBottomSheet(
         _ sheet: TimeSelectionBottomSheet,
         didConfirmStartTime startTime: TimeIndicatorEntity,

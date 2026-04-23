@@ -10,13 +10,16 @@ import Foundation
 enum ScheduleTypeOptionType {
     case vacation
     case workday
+    case none
     
     var title: String {
         switch self {
         case .vacation:
-            return "휴가"
+            return "연차"
         case .workday:
             return "근무"
+        case .none:
+            return "휴무"
         }
     }
 }

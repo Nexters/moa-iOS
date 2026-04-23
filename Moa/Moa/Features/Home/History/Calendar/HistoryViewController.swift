@@ -10,10 +10,10 @@ import Combine
 // MARK: - CoordinatorDelegate
 
 protocol HistoryViewControllerCoordinatorDelegate: AnyObject {
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?)
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity,
+        schedule: CalendarScheduleEntity?,
+        selectedDate: Date?,
         joinedAt: Date?
     )
 }
@@ -79,6 +79,8 @@ final class HistoryViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        selectedDate = Date()
         viewModel.send(.viewDidLoad)
     }
 
@@ -171,12 +173,12 @@ final class HistoryViewController: BaseViewController {
             calendarView.apply(joinedAt: joinedAt)
             calendarView.updateCalendarSchedules(schedules)
             calendarView.updateWorkInfo(earnings)
-
-            if let date = selectedDate {
-                viewModel.send(.selectDay(date))
-            } else {
-                hideDetail()
-            }
+           
+            let targetDate = selectedDate ?? Date()
+            selectedDate = targetDate
+            
+            calendarView.selectDate(targetDate)
+            viewModel.send(.selectDay(targetDate))
 
         case .dayDetail(let schedule, let salary):
             detailView.configure(schedule: schedule, salary: salary)
@@ -194,15 +196,6 @@ final class HistoryViewController: BaseViewController {
         detailContainer.isHidden = false
         detailContainer.alpha    = 0
         UIView.animate(withDuration: 0.25) { self.detailContainer.alpha = 1 }
-    }
-
-    private func hideDetail() {
-        guard !detailContainer.isHidden else { return }
-        UIView.animate(withDuration: 0.2) {
-            self.detailContainer.alpha = 0
-        } completion: { _ in
-            self.detailContainer.isHidden = true
-        }
     }
 
     // MARK: - Error
@@ -241,8 +234,17 @@ extension HistoryViewController: CalendarViewDelegate {
         viewModel.send(.changeMonth(date))
     }
 
-    func calendarViewDidTapAdd(_ view: CalendarView) {
-        coordinatorDelegate?.historyViewControllerDidTapAdd(self, joinedAt: currentJoinedAt)
+    func calendarViewDidTapAdd(
+        _ view: CalendarView,
+        selectedDate: Date?,
+        schedule: CalendarScheduleEntity?
+    ) {
+        coordinatorDelegate?.historyViewControllerDidTapEdit(
+            self,
+            schedule: schedule,
+            selectedDate: selectedDate,
+            joinedAt: currentJoinedAt
+        )
     }
 }
 
@@ -254,6 +256,7 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
         coordinatorDelegate?.historyViewControllerDidTapEdit(
             self,
             schedule: schedule,
+            selectedDate: schedule.date,
             joinedAt: currentJoinedAt
         )
     }

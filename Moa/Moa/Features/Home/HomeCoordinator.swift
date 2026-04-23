@@ -14,6 +14,10 @@ final class HomeCoordinator {
     private let container: AppContainer
     private weak var nav: UINavigationController?
 
+    /// HistoryViewController에서 받은 joinedAt을 캐싱
+    /// WorkViewController의 "일정 조정" 플로우에서도 동일하게 활용
+    private var cachedJoinedAt: Date?
+
     // MARK: - Init
 
     init(container: AppContainer) {
@@ -75,33 +79,52 @@ private extension HomeCoordinator {
         viewType: ScheduleTypeOptionViewType,
         preselectedDate: Date? = nil,
         existingSchedule: FixScheduleViewState? = nil,
-        joinedAt: Date? = nil
+        joinedAt: Date? = nil,
+        isDateSelectable: Bool = true
     ) -> FixScheduleViewController {
         let vm = FixScheduleViewModel(
             viewType: viewType,
             historyUseCase: container.historyUseCase,
             preselectedDate: preselectedDate,
             existingSchedule: existingSchedule,
-            joinedAt: joinedAt
+            joinedAt: joinedAt,
+            isDateSelectable: isDateSelectable
         )
         let vc = FixScheduleViewController(viewModel: vm)
         vc.coordinatorDelegate = self
         return vc
     }
 
-    /// 일정 추가 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
-    func showAddSchedule(joinedAt: Date?) {
-        let vc = makeFixScheduleViewController(viewType: .add, joinedAt: joinedAt)
+    /// 일정 추가
+    func showAddSchedule(selectedDate: Date?, joinedAt: Date?) {
+        let vc = makeFixScheduleViewController(
+            viewType: .add,
+            preselectedDate: selectedDate,
+            joinedAt: joinedAt
+        )
         nav?.pushViewController(vc, animated: true)
     }
 
-    /// 일정 수정 — joinedAt을 함께 전달해 날짜 선택 캘린더에 이전 달 이동 제한 적용
+    /// 일정 수정 (HistoryViewController → 캘린더 날짜 탭)
     func showFixSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
         let existing = FixScheduleViewModel.makeState(from: workday)
         let vc = makeFixScheduleViewController(
             viewType: .fix,
             existingSchedule: existing,
             joinedAt: joinedAt
+        )
+        nav?.pushViewController(vc, animated: true)
+    }
+
+    /// 근무 중 "일정 조정" / idle "근무 시간 수정"
+    /// → 오늘 날짜 고정(isDateSelectable: false)으로 FixScheduleViewController push
+    func showChangeSchedule(workday: CalendarScheduleEntity, joinedAt: Date?) {
+        let existing = FixScheduleViewModel.makeState(from: workday)
+        let vc = makeFixScheduleViewController(
+            viewType: .fix,
+            existingSchedule: existing,
+            joinedAt: joinedAt,
+            isDateSelectable: false  // 오늘 날짜 고정, 날짜 선택 UI 비활성
         )
         nav?.pushViewController(vc, animated: true)
     }
@@ -126,6 +149,14 @@ extension HomeCoordinator: WorkViewControllerCoordinatorDelegate {
     func workViewControllerDidTapWorkComplete(_ viewController: WorkViewController) {
         // WorkViewController 내부에서 처리 — Coordinator 추가 작업 없음
     }
+
+    func workViewControllerDidTapChangeSchedule(
+        _ viewController: WorkViewController,
+        workday: CalendarScheduleEntity,
+        joinedAt: Date?
+    ) {
+        showChangeSchedule(workday: workday, joinedAt: joinedAt ?? cachedJoinedAt)
+    }
 }
 
 // MARK: - HistoryViewControllerCoordinatorDelegate
@@ -134,14 +165,20 @@ extension HomeCoordinator: HistoryViewControllerCoordinatorDelegate {
 
     func historyViewControllerDidTapEdit(
         _ vc: HistoryViewController,
-        schedule: CalendarScheduleEntity,
+        schedule: CalendarScheduleEntity?,
+        selectedDate: Date?,
         joinedAt: Date?
     ) {
-        showFixSchedule(workday: schedule, joinedAt: joinedAt)
-    }
-
-    func historyViewControllerDidTapAdd(_ vc: HistoryViewController, joinedAt: Date?) {
-        showAddSchedule(joinedAt: joinedAt)
+        if let joinedAt { cachedJoinedAt = joinedAt }
+        
+        if let schedule {
+            showFixSchedule(workday: schedule, joinedAt: joinedAt)
+        } else {
+            showAddSchedule(
+                selectedDate: selectedDate,
+                joinedAt: joinedAt
+            )
+        }
     }
 }
 

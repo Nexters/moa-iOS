@@ -13,13 +13,11 @@ import SnapKit
 enum WorkScheduleChangeType: CaseIterable {
     case changeSchedule
     case endWork
-    case vacation
 
     var description: String {
         switch self {
-        case .changeSchedule: return "근무 시간 조정이 필요해요"
+        case .changeSchedule: return "오늘 일정 조정이 필요해요"
         case .endWork:        return "오늘 근무를 마칠 거에요"
-        case .vacation:       return "오늘 휴가에요"
         }
     }
 }
