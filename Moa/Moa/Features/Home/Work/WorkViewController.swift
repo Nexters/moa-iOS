@@ -445,10 +445,10 @@ extension WorkViewController: WorkMainContentViewDelegate {
 
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
-        if data.type == .none {
-            viewModel.send(.startWorkOnHoliday)
-        } else {
+        if data.type == .work {
             viewModel.send(.startWork)
+        } else {
+            coordinatorDelegate?.workViewControllerDidTapCalendar(self)
         }
     }
 
