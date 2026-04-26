@@ -598,6 +598,13 @@ final class EarningsStackView: UIView {
 
 // MARK: - Lottie
 
+extension EarningsStackView {
+
+    func triggerConfetti() {
+        playConfeti()
+    }
+}
+
 private extension EarningsStackView {
     func playConfeti() {
         confetiView.stop()
