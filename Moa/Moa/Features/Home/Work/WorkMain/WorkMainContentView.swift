@@ -80,7 +80,7 @@ final class WorkMainContentView: UIView {
     func configure(data: HomeEntity, status: WorkStatusEntity) {
         headerView.configure(data: data, status: status)
 
-        let isFinished = (status == .finished)
+        let isFinished = (status == .finished && data.type == .work)
 
         // 최종완료: "이번달 근무 기록 확인하기" 버튼만 표시
         workHistoryButton.isHidden = !isFinished
