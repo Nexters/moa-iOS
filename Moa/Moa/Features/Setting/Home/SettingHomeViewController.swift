@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import SafariServices
+
 
 final class SettingHomeViewController: BaseViewController {
     
@@ -226,7 +228,7 @@ final class SettingHomeViewController: BaseViewController {
         )
         inquiry.onTap = { [weak self] in
             guard let self else { return }
-            self.openInquiryMail()
+            self.openInquiryForm()
         }
         
         contentStack.addArrangedSubViews([
@@ -311,29 +313,11 @@ final class SettingHomeViewController: BaseViewController {
         }
     }
     
-    private func openInquiryMail() {
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+    private func openInquiryForm() {
+        guard let url = URL(string: "https://forms.gle/cvjVQuNpctzs1p2QA") else { return }
         
-        let subject = "[문의] 모아 서비스에 문의드립니다."
-        let body = """
-        - 문의 유형: (버그 신고 / 제휴·광고 / 계정·결제 / 신고 / 기능 제안 / 기타)
-        - 상세 설명:
-        - 스크린샷/영상(선택):
-        ------------------------------
-        - 앱 버전/빌드: v\(appVersion) (\(buildNumber))
-        - 계정/ID: \(viewModel.nickname)
-        """
-        
-        guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "mailto: moa.salary@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") else { return }
-        
-        guard UIApplication.shared.canOpenURL(url) else {
-            return
-        }
-        
-        UIApplication.shared.open(url)
+        let safariVC = SFSafariViewController(url: url)
+        present(safariVC, animated: true)
     }
     
     @objc private func logoutButtonTapped() {
