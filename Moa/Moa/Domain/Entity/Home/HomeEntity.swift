@@ -13,6 +13,8 @@ struct HomeEntity: Equatable {
     let standardSalary: Int
     let dailyPay: Int
     let type: WorkdayType
+    let status: CalendarScheduleStatus
+    let events: [CalendarEventType]
     let clockInTime: TimeIndicatorEntity?
     let clockOutTime: TimeIndicatorEntity?
 }

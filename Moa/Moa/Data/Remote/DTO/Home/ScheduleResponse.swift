@@ -12,7 +12,7 @@ struct ScheduleResponse: Decodable {
     let date:        String         // "2026-03-29"
     let type:        String         // "WORK" | "VACATION" | "NONE"
     let status:      String         // "NONE" | "SCHEDULED" | "COMPLETED"
-    let events:      [String]       // ["PAYDAY"] 등
+    let events:      [String]       // ["PAYDAY", "PUBLIC_HOLIDAY"] 등
     let dailyPay:    Int
     let clockInTime:  String?       // "09:00" (nullable)
     let clockOutTime: String?       // "18:00" (nullable)

@@ -13,6 +13,8 @@ struct HomeResponse: Decodable {
     let standardSalary: Int
     let dailyPay: Int
     let type: String
+    let status: String
+    let events: [String]
     let clockInTime: String?
     let clockOutTime: String?
 }
@@ -25,6 +27,8 @@ extension HomeResponse {
             standardSalary: standardSalary,
             dailyPay: dailyPay,
             type: WorkdayType(serverValue: type),
+            status: CalendarScheduleStatus(rawValue: status)  ?? .none,
+            events: events.compactMap { CalendarEventType(rawValue: $0) },
             clockInTime: TimeIndicatorEntity(from: clockInTime),
             clockOutTime: TimeIndicatorEntity(from: clockOutTime)
         )

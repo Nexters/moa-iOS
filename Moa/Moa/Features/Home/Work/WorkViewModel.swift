@@ -259,6 +259,8 @@ private extension WorkViewModel {
             standardSalary: entity.standardSalary,
             dailyPay:       entity.dailyPay,
             type:           workday.contentType,
+            status:         entity.status,
+            events:         entity.events,
             clockInTime:    workday.clockInTime,
             clockOutTime:   workday.clockOutTime
         )

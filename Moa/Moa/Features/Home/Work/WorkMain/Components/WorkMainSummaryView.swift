@@ -58,7 +58,7 @@ final class WorkMainSummaryView: UIView {
     
     private lazy var holidayRowView: KeyValueRowView = {
         let row = KeyValueRowView(
-            type: .customRow(key: "근무 시간", value: "근무 없음"),
+            type: .customRow(key: "근무 시간", value: ""),
             showsChevron: true
         )
         
@@ -90,7 +90,8 @@ final class WorkMainSummaryView: UIView {
         switch (data.type, status) {
             
         case (.none, _):
-            renderHolidayRow()
+            let isPublicHoliday = data.events.contains { $0 == .publicHoliday }
+            renderHolidayRow(title: isPublicHoliday ? "공휴일" : "근무 없음")
             
         case (.vacation, .finished):
             renderVacationRow(dailyPay: data.dailyPay)
@@ -123,7 +124,8 @@ final class WorkMainSummaryView: UIView {
         
         switch data.type {
         case .none:
-            renderHolidayRow()
+            let isPublicHoliday = data.events.contains { $0 == .publicHoliday }
+            renderHolidayRow(title: isPublicHoliday ? "공휴일" : "근무 없음")
         case .vacation:
             renderVacationRow(dailyPay: data.dailyPay)
         case .work:
@@ -179,9 +181,11 @@ final class WorkMainSummaryView: UIView {
         applyBottomRowConstraints(bottomRow: finishedTimeRowView, wageRow: accumulatedWageRowView)
     }
     
-    private func renderHolidayRow() {
+    private func renderHolidayRow(title: String) {
         setRowsHidden(wage: true, accumulated: true, divider: true,
                       time: true, finished: true, vacation: true, holiday: false)
+        
+        holidayRowView.updateValue(title)
         
         guard currentVariant != .holidayRow else { return }
         currentVariant = .holidayRow
