@@ -345,9 +345,7 @@ private extension WorkViewController {
 
     func presentFinishedTimeEditBottomSheet() {
         guard case let .loaded(_, data) = viewModel.state else { return }
-        let startTime = data.clockInTime  ?? TimeIndicatorEntity(hour: 9,  minute: 0)
-        let endTime   = data.clockOutTime ?? TimeIndicatorEntity(hour: 18, minute: 0)
-        presentTimeSheet(type: .changeWorkTime, startTime: startTime, endTime: endTime)
+        self.pushFixSchedule(from: data)
     }
 
     private func presentTimeSheet(

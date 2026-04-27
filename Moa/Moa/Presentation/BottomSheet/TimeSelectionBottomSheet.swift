@@ -50,8 +50,7 @@ enum TimeSelectionBottomSheetCase {
     /// 옵션 버튼 타이틀. nil이면 확인 버튼 단독 표시
     var optionButtonTitle: String? {
         switch self {
-        case .extendEndTime:  return "취소"
-        case .changeWorkTime: return "오늘 휴가"
+        case .extendEndTime: return "취소"
         default:              return nil
         }
     }
