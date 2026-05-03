@@ -21,12 +21,18 @@ enum AnalyticsEvent {
     case workPolicyTermsNextClicked
     /// 위젯 추가 버튼 클릭
     case widgetAddClicked // TODO
-    /// 지금 출근하기 버튼 클릭
+    /// 홈(근무전) - 지금 출근하기 버튼 클릭
     case beforeWorkNowWorkClicked
-    /// 근무시간 row 눌러서 일정 변경 화면 이동
+    /// 홈(근무전) - 근무시간 row 클릭
     case beforeWorkWorkTimeClicked
     /// 근무중 화면 체류 시간 (초 단위)
     case workingScreenTime(seconds: Int)
+    /// 홈(근무중) - 근무시간 row 클릭
+    case workingWorkTimeClicked
+    /// 홈(근무중) - 더일할게요 버튼 클릭
+    case workingMoreWorkClicked
+    /// 홈(근무중) - 완료 버튼 클릭
+    case workingWorkCompletedClicked
     
     var name: String {
         switch self {
@@ -39,6 +45,9 @@ enum AnalyticsEvent {
         case .beforeWorkNowWorkClicked: "before_work_now_work_clicked"
         case .beforeWorkWorkTimeClicked: "before_work_work_time_clicked"
         case .workingScreenTime: "working_screen_time"
+        case .workingWorkTimeClicked: "working_work_time_clicked"
+        case .workingMoreWorkClicked: "working_more_work_clicked"
+        case .workingWorkCompletedClicked: "working_work_completed_clicked"
         }
     }
     
@@ -62,6 +71,12 @@ enum AnalyticsEvent {
             return [:]
         case let .workingScreenTime(seconds):
             return ["time": seconds]
+        case .workingWorkTimeClicked:
+            return [:]
+        case .workingMoreWorkClicked:
+            return [:]
+        case .workingWorkCompletedClicked:
+            return [:]
         }
     }
 }

@@ -512,14 +512,17 @@ extension WorkViewController: WorkingContentViewDelegate {
     }
 
     func workingContentViewDidTapExtendWork(_ view: WorkingContentView) {
+        Analytics.track(.workingMoreWorkClicked)
         presentExtendTimeBottomSheet()
     }
 
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView) {
+        Analytics.track(.workingWorkTimeClicked)
         presentFinishedTimeEditBottomSheet()
     }
 
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
+        Analytics.track(.workingWorkCompletedClicked)
         viewModel.send(.confirmWork)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
     }
