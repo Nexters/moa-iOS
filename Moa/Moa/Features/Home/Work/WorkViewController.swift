@@ -458,6 +458,7 @@ extension WorkViewController: WorkMainContentViewDelegate {
     /// idle 상태에서 근무 시간 탭 → 바텀시트 대신 FixScheduleViewController push
     func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
+        Analytics.track(.beforeWorkWorkTimeClicked)
         pushFixSchedule(from: data)
     }
 
