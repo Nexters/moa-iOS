@@ -50,7 +50,14 @@ extension HistoryViewModel {
 
     func send(_ input: Input) {
         switch input {
-        case .viewDidLoad, .refresh:     loadCurrentMonth()
+        case .viewDidLoad:
+            loadCurrentMonth()
+        case .refresh:
+            if calendarEntity == nil {
+                loadCurrentMonth()
+            } else {
+                publishCalendar()
+            }
         case .changeMonth(let date):     loadMonth(from: date)
         case .selectDay(let date):       selectDay(date)
         case .deselectDay:               publishCalendar()
@@ -67,19 +74,23 @@ private extension HistoryViewModel {
     }
 
     func loadMonth(from date: Date) {
+        let calendar = Calendar.korea
+        let year  = calendar.component(.year,  from: date)
+        let month = calendar.component(.month, from: date)
+
+        if currentYear == year, currentMonth == month, calendarEntity != nil {
+            return
+        }
+
         guard state != .loading else { return }
         state = .loading
-
-        let calendar = Calendar.korea
-        let year     = calendar.component(.year,  from: date)
-        let month    = calendar.component(.month, from: date)
 
         currentYear  = year
         currentMonth = month
 
         Task { @MainActor in
             do {
-                let entity     = try await historyUseCase.getCalendarData(year: year, month: month)
+                let entity = try await historyUseCase.getCalendarData(year: year, month: month)
                 calendarEntity = entity
                 publishCalendar()
             } catch {
