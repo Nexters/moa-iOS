@@ -52,6 +52,7 @@ final class OnboardingWorkPolicyViewModel {
     func updateWorkPolicy() async throws {
         guard selectedWeekdays.isEmpty == false else { throw DomainError.missingRequiredData }
         _ = try await usecase.updateWorkPolicy(selectedWeekdays: Array(selectedWeekdays), clockInTime: clockInTime, clockOutTime: clockOutTime)
+        Analytics.track(.workPolicyNextClicked(isModified: false))
     }
     
     func workingHoursConfirmFromBottomSheet(

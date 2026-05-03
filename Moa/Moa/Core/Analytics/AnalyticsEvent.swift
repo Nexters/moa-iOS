@@ -11,12 +11,14 @@ enum AnalyticsEvent {
     case loginButtonClicked(oauthtype: AccountProvider)
     case nicknameNextClicked(isModified: Bool)
     case salaryNextClicked(isModified: Bool)
+    case workPolicyNextClicked(isModified: Bool)
     
     var name: String {
         switch self {
         case .loginButtonClicked: "login_button_clicked"
         case .nicknameNextClicked: "nickname_next_clicked"
         case .salaryNextClicked: "salary_next_clicked"
+        case .workPolicyNextClicked: "work_policy_next_clicked"
         }
     }
     
@@ -27,6 +29,8 @@ enum AnalyticsEvent {
         case let .nicknameNextClicked(isModified):
             return ["is_modified": isModified]
         case let .salaryNextClicked(isModified):
+            return ["is_modified": isModified]
+        case let .workPolicyNextClicked(isModified):
             return ["is_modified": isModified]
         }
     }
