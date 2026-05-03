@@ -26,7 +26,7 @@ final class OnboardingAddWidgetViewController: BaseViewController {
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.showsVerticalScrollIndicator = false
-        sv.alwaysBounceVertical = true
+        sv.alwaysBounceVertical = false
         return sv
     }()
 
