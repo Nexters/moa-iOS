@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// 사용자 행동 이벤트 - Analytics.track(:)으로 전송
 enum AnalyticsEvent {
     case loginButtonClicked(oauthtype: AccountProvider)
     case nicknameNextClicked(isModified: Bool)

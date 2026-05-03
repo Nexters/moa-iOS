@@ -16,4 +16,12 @@ enum Analytics {
         
         PostHogSDK.shared.capture(event.name, properties: event.properties)
     }
+    
+    static func identify(_ userProperty: AnalyticsUserProperty) {
+        #if DEBUG
+        print("📈 [Analytics]\n- identify: \(userProperty)")
+        #endif
+        
+        PostHogSDK.shared.setPersonProperties(userPropertiesToSet: userProperty.properties)
+    }
 }

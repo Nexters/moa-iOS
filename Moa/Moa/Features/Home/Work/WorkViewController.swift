@@ -78,6 +78,7 @@ final class WorkViewController: BaseViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        viewModel.trackNotificationPermission()
         viewModel.send(.refresh)
 
         if case let .loaded(status, _) = viewModel.state,
