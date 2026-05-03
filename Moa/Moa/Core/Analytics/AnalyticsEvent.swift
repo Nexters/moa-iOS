@@ -25,6 +25,8 @@ enum AnalyticsEvent {
     case beforeWorkNowWorkClicked
     /// 근무시간 row 눌러서 일정 변경 화면 이동
     case beforeWorkWorkTimeClicked
+    /// 근무중 화면 체류 시간 (초 단위)
+    case workingScreenTime(seconds: Int)
     
     var name: String {
         switch self {
@@ -36,7 +38,7 @@ enum AnalyticsEvent {
         case .widgetAddClicked: "widget_add_clicked"
         case .beforeWorkNowWorkClicked: "before_work_now_work_clicked"
         case .beforeWorkWorkTimeClicked: "before_work_work_time_clicked"
-        
+        case .workingScreenTime: "working_screen_time"
         }
     }
     
@@ -58,6 +60,8 @@ enum AnalyticsEvent {
             return [:]
         case .beforeWorkWorkTimeClicked:
             return [:]
+        case let .workingScreenTime(seconds):
+            return ["time": seconds]
         }
     }
 }
