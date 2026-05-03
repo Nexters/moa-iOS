@@ -37,6 +37,7 @@ final class PayrollEditViewModel {
     func updatePayroll() async throws {
         guard let amount, amount != .zero else { throw DomainError.missingRequiredData }
         _ = try await settingUsecase.updatePayroll(salaryType: selectedSalaryType, amount: amount)
+        Analytics.track(.salaryNextClicked(isModified: true))
     }
     
     func updateAmount(fromTextFieldText text: String?) {
