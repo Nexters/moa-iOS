@@ -33,6 +33,10 @@ enum AnalyticsEvent {
     case workingMoreWorkClicked
     /// 홈(근무중) - 완료 버튼 클릭
     case workingWorkCompletedClicked
+    /// 캘린더 상단 수정 버튼 클릭
+    case calendarEditClicked
+    /// 캘린더 하단 리스트 클릭 (월급 아이템 제외)
+    case calendarListClicked
     
     var name: String {
         switch self {
@@ -48,6 +52,8 @@ enum AnalyticsEvent {
         case .workingWorkTimeClicked: "working_work_time_clicked"
         case .workingMoreWorkClicked: "working_more_work_clicked"
         case .workingWorkCompletedClicked: "working_work_completed_clicked"
+        case .calendarEditClicked: "calendar_edit_clicked"
+        case .calendarListClicked: "calendar_list_clicked"
         }
     }
     
@@ -76,6 +82,10 @@ enum AnalyticsEvent {
         case .workingMoreWorkClicked:
             return [:]
         case .workingWorkCompletedClicked:
+            return [:]
+        case .calendarEditClicked:
+            return [:]
+        case .calendarListClicked:
             return [:]
         }
     }

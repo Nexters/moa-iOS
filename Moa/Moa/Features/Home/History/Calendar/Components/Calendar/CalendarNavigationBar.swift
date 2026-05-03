@@ -138,5 +138,8 @@ final class CalendarNavigationBar: UIView {
     
     @objc private func tappedPrev() { delegate?.navigationBarDidTapPrev() }
     @objc private func tappedNext() { delegate?.navigationBarDidTapNext() }
-    @objc private func tappedAdd()  { delegate?.navigationBarDidTapAdd()  }
+    @objc private func tappedAdd()  {
+        Analytics.track(.calendarEditClicked)
+        delegate?.navigationBarDidTapAdd()
+    }
 }
