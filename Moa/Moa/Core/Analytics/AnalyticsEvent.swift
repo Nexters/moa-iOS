@@ -37,6 +37,8 @@ enum AnalyticsEvent {
     case calendarEditClicked
     /// 캘린더 하단 리스트 클릭 (월급 아이템 제외)
     case calendarListClicked
+    /// 일정 변경 성공 후 화면 이동
+    case modifyWorkdayComplete(type: WorkdayType)
     
     var name: String {
         switch self {
@@ -54,6 +56,7 @@ enum AnalyticsEvent {
         case .workingWorkCompletedClicked: "working_work_completed_clicked"
         case .calendarEditClicked: "calendar_edit_clicked"
         case .calendarListClicked: "calendar_list_clicked"
+        case .modifyWorkdayComplete: "modify_workday_complete"
         }
     }
     
@@ -87,6 +90,8 @@ enum AnalyticsEvent {
             return [:]
         case .calendarListClicked:
             return [:]
+        case let .modifyWorkdayComplete(type):
+            return ["type": type.rawValue]
         }
     }
 }
