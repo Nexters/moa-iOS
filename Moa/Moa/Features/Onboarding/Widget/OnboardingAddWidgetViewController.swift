@@ -88,6 +88,7 @@ final class OnboardingAddWidgetViewController: BaseViewController {
     // MARK: - Setup
 
     override func setupUI() {
+        replaceSystemBackButtonWithAppBackButton()
         setupHierarchy()
         setupLayout()
     }
