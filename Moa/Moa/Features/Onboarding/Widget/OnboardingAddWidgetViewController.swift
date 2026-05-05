@@ -219,6 +219,7 @@ private extension OnboardingAddWidgetViewController {
 
 private extension OnboardingAddWidgetViewController {
     @objc func didTapConfirm() {
+        Analytics.track(.widgetAddClicked)
         onNext()
     }
 }
