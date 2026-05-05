@@ -127,12 +127,7 @@ private extension OnboardingCoordinator {
             return vc
             
         case .widget:
-            let vm = OnboardingAddWidgetViewModel()
-            let vc = OnboardingAddWidgetViewController(
-                viewModel: vm,
-                onNext: makeOnNext(for: .widget)
-            )
-            return vc
+            return OnboardingAddWidgetViewController(onNext: makeOnNext(for: .widget))
         }
     }
     

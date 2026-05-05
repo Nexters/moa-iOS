@@ -18,7 +18,6 @@ final class OnboardingAddWidgetViewController: BaseViewController {
 
     // MARK: - Dependencies
 
-    private let viewModel: OnboardingAddWidgetViewModel
     private let onNext: () -> Void
 
     // MARK: - UI
@@ -77,8 +76,7 @@ final class OnboardingAddWidgetViewController: BaseViewController {
 
     // MARK: - Init
 
-    init(viewModel: OnboardingAddWidgetViewModel, onNext: @escaping () -> Void) {
-        self.viewModel = viewModel
+    init(onNext: @escaping () -> Void) {
         self.onNext = onNext
         super.init(nibName: nil, bundle: nil)
     }
@@ -228,8 +226,5 @@ private extension OnboardingAddWidgetViewController {
 
 @available(iOS 17.0, *)
 #Preview {
-    OnboardingAddWidgetViewController(
-        viewModel: OnboardingAddWidgetViewModel(),
-        onNext: {}
-    )
+    OnboardingAddWidgetViewController(onNext: {})
 }
