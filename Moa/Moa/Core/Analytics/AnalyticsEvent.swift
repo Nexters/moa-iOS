@@ -20,7 +20,7 @@ enum AnalyticsEvent {
     /// 이용약관 동의 성공 후 화면 이동
     case workPolicyTermsNextClicked
     /// 위젯 추가 버튼 클릭
-    case widgetAddClicked // TODO
+    case widgetAddClicked
     /// 홈(근무전) - 지금 출근하기 버튼 클릭
     case beforeWorkNowWorkClicked
     /// 홈(근무전) - 근무시간 row 클릭
