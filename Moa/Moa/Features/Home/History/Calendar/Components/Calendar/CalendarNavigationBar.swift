@@ -68,7 +68,7 @@ final class CalendarNavigationBar: UIView {
         
         addButton.backgroundColor    = AppColor.Container.secondary
         addButton.layer.cornerRadius = 16
-        addButton.setImage(UIImage(resource: .Icon.iconPlus), for: .normal)
+        addButton.setImage(UIImage(resource: .Icon.iconWrite), for: .normal)
         addButton.tintColor          = AppColor.IconAndText.highEmphasis
     }
     

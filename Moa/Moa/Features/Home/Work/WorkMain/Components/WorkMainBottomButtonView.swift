@@ -27,14 +27,8 @@ final class WorkMainBottomButtonView: UIView {
         return button
     }()
 
-    private lazy var vacationButton: UnderlineTextButton = {
-        let button = UnderlineTextButton(title: "오늘 휴가예요")
-        button.addTarget(self, action: #selector(didTapVacation), for: .touchUpInside)
-        return button
-    }()
-
     private lazy var stackView: UIStackView = {
-        let sv = UIStackView(arrangedSubviews: [autoWorkIndicator, primaryButton, vacationButton])
+        let sv = UIStackView(arrangedSubviews: [autoWorkIndicator, primaryButton])
         sv.axis      = .vertical
         sv.alignment = .center
         sv.setCustomSpacing(12, after: autoWorkIndicator)
@@ -76,19 +70,29 @@ final class WorkMainBottomButtonView: UIView {
         self.vacationAction = vacationAction
 
         autoWorkIndicator.isHidden = (status != .idle)
-        vacationButton.isHidden    = !(data.type == .work && status == .idle)
 
         primaryButton.setTitle(data.type.bottomButtonText, for: .normal)
-        primaryButton.applyStyle(data.type == .none ? .tertiary() : .primary())
+        primaryButton.applyStyle(data.type == .work ? .primary() : .tertiary())
 
         if status == .idle {
+            guard let bubbleLabelText = data.type.bubbleLabelText else {
+                autoWorkIndicator.isHidden = true
+                return
+            }
+
+            autoWorkIndicator.isHidden = false
+
             let bubbleText: String = {
-                guard data.type != .none, let clockIn = data.clockInTime else {
-                    return data.type.bubbleLabelText
+                guard data.type != .none,
+                      let clockIn = data.clockInTime else {
+                    return bubbleLabelText
                 }
-                return "\(clockIn.displayString) \(data.type.bubbleLabelText)"
+                return "\(clockIn.displayString) \(bubbleLabelText)"
             }()
+
             autoWorkIndicator.configure(text: bubbleText)
+        } else {
+            autoWorkIndicator.isHidden = true
         }
     }
 

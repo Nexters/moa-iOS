@@ -112,13 +112,9 @@ final class MonthlySalaryView: UIView {
     func configure(_ config: MonthlySalaryEntity) {
         self.config = config
 
-        moneyImageView.image = config.workStatus == .finished
-            ? UIImage(resource: .Image.imgFullMoney)
-            : config.type.moneyImg
+        moneyImageView.image = config.type.moneyImg
 
-        let newColor: UIColor = config.workStatus == .finished
-            ? AppColor.IconAndText.green
-            : config.type.amountLabelColor
+        let newColor: UIColor = config.type.amountLabelColor
 
         if newColor != currentAmountColor {
             currentAmountColor = newColor

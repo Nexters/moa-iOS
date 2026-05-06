@@ -14,33 +14,33 @@ enum WorkdayType: String {
     
     var moneyImg: UIImage {
         switch self {
-        case .work, .vacation: return UIImage(resource: .Image.imgEmptyMoney)
-        case .none: return UIImage(resource: .Image.imgVacationMoney)
+        case .work: return UIImage(resource: .Image.imgEmptyMoney)
+        case .vacation, .none: return UIImage(resource: .Image.imgVacationMoney)
         }
     }
     
     var amountLabelColor: UIColor {
         switch self {
-        case .work, .vacation: return AppColor.IconAndText.green
-        case .none: return AppColor.IconAndText.blue
+        case .work: return AppColor.IconAndText.green
+        case .none, .vacation: return AppColor.IconAndText.blue
         }
     }
     
     var bottomButtonText: String {
         switch self {
-        case .work, .vacation:
+        case .work:
             return "지금 출근하기"
-        case .none:
-            return "쉬는 날 출근하기"
+        case .vacation, .none:
+            return "이번 달 일정 확인하기"
         }
     }
     
-    var bubbleLabelText: String {
+    var bubbleLabelText: String? {
         switch self {
-        case .work, .vacation:
+        case .work:
             return "자동 출근 예정"
-        case .none:
-            return "설마 쉬는 날 일하시나요?"
+        case .vacation, .none:
+            return nil
         }
     }
 }

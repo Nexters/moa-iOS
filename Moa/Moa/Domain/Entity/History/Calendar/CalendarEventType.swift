@@ -9,4 +9,5 @@ import Foundation
 
 enum CalendarEventType: String {
     case payday = "PAYDAY"
+    case publicHoliday = "PUBLIC_HOLIDAY"
 }
