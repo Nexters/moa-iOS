@@ -424,3 +424,15 @@ private extension WorkViewModel {
         MoaWidgetUpdater.sync(status: currentStatus, entity: entity)
     }
 }
+
+// MARK: - Analytics
+
+extension WorkViewModel {
+    func trackNotificationPermission() {
+        Task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            let isGranted = settings.authorizationStatus == .authorized
+            Analytics.identify(.notificationPermission(isGranted))
+        }
+    }
+}

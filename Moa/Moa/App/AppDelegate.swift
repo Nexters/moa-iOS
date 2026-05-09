@@ -9,6 +9,7 @@ import UIKit
 import KakaoSDKCommon
 import FirebaseCore
 import FirebaseMessaging
+import PostHog
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -17,6 +18,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // 카카오 네이티브 앱 키 설정
         KakaoSDK.initSDK(appKey: Config.getPropertyValue(.kakaoAppKey))
+        
+        // PostHog 설정
+        let postHogApiKey = Config.getPropertyValue(.postHogApiKey)
+        let postHogHost = Config.getPropertyValue(.postHogHost)
+        let config = PostHogConfig(apiKey: postHogApiKey, host: postHogHost)
+        PostHogSDK.shared.setup(config)
         
         // Firebase 초기화
         FirebaseApp.configure()

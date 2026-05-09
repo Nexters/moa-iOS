@@ -218,6 +218,7 @@ extension OnboardingWorkPolicyViewController: TermsAgreementBottomSheetViewDeleg
         Task {
             do {
                 try await viewModel.updateTermsAgreement(agreements: agreements)
+                Analytics.track(.workPolicyTermsNextClicked)
                 onNext()
             } catch {
                 ToastManager.show(message: "약관 및 정책 동의에 실패했습니다.")

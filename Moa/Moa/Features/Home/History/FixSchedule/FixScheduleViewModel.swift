@@ -115,6 +115,7 @@ private extension FixScheduleViewModel {
                     clockOutTime: workdayType == .vacation ? nil : endTime
                 )
                 submitState = .success
+                Analytics.track(.modifyWorkdayComplete(type: workdayType))
             } catch {
                 let message = (error as? LocalizedError)?.errorDescription
                     ?? "일정을 저장하지 못했습니다. 다시 시도해주세요."

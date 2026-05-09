@@ -49,6 +49,7 @@ final class WorkPolicyEditViewModel {
             clockInTime: clockInTime,
             clockOutTime: clockOutTime
         )
+        Analytics.track(.workPolicyNextClicked(isModified: true))
     }
     
     func workingHoursConfirmFromBottomSheet(

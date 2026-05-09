@@ -34,6 +34,7 @@ final class WorkViewController: BaseViewController {
 
     private let viewModel: WorkViewModel
     private var workingTimer: Timer?
+    private var workingScreenEntryTime: Date?
 
     override var prefersNavigationBarHidden: Bool { true }
     weak var coordinatorDelegate: WorkViewControllerCoordinatorDelegate?
@@ -78,11 +79,15 @@ final class WorkViewController: BaseViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        viewModel.trackNotificationPermission()
         viewModel.send(.refresh)
 
         if case let .loaded(status, _) = viewModel.state,
            status == .working || status == .workFinished {
             startWorkingTimer()
+        }
+        if case let .loaded(status, _) = viewModel.state, status == .working {
+            recordWorkingScreenEntry()
         }
     }
 
@@ -94,6 +99,7 @@ final class WorkViewController: BaseViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopWorkingTimer()
+        sendWorkingScreenTimeIfNeeded()
     }
 
     // MARK: - Setup
@@ -200,6 +206,7 @@ private extension WorkViewController {
 
     func renderIdleView(data: HomeEntity) {
         stopWorkingTimer()
+        sendWorkingScreenTimeIfNeeded()
         workingContentView.stopAnimations()
         workMainView.isHidden       = false
         workingContentView.isHidden = true
@@ -227,6 +234,7 @@ private extension WorkViewController {
 
         if status == .working {
             workingContentView.startAnimations()
+            recordWorkingScreenEntry()
         }
 
         startWorkingTimer()
@@ -234,6 +242,7 @@ private extension WorkViewController {
 
     func renderFinalComplete(data: HomeEntity) {
         stopWorkingTimer()
+        sendWorkingScreenTimeIfNeeded()
         workingContentView.stopAnimations()
         workMainView.isHidden       = false
         workingContentView.isHidden = true
@@ -242,7 +251,7 @@ private extension WorkViewController {
 
     func renderError(_ error: WorkViewError) {
         loadingIndicator.stopAnimating()
-        showErrorAlert(message: error.localizedDescription ?? "")
+        showErrorAlert(message: error.localizedDescription)
     }
 }
 
@@ -384,6 +393,23 @@ private extension WorkViewController {
     }
 }
 
+// MARK: - Analytics
+
+private extension WorkViewController {
+
+    func recordWorkingScreenEntry() {
+        guard workingScreenEntryTime == nil else { return }
+        workingScreenEntryTime = Date()
+    }
+
+    func sendWorkingScreenTimeIfNeeded() {
+        guard let entryTime = workingScreenEntryTime else { return }
+        let seconds = Int(Date().timeIntervalSince(entryTime))
+        Analytics.track(.workingScreenTime(seconds: seconds))
+        workingScreenEntryTime = nil
+    }
+}
+
 // MARK: - Helpers
 
 private extension WorkViewController {
@@ -444,6 +470,7 @@ extension WorkViewController: WorkMainContentViewDelegate {
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
         if data.type == .work {
+            Analytics.track(.beforeWorkNowWorkClicked)
             viewModel.send(.startWork)
         } else {
             coordinatorDelegate?.workViewControllerDidTapCalendar(self)
@@ -457,6 +484,7 @@ extension WorkViewController: WorkMainContentViewDelegate {
     /// idle 상태에서 근무 시간 탭 → 바텀시트 대신 FixScheduleViewController push
     func workMainContentViewDidRequestTimeSelection(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
+        Analytics.track(.beforeWorkWorkTimeClicked)
         pushFixSchedule(from: data)
     }
 
@@ -485,14 +513,17 @@ extension WorkViewController: WorkingContentViewDelegate {
     }
 
     func workingContentViewDidTapExtendWork(_ view: WorkingContentView) {
+        Analytics.track(.workingMoreWorkClicked)
         presentExtendTimeBottomSheet()
     }
 
     func workingContentViewDidTapTimeRow(_ view: WorkingContentView) {
+        Analytics.track(.workingWorkTimeClicked)
         presentFinishedTimeEditBottomSheet()
     }
 
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
+        Analytics.track(.workingWorkCompletedClicked)
         viewModel.send(.confirmWork)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
     }

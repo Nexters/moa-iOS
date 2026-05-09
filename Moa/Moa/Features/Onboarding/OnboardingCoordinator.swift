@@ -125,6 +125,9 @@ private extension OnboardingCoordinator {
                 onNext: makeOnNext(for: .workPolicy)
             )
             return vc
+            
+        case .widget:
+            return OnboardingAddWidgetViewController(onNext: makeOnNext(for: .widget))
         }
     }
     

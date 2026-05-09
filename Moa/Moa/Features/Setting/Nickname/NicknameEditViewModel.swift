@@ -46,7 +46,7 @@ final class NicknameEditViewModel: BaseViewModel<NicknameEditOutput> {
                 guard let nickname, !nickname.isEmpty else { throw DomainError.missingRequiredData }
                 
                 _ = try await settingUsecase.updateNickname(to: nickname)
-                
+                Analytics.track(.nicknameNextClicked(isModified: true))
                 self.send(.nicknameEdited)
             } catch {
                 ToastManager.show(message: "닉네임 수정에 실패했습니다.")

@@ -39,6 +39,7 @@ final class OnboardingPayrollViewModel {
     func updatePayroll() async throws {
         guard let amount, amount != .zero else { throw DomainError.missingRequiredData }
         _ = try await usecase.updatePayroll(type: selectedSalaryType, amount: amount)
+        Analytics.track(.salaryNextClicked(isModified: false))
     }
     
     func updateAmount(fromTextFieldText text: String?) {

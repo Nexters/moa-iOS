@@ -151,6 +151,7 @@ final class WorkdayDetailView: UIView {
 
     private func handleTicketTap() {
         guard let schedule = currentSchedule else { return }
+        Analytics.track(.calendarListClicked)
         delegate?.workdayDetailView(self, didTapEdit: schedule)
     }
 

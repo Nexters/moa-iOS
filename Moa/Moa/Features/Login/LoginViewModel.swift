@@ -65,6 +65,7 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                     fcmDeviceToken: fcmToken
                 )
                 await sendFcmTokenIfAvailable()
+                trackLoginSuccess(oauthtype: .kakao)
                 await MainActor.run { self.send(.loginSucceed) }
             } catch {
                 print("로그인 요청 실패: \(error.localizedDescription)")
@@ -83,7 +84,7 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 )
                 
                 await sendFcmTokenIfAvailable()
-                
+                trackLoginSuccess(oauthtype: .apple)
                 await MainActor.run {
                     self.send(.loginSucceed)
                 }
@@ -109,5 +110,9 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
                 continuation.resume(returning: token)
             }
         }
+    }
+    
+    private func trackLoginSuccess(oauthtype: AccountProvider) {
+        Analytics.track(.loginButtonClicked(oauthtype: oauthtype))
     }
 }
