@@ -470,6 +470,7 @@ extension WorkViewController: WorkMainContentViewDelegate {
     func workMainContentViewDidTapPrimaryAction(_ view: WorkMainContentView) {
         guard case let .loaded(_, data) = viewModel.state else { return }
         if data.type == .work {
+            Analytics.track(.beforeWorkNowWorkClicked)
             viewModel.send(.startWork)
         } else {
             coordinatorDelegate?.workViewControllerDidTapCalendar(self)
