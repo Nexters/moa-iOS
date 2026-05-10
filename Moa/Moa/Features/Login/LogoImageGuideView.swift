@@ -7,10 +7,41 @@
 
 import UIKit
 import SnapKit
+import Lottie
 
 final class LogoImageGuideView: UIView {
 
-    private let imageView = UIImageView()
+    private let lottieView: LottieAnimationView = {
+        let view = LottieAnimationView(name: "flying_money")
+        view.loopMode = .loop
+        view.contentMode = .scaleAspectFill
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let logoImageView: UIImageView = {
+        let view = UIImageView()
+        view.image = UIImage(resource: .Logo.login)
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
+
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "실시간으로 월급이 쌓이는 경험!"
+        label.font = AppTypography.b1_400.font()
+        label.textColor = AppColor.IconAndText.highEmphasis
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 16
+        return stack
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -23,17 +54,26 @@ final class LogoImageGuideView: UIView {
     }
 
     private func setup() {
-        imageView.image = UIImage(resource: .Logo.login)
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        addSubview(imageView)
+        contentStack.addArrangedSubview(logoImageView)
+        contentStack.addArrangedSubview(descriptionLabel)
+        addSubViews([lottieView, contentStack])
 
-        imageView.setContentHuggingPriority(.required, for: .vertical)
-        imageView.setContentCompressionResistancePriority(.required, for: .vertical)
+        lottieView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
 
-        imageView.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.leading.trailing.equalToSuperview()
+        contentStack.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(40)
+        }
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            lottieView.play()
+        } else {
+            lottieView.stop()
         }
     }
 }

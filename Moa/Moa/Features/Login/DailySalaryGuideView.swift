@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Lottie
 
 /// 가이드 페이저 두번째 뷰 (오늘 쌓은 월급)
 final class DailySalaryGuideView: UIView {
@@ -26,7 +27,7 @@ final class DailySalaryGuideView: UIView {
     // MARK: - UI Components
     
     private lazy var stackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [todaysEarnedSalaryLabel, exampleAmountLabel, moneyStackImageView, largeTitleLabel, descriptionLabel])
+        let stackView = UIStackView(arrangedSubviews: [todaysEarnedSalaryLabel, exampleAmountLabel, moneyStackLottieView, largeTitleLabel, descriptionLabel])
         stackView.axis = .vertical
         stackView.alignment = .center
         stackView.distribution = .fill
@@ -35,7 +36,7 @@ final class DailySalaryGuideView: UIView {
         stackView.layoutMargins = UIEdgeInsets(top: 40, left: 20, bottom: 32, right: 20)
         stackView.setCustomSpacing(0, after: todaysEarnedSalaryLabel)
         stackView.setCustomSpacing(14, after: exampleAmountLabel)
-        stackView.setCustomSpacing(22, after: moneyStackImageView)
+        stackView.setCustomSpacing(22, after: moneyStackLottieView)
         stackView.setCustomSpacing(6, after: largeTitleLabel)
         return stackView
     }()
@@ -70,10 +71,11 @@ final class DailySalaryGuideView: UIView {
         return label
     }()
     
-    private let moneyStackImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(resource: .Image.imgGuideMoneyStack)
-        return imageView
+    private let moneyStackLottieView: LottieAnimationView = {
+        let view = LottieAnimationView(name: "money_stack")
+        view.loopMode = .loop
+        view.contentMode = .scaleAspectFit
+        return view
     }()
     
     private let largeTitleLabel: StyledLabel = {
@@ -120,7 +122,16 @@ final class DailySalaryGuideView: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            moneyStackLottieView.play()
+        } else {
+            moneyStackLottieView.stop()
+        }
+    }
+
     // MARK: - Setup
     
     private func setupUI() {
@@ -133,8 +144,7 @@ final class DailySalaryGuideView: UIView {
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         
-        moneyStackImageView.contentMode = .scaleAspectFit
-        moneyStackImageView.snp.makeConstraints { make in
+        moneyStackLottieView.snp.makeConstraints { make in
             make.height.equalTo(Constant.imageHeight)
         }
     }

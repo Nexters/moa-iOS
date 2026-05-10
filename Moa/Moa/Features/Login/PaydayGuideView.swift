@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Lottie
 
 /// 가이드 페이저 세번째 뷰 (오늘은 월급날!)
 final class PaydayGuideView: UIView {
@@ -21,12 +22,13 @@ final class PaydayGuideView: UIView {
         static let largeTitleHighlight = "존버"
         static let descriptionText = "월급날만 기다리지 말고\n지금 버는 돈을 보면서 같이 존버해요!"
         static let imageHeight = 160
+        static let lottieFileName = "money_coin"
     }
     
     // MARK: - UI Components
     
     private lazy var stackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [todayIsPaydayLabel, exampleAmountLabel, coinsImageView, largeTitleLabel, descriptionLabel])
+        let stackView = UIStackView(arrangedSubviews: [todayIsPaydayLabel, exampleAmountLabel, coinsLottieView, largeTitleLabel, descriptionLabel])
         stackView.axis = .vertical
         stackView.alignment = .center
         stackView.distribution = .fill
@@ -35,7 +37,7 @@ final class PaydayGuideView: UIView {
         stackView.layoutMargins = UIEdgeInsets(top: 40, left: 20, bottom: 32, right: 20)
         stackView.setCustomSpacing(0, after: todayIsPaydayLabel)
         stackView.setCustomSpacing(14, after: exampleAmountLabel)
-        stackView.setCustomSpacing(22, after: coinsImageView)
+        stackView.setCustomSpacing(22, after: coinsLottieView)
         stackView.setCustomSpacing(6, after: largeTitleLabel)
         return stackView
     }()
@@ -70,10 +72,11 @@ final class PaydayGuideView: UIView {
         return label
     }()
     
-    private let coinsImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(resource: .Image.imgGuideCoins)
-        return imageView
+    private let coinsLottieView: LottieAnimationView = {
+        let view = LottieAnimationView(name: Constant.lottieFileName)
+        view.loopMode = .loop
+        view.contentMode = .scaleAspectFit
+        return view
     }()
     
     private let largeTitleLabel: StyledLabel = {
@@ -120,6 +123,15 @@ final class PaydayGuideView: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            coinsLottieView.play()
+        } else {
+            coinsLottieView.stop()
+        }
+    }
     
     // MARK: - Setup
     
@@ -133,8 +145,7 @@ final class PaydayGuideView: UIView {
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
         
-        coinsImageView.contentMode = .scaleAspectFit
-        coinsImageView.snp.makeConstraints { make in
+        coinsLottieView.snp.makeConstraints { make in
             make.height.equalTo(Constant.imageHeight)
         }
     }
