@@ -123,13 +123,12 @@ final class DailySalaryGuideView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window != nil {
-            moneyStackLottieView.play()
-        } else {
-            moneyStackLottieView.stop()
-        }
+    func play() {
+        moneyStackLottieView.play()
+    }
+
+    func stop() {
+        moneyStackLottieView.stop()
     }
 
     // MARK: - Setup

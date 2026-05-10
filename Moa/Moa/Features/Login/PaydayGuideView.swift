@@ -124,13 +124,12 @@ final class PaydayGuideView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window != nil {
-            coinsLottieView.play()
-        } else {
-            coinsLottieView.stop()
-        }
+    func play() {
+        coinsLottieView.play()
+    }
+
+    func stop() {
+        coinsLottieView.stop()
     }
     
     // MARK: - Setup

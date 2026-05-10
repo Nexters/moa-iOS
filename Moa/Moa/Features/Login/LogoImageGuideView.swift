@@ -68,12 +68,11 @@ final class LogoImageGuideView: UIView {
         }
     }
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window != nil {
-            lottieView.play()
-        } else {
-            lottieView.stop()
-        }
+    func play() {
+        lottieView.play()
+    }
+
+    func stop() {
+        lottieView.stop()
     }
 }

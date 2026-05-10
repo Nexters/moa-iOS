@@ -25,7 +25,12 @@ final class LoginViewController: BaseViewController {
     
     // MARK: - UI Components
     
-    private let logoImageView = LogoImageGuideView()
+    private let firstGuidePage = LogoImageGuideView()
+    private let secondGuidePage = DailySalaryGuideView()
+    private let thirdGuidePage = PaydayGuideView()
+    private let firstClone = LogoImageGuideView()
+    private let lastClone = PaydayGuideView()
+
     private let loginButtonStackView: UIStackView = {
         let v = UIStackView()
         v.axis = .vertical
@@ -110,31 +115,26 @@ final class LoginViewController: BaseViewController {
             make.height.equalToSuperview()
         }
 
-        let firstGuidePage = LogoImageGuideView()
         let secondPageContainer = UIView()
-        let secondGuidePage = DailySalaryGuideView()
         secondPageContainer.addSubview(secondGuidePage)
         secondGuidePage.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
         let thirdGuidePageContainer = UIView()
-        let thirdGuidePage = PaydayGuideView()
         thirdGuidePageContainer.addSubview(thirdGuidePage)
         thirdGuidePage.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
-        
+
         let firstCloneContainer = UIView()
-        let firstClone = LogoImageGuideView()
         firstCloneContainer.addSubview(firstClone)
         firstClone.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
 
         let lastCloneContainer = UIView()
-        let lastClone = PaydayGuideView()
         lastCloneContainer.addSubview(lastClone)
         lastClone.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(20)
@@ -215,6 +215,7 @@ final class LoginViewController: BaseViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        updateLottiePlayback(for: currentPage)
         startAutoPaging()
     }
 
@@ -245,12 +246,7 @@ final class LoginViewController: BaseViewController {
     
     private func startAutoPaging() {
         stopAutoPaging()
-        autoPagingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
-            self?.goToNextPage(animated: true)
-        }
-        if let timer = autoPagingTimer {
-            RunLoop.current.add(timer, forMode: .common)
-        }
+        scheduleNextAutoPaging()
     }
 
     private func stopAutoPaging() {
@@ -258,14 +254,30 @@ final class LoginViewController: BaseViewController {
         autoPagingTimer = nil
     }
 
+    private func scheduleNextAutoPaging() {
+        autoPagingTimer?.invalidate()
+        autoPagingTimer = Timer.scheduledTimer(withTimeInterval: delayForCurrentPage(), repeats: false) { [weak self] _ in
+            self?.goToNextPage(animated: true)
+        }
+        if let timer = autoPagingTimer {
+            RunLoop.current.add(timer, forMode: .common)
+        }
+    }
+
+    private func delayForCurrentPage() -> TimeInterval {
+        switch currentPage {
+        case 0: return 1.6
+        default: return 2.2
+        }
+    }
+
     private func scheduleResumeAutoPaging() {
         resumeTimer?.invalidate()
         resumeTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             self.goToNextPage(animated: true)
-            self.startAutoPaging()
         }
-        
+
         if let timer = resumeTimer {
             RunLoop.current.add(timer, forMode: .common)
         }
@@ -275,37 +287,42 @@ final class LoginViewController: BaseViewController {
         guard numberOfPages > 0 else { return }
         if currentPage == numberOfPages - 1 {
             let cloneIndex = numberOfPages + 1
-            scrollToPage(index: cloneIndex, animated: true)
+            scrollToPage(index: cloneIndex, animated: true) { [weak self] in
+                self?.scheduleNextAutoPaging()
+            }
         } else {
             let nextRealPage = currentPage + 1
             let targetIndexInScroll = nextRealPage + 1
-            scrollToPage(index: targetIndexInScroll, animated: animated)
+            scrollToPage(index: targetIndexInScroll, animated: animated) { [weak self] in
+                self?.scheduleNextAutoPaging()
+            }
             currentPage = nextRealPage
             pageControl.currentPage = currentPage
             updatePageControlIndicatorImages()
         }
     }
 
-    private func scrollToPage(index: Int, animated: Bool) {
+    private func scrollToPage(index: Int, animated: Bool, completion: (() -> Void)? = nil) {
         let pageWidth = pagerScrollView.bounds.width
         let offsetX = CGFloat(index) * pageWidth
-        
+
         if animated {
-            // Ease in 애니메이션
             UIView.animate(
-                withDuration: 0.6,
+                withDuration: 0.72,
                 delay: 0,
-                options: [.curveEaseIn],
+                options: [.curveEaseInOut],
                 animations: { [weak self] in
                     self?.pagerScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: false)
                 },
                 completion: { [weak self] _ in
                     self?.correctOffsetIfNeeded()
                     self?.updateCurrentPageFromOffset()
+                    completion?()
                 }
             )
         } else {
             pagerScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: false)
+            completion?()
         }
     }
     
@@ -413,6 +430,13 @@ extension LoginViewController: UIScrollViewDelegate {
         currentPage = max(0, min(numberOfPages - 1, realPage))
         pageControl.currentPage = currentPage
         updatePageControlIndicatorImages()
+        updateLottiePlayback(for: currentPage)
+    }
+
+    private func updateLottiePlayback(for page: Int) {
+        [firstGuidePage, firstClone].forEach { page == 0 ? $0.play() : $0.stop() }
+        page == 1 ? secondGuidePage.play() : secondGuidePage.stop()
+        [thirdGuidePage, lastClone].forEach { page == 2 ? $0.play() : $0.stop() }
     }
     
     private func correctOffsetIfNeeded() {
