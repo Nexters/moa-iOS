@@ -144,7 +144,8 @@ extension FixScheduleViewModel {
 
         switch workday.contentType {
         case .vacation:    state.scheduleType = .vacation
-        case .work, .none: state.scheduleType = .workday
+        case .work : state.scheduleType = .workday
+        case .none : state.scheduleType = .none
         }
 
         if let clockIn  = workday.clockInTime  { state.startTime = clockIn  }
