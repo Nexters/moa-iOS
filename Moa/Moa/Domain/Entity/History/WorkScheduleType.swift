@@ -20,7 +20,7 @@ enum WorkScheduleType {
         case .worked:    return "근무 완료"
         case .scheduled: return "근무 예정"
         case let .payday(schedule, _):    return "월급날 · 매달 \(schedule)일"
-        case .vacation:  return "휴가"
+        case .vacation:  return "연차"
         }
     }
 
