@@ -25,6 +25,7 @@ final class TimeWheelPickerView: UIView {
     private let cellHeight: CGFloat = 44
     private let visibleRowCount: CGFloat = 5
     private let minuteUnit: Int = 5
+    private let maxHour: Int
     
     private var pickerHeight: CGFloat {
         cellHeight * visibleRowCount
@@ -88,9 +89,14 @@ final class TimeWheelPickerView: UIView {
     
     // MARK: - Init
     
-    init(initialHour: Int, initialMinute: Int) {
+    init(
+        initialHour: Int,
+        initialMinute: Int,
+        maxHour: Int = 24
+    ) {
         self.initialHour = initialHour
         self.initialMinute = initialMinute
+        self.maxHour = maxHour
         super.init(frame: .zero)
         
         setupLayout()

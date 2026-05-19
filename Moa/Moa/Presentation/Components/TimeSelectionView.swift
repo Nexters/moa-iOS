@@ -45,6 +45,7 @@ final class TimeSelectionView: UIView {
     private let isEndTimeOnly: Bool
     
     // MARK: - UI
+    private let durationView = WorkDurationView()
     
     private lazy var startTimeButton: TimeDisplayView = {
         let button = TimeDisplayView(timeCase: .start)
@@ -141,29 +142,33 @@ final class TimeSelectionView: UIView {
         wheelPicker.delegate = self
         
         setupViews(hasOption: optionTitle != nil)
+        
         updateTimeDisplay()
+        updateDurationView()
         updateSelectionState()
     }
     
     required init?(coder: NSCoder) { fatalError() }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        let time = selectionMode == .selectingEnd ? selectedEndTime : selectedStartTime
-        wheelPicker.setTime(hour: time.hour, minute: time.minute, animated: true)
-    }
     
     // MARK: - Setup
 
     private func setupViews(hasOption: Bool) {
         backgroundColor = AppColor.Container.primary
         
+        addSubview(durationView)
         addSubview(timeDisplayStackView)
-        timeDisplayStackView.snp.makeConstraints {
+
+        durationView.snp.makeConstraints {
             $0.top.equalToSuperview()
+            $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
+        }
+
+        timeDisplayStackView.snp.makeConstraints {
+            $0.top.equalTo(durationView.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             $0.height.equalTo(55)
         }
+        
         arrowImageView.snp.makeConstraints { $0.width.height.equalTo(24) }
         startTimeButton.snp.makeConstraints { $0.width.equalTo(endTimeButton) }
         
@@ -245,6 +250,13 @@ final class TimeSelectionView: UIView {
             endTimeButton.setActive(true)
         }
     }
+    
+    private func updateDurationView() {
+        durationView.configure(
+            start: selectedStartTime.displayString,
+            end: selectedEndTime.displayString
+        )
+    }
 }
 
 // MARK: - TimeWheelPickerViewDelegate
@@ -265,11 +277,6 @@ extension TimeSelectionView: TimeWheelPickerViewDelegate {
             break
         }
         
-        // 출근 > 퇴근이면 확인 버튼 비활성화
-        let invalid = selectedStartTime.totalMinutes >= selectedEndTime.totalMinutes
-        confirmButton.isEnabled = !invalid
-        if !optionButton.isHidden {
-            // buttonStack 내 confirmButton도 동일하게 적용됨 (같은 인스턴스)
-        }
+        updateDurationView()
     }
 }

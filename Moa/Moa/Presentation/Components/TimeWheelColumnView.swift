@@ -14,12 +14,6 @@ final class TimeWheelColumnView: UIView {
 
     private let cellHeight: CGFloat = 44
     private let visibleRows: Int = 5
-    private let repeatCount: Int = 1_000
-
-    /// 중앙 기준 index
-    private var centerIndex: Int {
-        (repeatCount / 2) * values.count
-    }
 
     /// 중앙 정렬 offset 보정
     private var midOffset: CGFloat {
@@ -38,8 +32,7 @@ final class TimeWheelColumnView: UIView {
     
     /// 외부 노출 index
     var selectedIndex: Int {
-        let mod = absoluteIndex % values.count
-        return mod >= 0 ? mod : mod + values.count
+        absoluteIndex
     }
 
     var onValueChanged: (() -> Void)?
@@ -49,7 +42,7 @@ final class TimeWheelColumnView: UIView {
     init(values: [String], initialIndex: Int = 0, alignment: NSTextAlignment = .center) {
         self.values = values
         self.alignment = alignment
-        self.absoluteIndex = (repeatCount / 2) * values.count + initialIndex
+        self.absoluteIndex = initialIndex
         super.init(frame: .zero)
         setupCollectionView()
     }
@@ -76,12 +69,11 @@ final class TimeWheelColumnView: UIView {
 
     func scrollToIndexSilently(_ realIndex: Int, animated: Bool = false) {
         guard realIndex >= 0, realIndex < values.count else { return }
-
-        let newAbsolute = centerIndex + realIndex
-        absoluteIndex = newAbsolute
+        
+        absoluteIndex = realIndex
 
         collectionView.setContentOffset(
-            CGPoint(x: 0, y: snapOffset(for: newAbsolute)),
+            CGPoint(x: 0, y: snapOffset(for: absoluteIndex)),
             animated: animated
         )
 
@@ -94,10 +86,14 @@ final class TimeWheelColumnView: UIView {
         CGFloat(index) * cellHeight - midOffset
     }
 
-    /// clamp 제거 → 진짜 무한 index
     private func centeredAbsoluteIndex() -> Int {
         let rawIndex = (collectionView.contentOffset.y + midOffset) / cellHeight
-        return Int(rawIndex.rounded())
+        let rounded = Int(rawIndex.rounded())
+
+        return min(
+            max(rounded, 0),
+            values.count - 1
+        )
     }
 
     private func snapToCurrent(animated: Bool = true) {
@@ -119,26 +115,11 @@ final class TimeWheelColumnView: UIView {
 
         for cell in collectionView.visibleCells.compactMap({ $0 as? TimeWheelCell }) {
             guard let ip = collectionView.indexPath(for: cell) else { continue }
-            let realIndex = ip.item % values.count
-            cell.setSelectedStyle(realIndex == newReal)
+            cell.setSelectedStyle(ip.item == newReal)
         }
 
         if oldReal != newReal {
             onValueChanged?()
-        }
-    }
-
-    private func recenterIfNeeded() {
-        let threshold = values.count * repeatCount / 4
-
-        if absoluteIndex < threshold || absoluteIndex > values.count * repeatCount - threshold {
-            let newIndex = centerIndex + selectedIndex
-            absoluteIndex = newIndex
-
-            collectionView.setContentOffset(
-                CGPoint(x: 0, y: snapOffset(for: newIndex)),
-                animated: false
-            )
         }
     }
 
@@ -172,7 +153,7 @@ extension TimeWheelColumnView: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        values.count * repeatCount
+        values.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
@@ -183,9 +164,8 @@ extension TimeWheelColumnView: UICollectionViewDataSource {
             for: indexPath
         ) as! TimeWheelCell
 
-        let realIndex = indexPath.item % values.count
-        cell.configure(text: values[realIndex], alignment: alignment)
-        cell.setSelectedStyle(realIndex == selectedIndex)
+        cell.configure(text: values[indexPath.item], alignment: alignment)
+        cell.setSelectedStyle(indexPath.item == selectedIndex)
 
         return cell
     }
@@ -197,11 +177,7 @@ extension TimeWheelColumnView: UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView,
                         didSelectItemAt indexPath: IndexPath) {
-
-        let realIndex = indexPath.item % values.count
-        let newAbsolute = centerIndex + realIndex
-
-        absoluteIndex = newAbsolute
+        absoluteIndex = indexPath.item
         snapToCurrent(animated: true)
         collectionView.reloadData()
         onValueChanged?()
@@ -217,7 +193,6 @@ extension TimeWheelColumnView: UICollectionViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateSelectionIfNeeded()
-        recenterIfNeeded()
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
