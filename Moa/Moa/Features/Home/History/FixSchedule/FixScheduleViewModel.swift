@@ -147,7 +147,7 @@ extension FixScheduleViewModel {
         case .work : state.scheduleType = .workday
         case .none : state.scheduleType = .none
         }
-
+        
         if let clockIn  = workday.clockInTime  { state.startTime = clockIn  }
         if let clockOut = workday.clockOutTime { state.endTime   = clockOut }
 

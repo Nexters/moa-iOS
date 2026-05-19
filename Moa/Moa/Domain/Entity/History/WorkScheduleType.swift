@@ -14,6 +14,7 @@ enum WorkScheduleType {
     case scheduled(startTime: String, endTime: String)
     case payday(schedule: String, salary: String)   // e.g. "매달 25일", "2,000,000"
     case vacation(startTime: String, endTime: String)
+    case publicHoliday
 
     var titleText: String {
         switch self {
@@ -21,6 +22,7 @@ enum WorkScheduleType {
         case .scheduled: return "근무 예정"
         case let .payday(schedule, _):    return "월급날 · 매달 \(schedule)일"
         case .vacation:  return "연차"
+        case .publicHoliday: return "공휴일"
         }
     }
 
@@ -36,6 +38,7 @@ enum WorkScheduleType {
              .scheduled(let s, let e),
              .vacation(let s, let e): return "\(s) - \(e)"
         case .payday(_, let salary):  return "\(salary)원"
+        case .publicHoliday: return "근무 일정 없음"
         }
     }
 
@@ -48,7 +51,7 @@ enum WorkScheduleType {
         case .worked:    return UIImage(resource: .Icon.iconTicketWorked)
         case .scheduled: return UIImage(resource: .Icon.iconTicektScheduled)
         case .payday:    return UIImage(resource: .Icon.iconTicketPayday)
-        case .vacation:  return UIImage(resource: .Icon.iconTicketVacation)
+        case .vacation, .publicHoliday:  return UIImage(resource: .Icon.iconTicketVacation)
         }
     }
 }

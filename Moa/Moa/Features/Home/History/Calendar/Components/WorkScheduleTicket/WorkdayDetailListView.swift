@@ -15,8 +15,15 @@ import SnapKit
 protocol WorkdayDetailViewDelegate: AnyObject {
     /// 근무/휴가 티켓 탭 → 일정 수정 화면으로 이동
     func workdayDetailView(_ view: WorkdayDetailView, didTapEdit schedule: CalendarScheduleEntity)
+    
     /// 월급 티켓 탭 → 월급날 수정 바텀시트
     func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView)
+    
+    /// 공휴일 티켓 탭 → 휴무 상태로 일정 추가/수정
+    func workdayDetailViewDidTapPublicHoliday(
+        _ view: WorkdayDetailView,
+        schedule: CalendarScheduleEntity
+    )
 }
 
 // MARK: - WorkdayDetailView
@@ -131,8 +138,7 @@ final class WorkdayDetailView: UIView {
             break
         }
 
-        // payday 티켓: events 배열에 .payday 포함 여부로 판단
-        // 기존 UserDefaults.payday 의존 방식에서 서버 데이터 기반으로 변경
+        // 월급날
         if schedule.events.contains(.payday) {
             let nf                  = NumberFormatter()
             nf.numberStyle          = .decimal
@@ -146,6 +152,11 @@ final class WorkdayDetailView: UIView {
             )
         }
 
+        // 공휴일
+        if schedule.events.contains(.publicHoliday) {
+            tickets.append(.publicHoliday() { [weak self] in self?.handlePublicHolidayTap() })
+        }
+            
         return tickets
     }
 
@@ -154,7 +165,16 @@ final class WorkdayDetailView: UIView {
         Analytics.track(.calendarListClicked)
         delegate?.workdayDetailView(self, didTapEdit: schedule)
     }
+    
+    private func handlePublicHolidayTap() {
+        guard let schedule = currentSchedule else { return }
 
+        delegate?.workdayDetailViewDidTapPublicHoliday(
+            self,
+            schedule: schedule
+        )
+    }
+    
     private func handlePaydayTicketTap() {
         delegate?.workdayDetailViewDidTapPaydayTicket(self)
     }
