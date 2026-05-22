@@ -144,7 +144,12 @@ final class WorkViewController: BaseViewController {
 private extension WorkViewController {
 
     func setupHierarchy() {
-        view.addSubViews([navigationBarView, workMainView, workingContentView, loadingIndicator])
+        view.addSubViews([
+            navigationBarView,
+            workMainView,
+            workingContentView,
+            loadingIndicator
+        ])
     }
 
     func setupConstraints() {
@@ -153,15 +158,18 @@ private extension WorkViewController {
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(Constant.navigationBarHeight)
         }
+        
         workMainView.snp.makeConstraints {
             $0.top.equalTo(navigationBarView.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
         }
+        
         workingContentView.snp.makeConstraints {
             $0.top.equalTo(navigationBarView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
+        
         loadingIndicator.snp.makeConstraints { $0.center.equalToSuperview() }
     }
 }
@@ -191,7 +199,7 @@ private extension WorkViewController {
 
     func renderLoaded(status: WorkStatusEntity, data: HomeEntity) {
         loadingIndicator.stopAnimating()
-
+        
         switch status {
         case .idle:
             renderIdleView(data: data)
@@ -211,6 +219,7 @@ private extension WorkViewController {
         workMainView.isHidden       = false
         workingContentView.isHidden = true
         workMainView.configure(data: data, status: .idle)
+        presentSalaryOverlayIfNeeded(with: data)
     }
 
     func renderActiveWork(status: WorkStatusEntity, data: HomeEntity) {
@@ -556,5 +565,33 @@ extension WorkViewController: WorkScheduleChangeBottomSheetDelegate {
 
     func workScheduleChangeBottomSheetDidCancel(_ sheet: WorkScheduleChangeBottomSheet) {
         dismiss(animated: true)
+    }
+}
+
+private extension WorkViewController {
+    private func presentSalaryOverlayIfNeeded(with data: HomeEntity) {
+        
+        // payday 이벤트가 없는 날이면 노출하지 않음
+        guard data.events.contains(.payday) else { return }
+        
+        // 이번 달에 이미 표시한 적이 있으면 노출하지 않음
+        guard SalaryOverlayView.shouldPresentThisMonth() else { return }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        // dailyPay(일급) 대신 standardSalary(월급) 사용
+        let salaryString = formatter.string(from: NSNumber(value: data.standardSalary)) ?? "0"
+
+        // 표시 전 먼저 기록 — 중복 노출 방지
+        SalaryOverlayView.markPresented()
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+
+            let overlay = SalaryOverlayView(salaryText: "\(salaryString)")
+            self.view.addSubview(overlay)
+            overlay.snp.makeConstraints { $0.edges.equalToSuperview() }
+            self.view.bringSubviewToFront(overlay)
+        }
     }
 }
