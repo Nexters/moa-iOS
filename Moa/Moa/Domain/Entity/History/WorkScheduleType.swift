@@ -46,7 +46,7 @@ enum WorkScheduleType {
     var iconImage: UIImage? {
         switch self {
         case .worked:    return UIImage(resource: .Icon.iconTicketWorked)
-        case .scheduled: return UIImage(resource: .Icon.iconTicektScheduled)
+        case .scheduled: return UIImage(resource: .Icon.iconTicketScheduled)
         case .payday:    return UIImage(resource: .Icon.iconTicketPayday)
         case .vacation:  return UIImage(resource: .Icon.iconTicketVacation)
         }
