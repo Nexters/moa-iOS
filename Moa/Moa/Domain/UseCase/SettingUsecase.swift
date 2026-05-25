@@ -105,12 +105,12 @@ final class SettingUsecase {
     }
     
     func logout(fcmDeviceToken: String) async throws {
+        defer {
+            AuthSessionManager.shared.clearTokens()
+            userDefaults.removeObject(forKey: "payday")
+            userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
+        }
         try await authRepository.logout(fcmDeviceToken: fcmDeviceToken)
-        
-        AuthSessionManager.shared.clearTokens()
-        
-        userDefaults.removeObject(forKey: "payday")
-        userDefaults.removeObject(forKey: "HasShownWorkAlarmSheet")
     }
     
     func withdrawal(reason: [String]) async throws {
