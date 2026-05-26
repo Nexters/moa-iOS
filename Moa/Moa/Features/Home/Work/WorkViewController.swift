@@ -95,6 +95,7 @@ final class WorkViewController: BaseViewController {
         super.viewDidAppear(animated)
         
         showWorkAlarmBottomSheetIfNeeded()
+        handleAppReviewTriggers()
         presentSalaryOverlayIfNeededIfPossible()
     }
     
@@ -403,6 +404,17 @@ private extension WorkViewController {
     }
 }
 
+// MARK: - App Review
+
+private extension WorkViewController {
+
+    func handleAppReviewTriggers() {
+        let payday = UserDefaults.standard.integer(forKey: "payday")
+        AppReviewManager.shared.handleHomeVisit()
+        AppReviewManager.shared.handlePaydayIfNeeded(payday: payday)
+    }
+}
+
 // MARK: - Analytics
 
 private extension WorkViewController {
@@ -534,6 +546,7 @@ extension WorkViewController: WorkingContentViewDelegate {
     
     func workingContentViewDidTapConfirm(_ view: WorkingContentView) {
         Analytics.track(.workingWorkCompletedClicked)
+        AppReviewManager.shared.handleWorkConfirm()
         viewModel.send(.confirmWork)
         coordinatorDelegate?.workViewControllerDidTapWorkComplete(self)
     }
