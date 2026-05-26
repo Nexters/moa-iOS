@@ -27,6 +27,8 @@ enum AnalyticsEvent {
     case beforeWorkWorkTimeClicked
     /// 근무중 화면 체류 시간 (초 단위)
     case workingScreenTime(seconds: Int)
+    /// 일정 조정 버튼 클릭
+    case workingWorkEditClicked
     /// 홈(근무중) - 근무시간 row 클릭
     case workingWorkTimeClicked
     /// 홈(근무중) - 더일할게요 버튼 클릭
@@ -51,6 +53,7 @@ enum AnalyticsEvent {
         case .beforeWorkNowWorkClicked: "before_work_now_work_clicked"
         case .beforeWorkWorkTimeClicked: "before_work_work_time_clicked"
         case .workingScreenTime: "working_screen_time"
+        case .workingWorkEditClicked: "working_work_edit_clicked"
         case .workingWorkTimeClicked: "working_work_time_clicked"
         case .workingMoreWorkClicked: "working_more_work_clicked"
         case .workingWorkCompletedClicked: "working_work_completed_clicked"
@@ -80,6 +83,8 @@ enum AnalyticsEvent {
             return [:]
         case let .workingScreenTime(seconds):
             return ["time": seconds]
+        case .workingWorkEditClicked:
+            return [:]
         case .workingWorkTimeClicked:
             return [:]
         case .workingMoreWorkClicked:

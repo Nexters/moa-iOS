@@ -119,6 +119,7 @@ final class WorkingStatusView: UIView {
     }
 
     @objc private func didTapSchedule() {
+        Analytics.track(.workingWorkEditClicked)
         delegate?.workingStatusViewDidTapScheduleAdjust(self)
     }
 }
