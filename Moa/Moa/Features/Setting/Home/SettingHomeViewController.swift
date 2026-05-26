@@ -150,6 +150,10 @@ final class SettingHomeViewController: BaseViewController {
         value: Constants.latestVersion,
         showsChevron: false
     )
+
+    private lazy var serviceFeedbackRow = SettingItemRowView(
+        title: Constants.serviceFeedback
+    )
     
     // MARK: - Init
     
@@ -232,10 +236,8 @@ final class SettingHomeViewController: BaseViewController {
             self.openInquiryForm()
         }
 
-        let serviceFeedback = SettingItemRowView(
-            title: Constants.serviceFeedback
-        )
-        serviceFeedback.onTap = { [weak self] in
+        serviceFeedbackRow.isHidden = viewModel.isReviewRequested
+        serviceFeedbackRow.onTap = { [weak self] in
             guard let self else { return }
             self.openServiceFeedback()
         }
@@ -262,7 +264,7 @@ final class SettingHomeViewController: BaseViewController {
                     versionInfoRow,
                     termsAndPolicy,
                     inquiry,
-                    serviceFeedback
+                    serviceFeedbackRow
                 ],
                 onRowTap: { [weak self] index in
                     
@@ -331,6 +333,9 @@ final class SettingHomeViewController: BaseViewController {
     }
 
     private func openServiceFeedback() {
+        viewModel.markReviewRequested()
+        serviceFeedbackRow.isHidden = true
+
         guard let url = URL(string: "https://apps.apple.com/kr/app/id\(Constants.appstoreId)?action=write-review") else { return }
         UIApplication.shared.open(url)
     }
