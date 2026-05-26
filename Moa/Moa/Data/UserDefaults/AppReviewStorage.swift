@@ -23,4 +23,9 @@ enum AppReviewStorage {
     static var isRequested: Bool {
         UserDefaults.standard.bool(forKey: key)
     }
+
+    /// 저장된 리뷰 요청 상태 초기화 (로그아웃 / 회원탈퇴 시)
+    static func reset() {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
 }
