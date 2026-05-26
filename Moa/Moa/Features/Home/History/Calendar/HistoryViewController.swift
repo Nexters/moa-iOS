@@ -270,9 +270,7 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
             schedule: CalendarScheduleEntity
         ) {
 
-            var holidaySchedule = schedule
-
-            holidaySchedule = CalendarScheduleEntity(
+            var holidaySchedule = CalendarScheduleEntity(
                 date: schedule.date,
                 contentType: .none,
                 status: schedule.status,
