@@ -102,7 +102,7 @@ final class TimeSelectionView: UIView {
     }()
     
     // MARK: - Initialization
-
+    
     /// - Parameters:
     ///   - startTime: 초기 출근 시각
     ///   - endTime: 초기 퇴근 시각
@@ -146,23 +146,24 @@ final class TimeSelectionView: UIView {
         updateTimeDisplay()
         updateDurationView()
         updateSelectionState()
+        updateConfirmButtonState()
     }
     
     required init?(coder: NSCoder) { fatalError() }
     
     // MARK: - Setup
-
+    
     private func setupViews(hasOption: Bool) {
         backgroundColor = AppColor.Container.primary
         
         addSubview(durationView)
         addSubview(timeDisplayStackView)
-
+        
         durationView.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.leading.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
-
+        
         timeDisplayStackView.snp.makeConstraints {
             $0.top.equalTo(durationView.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
@@ -200,17 +201,19 @@ final class TimeSelectionView: UIView {
     }
     
     // MARK: - Actions
-
+    
     @objc private func startTimeButtonTapped() {
         guard !isEndTimeOnly else { return }
         selectionMode = .selectingStart
         updateSelectionState()
+        updateConfirmButtonState()
         wheelPicker.setTime(hour: selectedStartTime.hour, minute: selectedStartTime.minute, animated: true)
     }
     
     @objc private func endTimeButtonTapped() {
         selectionMode = .selectingEnd
         updateSelectionState()
+        updateConfirmButtonState()
         wheelPicker.setTime(hour: selectedEndTime.hour, minute: selectedEndTime.minute, animated: true)
     }
     
@@ -234,7 +237,7 @@ final class TimeSelectionView: UIView {
     }
     
     // MARK: - Private Helpers
-
+    
     private func updateTimeDisplay() {
         startTimeButton.setTime(selectedStartTime)
         endTimeButton.setTime(selectedEndTime)
@@ -278,5 +281,15 @@ extension TimeSelectionView: TimeWheelPickerViewDelegate {
         }
         
         updateDurationView()
+        updateConfirmButtonState()
+    }
+    
+    private func updateConfirmButtonState() {
+        
+        let isSameTime =
+        selectedStartTime.hour == selectedEndTime.hour &&
+        selectedStartTime.minute == selectedEndTime.minute
+        
+        confirmButton.isEnabled = !isSameTime
     }
 }
