@@ -149,39 +149,35 @@ final class SalaryOverlayView: UIView {
     // MARK: - Configure
 
     private func configureSalary() {
-
         let fullText = "\(salaryText)원"
+        let fullLength = fullText.count
 
-        let attributedString = NSMutableAttributedString(
+        let attributed = NSMutableAttributedString(
             string: fullText,
             attributes: [
                 .font: AppTypography.h2_700.font(),
                 .foregroundColor: AppColor.IconAndText.green
             ]
         )
-        
-        attributedString.addAttributes(
+
+        attributed.addAttributes(
             [
                 .font: AppTypography.h3_500.font(),
                 .foregroundColor: AppColor.IconAndText.mediumEmphasis,
                 .baselineOffset: 2
             ],
-            range: NSRange(
-                location: fullText.count - 1,
-                length: 1
-            )
-        )
-        
-        attributedString.addAttribute(
-            .kern,
-            value: 6,
-            range: NSRange(
-                location: fullText.count - 2,
-                length: 1
-            )
+            range: NSRange(location: fullLength - 1, length: 1)
         )
 
-        salaryLabel.attributedText = attributedString
+        if fullLength >= 2 {
+            attributed.addAttribute(
+                .kern,
+                value: 6,
+                range: NSRange(location: fullLength - 2, length: 1)
+            )
+        }
+
+        salaryLabel.attributedText = attributed
     }
 
     private func configureMonthText() {
@@ -205,7 +201,6 @@ final class SalaryOverlayView: UIView {
 
 extension SalaryOverlayView {
 
-    /// UserDefaults 키: 마지막으로 오버레이를 표시한 연-월을 "yyyy-MM" 형태로 저장
     private static let presentedMonthKey = "SalaryOverlayPresent"
 
     /// 이번 달에 아직 오버레이를 표시하지 않았으면 true
