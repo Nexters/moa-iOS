@@ -31,9 +31,10 @@ final class SettingHomeViewController: BaseViewController {
         static let latestVersion = "최신 버전"
         static let termsAndPolicy = "약관 및 정책"
         static let inquiry = "문의하기"
+        static let serviceFeedback = "서비스 의견 남기기"
         static let logout = "로그아웃"
         static let withdrawal = "회원탈퇴"
-        static let appstoreId = "6758913984"
+        static let appstoreId = "6759603878"
     }
     
     // MARK: - UI Components
@@ -149,6 +150,10 @@ final class SettingHomeViewController: BaseViewController {
         value: Constants.latestVersion,
         showsChevron: false
     )
+
+    private lazy var serviceFeedbackRow = SettingItemRowView(
+        title: Constants.serviceFeedback
+    )
     
     // MARK: - Init
     
@@ -230,7 +235,13 @@ final class SettingHomeViewController: BaseViewController {
             guard let self else { return }
             self.openInquiryForm()
         }
-        
+
+        serviceFeedbackRow.isHidden = viewModel.isReviewRequested
+        serviceFeedbackRow.onTap = { [weak self] in
+            guard let self else { return }
+            self.openServiceFeedback()
+        }
+
         contentStack.addArrangedSubViews([
             SettingSectionView(
                 title: Constants.myInfo,
@@ -252,7 +263,8 @@ final class SettingHomeViewController: BaseViewController {
                 rows: [
                     versionInfoRow,
                     termsAndPolicy,
-                    inquiry
+                    inquiry,
+                    serviceFeedbackRow
                 ],
                 onRowTap: { [weak self] index in
                     
@@ -315,9 +327,17 @@ final class SettingHomeViewController: BaseViewController {
     
     private func openInquiryForm() {
         guard let url = URL(string: "https://forms.gle/cvjVQuNpctzs1p2QA") else { return }
-        
+
         let safariVC = SFSafariViewController(url: url)
         present(safariVC, animated: true)
+    }
+
+    private func openServiceFeedback() {
+        viewModel.markReviewRequested()
+        serviceFeedbackRow.isHidden = true
+
+        guard let url = URL(string: "https://apps.apple.com/kr/app/id\(Constants.appstoreId)?action=write-review") else { return }
+        UIApplication.shared.open(url)
     }
     
     @objc private func logoutButtonTapped() {

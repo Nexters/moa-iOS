@@ -30,6 +30,7 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
     private(set) var nickname: String = ""
     private(set) var currentVersion: String = ""
     private(set) var versionStatus: VersionStatus = .latest
+    var isReviewRequested: Bool { AppReviewStorage.isRequested }
 
     // MARK: - Init
     
@@ -86,6 +87,10 @@ final class SettingHomeViewModel: BaseViewModel<SettingHomeOutput> {
         }
     }
     
+    func markReviewRequested() {
+        AppReviewStorage.markRequested()
+    }
+
     func logout() {
         Task {
             if let fcmToken = AuthSessionManager.shared.currentFcmToken() {
