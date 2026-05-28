@@ -123,6 +123,10 @@ extension WorkScheduleTicket {
     static func vacation(startTime: String, endTime: String, onTap: (() -> Void)? = nil) -> WorkScheduleTicket {
         make(.vacation(startTime: startTime, endTime: endTime), onTap: onTap)
     }
+    
+    static func publicHoliday(onTap: (() -> Void)? = nil) -> WorkScheduleTicket {
+        make(.publicHoliday, onTap: onTap)
+    }
 
     private static func make(_ type: WorkScheduleType, onTap: (() -> Void)?) -> WorkScheduleTicket {
         let card = WorkScheduleTicket(type: type)

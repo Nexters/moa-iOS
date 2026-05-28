@@ -264,6 +264,32 @@ extension HistoryViewController: WorkdayDetailViewDelegate {
     func workdayDetailViewDidTapPaydayTicket(_ view: WorkdayDetailView) {
         presentPaydayBottomSheet()
     }
+    
+    func workdayDetailViewDidTapPublicHoliday(
+            _ view: WorkdayDetailView,
+            schedule: CalendarScheduleEntity
+        ) {
+
+            var holidaySchedule = CalendarScheduleEntity(
+                date: schedule.date,
+                contentType: .none,
+                status: schedule.status,
+                events: schedule.events,
+                dailyPay: schedule.dailyPay,
+                clockInTime: nil,
+                clockOutTime: nil,
+                isToday: schedule.isToday,
+                isSelected: schedule.isSelected,
+                isCurrentMonth: schedule.isCurrentMonth
+            )
+
+            coordinatorDelegate?.historyViewControllerDidTapEdit(
+                self,
+                schedule: holidaySchedule,
+                selectedDate: schedule.date,
+                joinedAt: currentJoinedAt
+            )
+        }
 }
 
 // MARK: - PaydaySelectionBottomSheetDelegate
