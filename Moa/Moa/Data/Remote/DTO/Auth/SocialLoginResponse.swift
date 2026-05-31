@@ -8,9 +8,13 @@
 import Foundation
 
 struct SocialLoginResponse: Decodable {
+    let userId: Int
     let accessToken: String
     
     func toDomain() -> SocialLoginEntity {
-        .init(accessToken: accessToken)
+        .init(
+            userId: userId,
+            accessToken: accessToken
+        )
     }
 }

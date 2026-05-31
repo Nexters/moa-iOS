@@ -432,7 +432,7 @@ extension WorkViewModel {
         Task {
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             let isGranted = settings.authorizationStatus == .authorized
-            Analytics.identify(.notificationPermission(isGranted))
+            Analytics.setPersonProperties(.notificationPermission(isGranted))
         }
     }
 }
