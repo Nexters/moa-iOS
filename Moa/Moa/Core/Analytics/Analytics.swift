@@ -17,11 +17,19 @@ enum Analytics {
         PostHogSDK.shared.capture(event.name, properties: event.properties)
     }
     
-    static func identify(_ userProperty: AnalyticsUserProperty) {
+    static func identify(userId: String) {
         #if DEBUG
-        print("📈 [Analytics]\n- identify: \(userProperty)")
+        print("📈 [Analytics]\n- identify: \(userId)")
         #endif
         
+        PostHogSDK.shared.identify(userId)
+    }
+
+    static func setPersonProperties(_ userProperty: AnalyticsUserProperty) {
+        #if DEBUG
+        print("📈 [Analytics]\n- setPersonProperties: \(userProperty)")
+        #endif
+
         PostHogSDK.shared.setPersonProperties(userPropertiesToSet: userProperty.properties)
     }
 }

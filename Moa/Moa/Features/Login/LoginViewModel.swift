@@ -60,13 +60,11 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
             guard let self else { return }
             let fcmToken = AuthSessionManager.shared.currentFcmToken()
             do {
-                _ = try await self.authUsecase.loginWithKakaoTalk(
+                let entity = try await self.authUsecase.loginWithKakaoTalk(
                     idToken: idToken,
                     fcmDeviceToken: fcmToken
                 )
-                await sendFcmTokenIfAvailable()
-                trackLoginSuccess(oauthtype: .kakao)
-                await MainActor.run { self.send(.loginSucceed) }
+                await handleLoginSuccess(entity: entity, oauthtype: .kakao)
             } catch {
                 print("로그인 요청 실패: \(error.localizedDescription)")
             }
@@ -78,16 +76,11 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
             guard let self else { return }
             let fcmToken = AuthSessionManager.shared.currentFcmToken()
             do {
-                let _ = try await self.authUsecase.loginWithApple(
+                let entity = try await self.authUsecase.loginWithApple(
                     idToken: idToken,
                     fcmDeviceToken: fcmToken
                 )
-                
-                await sendFcmTokenIfAvailable()
-                trackLoginSuccess(oauthtype: .apple)
-                await MainActor.run {
-                    self.send(.loginSucceed)
-                }
+                await handleLoginSuccess(entity: entity, oauthtype: .apple)
             } catch {
                 print("로그인 요청 실패: \(error.localizedDescription)")
             }
@@ -112,7 +105,10 @@ final class LoginViewModel: BaseViewModel<LoginOutput> {
         }
     }
     
-    private func trackLoginSuccess(oauthtype: AccountProvider) {
+    private func handleLoginSuccess(entity: SocialLoginEntity, oauthtype: AccountProvider) async {
+        Analytics.identify(userId: String(entity.userId))
+        await sendFcmTokenIfAvailable()
         Analytics.track(.loginButtonClicked(oauthtype: oauthtype))
+        await MainActor.run { send(.loginSucceed) }
     }
 }

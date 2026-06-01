@@ -53,19 +53,29 @@ final class LogoImageGuideView: UIView {
         setup()
     }
 
+    private var lottieTopConstraint: Constraint?
+
     private func setup() {
         contentStack.addArrangedSubview(logoImageView)
         contentStack.addArrangedSubview(descriptionLabel)
         addSubViews([lottieView, contentStack])
 
         lottieView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            lottieTopConstraint = $0.top.equalToSuperview().constraint
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(334)
         }
 
         contentStack.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(40)
         }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let safeTop = window?.safeAreaInsets.top ?? 44
+        lottieTopConstraint?.update(offset: max(0, 80 - safeTop))
     }
 
     func play() {

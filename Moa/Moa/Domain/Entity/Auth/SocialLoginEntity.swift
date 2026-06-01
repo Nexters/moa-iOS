@@ -8,5 +8,6 @@
 import Foundation
 
 struct SocialLoginEntity {
+    let userId: Int
     let accessToken: String
 }
