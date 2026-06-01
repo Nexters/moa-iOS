@@ -117,7 +117,7 @@ final class CalendarDayCell: UICollectionViewCell {
 
         // 인디케이터 높이 결정
         //   월급/휴가 레이블이 있으면 18pt, 근무 점이면 14pt, 없으면 0
-        let hasLabel = schedule.events.contains(.payday) || schedule.contentType == .vacation
+        let hasLabel = schedule.events.contains(.payday) || schedule.events.contains(.publicHoliday) || schedule.contentType == .vacation
         let hasDot   = schedule.contentType == .work && schedule.status != .none
         if hasLabel {
             setIndicatorHeight(18)
