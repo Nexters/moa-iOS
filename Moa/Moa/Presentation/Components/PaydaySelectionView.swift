@@ -28,7 +28,7 @@ final class PaydaySelectionView: UIView {
     // MARK: - Constants
     
     private enum Constants {
-        static let range = 1...28
+        static let range = 1...31
         static let cellHeight: CGFloat = 44
         static let visibleRowCount: CGFloat = 5
     }

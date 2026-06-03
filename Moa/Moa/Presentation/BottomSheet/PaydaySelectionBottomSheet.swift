@@ -39,7 +39,38 @@ final class PaydaySelectionBottomSheet: UIViewController {
         )
         return label
     }()
-    
+
+    private let hintIconView: UIImageView = {
+        let iv = UIImageView(image: UIImage(resource: .Icon.iconInfo))
+        iv.contentMode = .scaleAspectFit
+        iv.snp.makeConstraints { make in
+            make.size.equalTo(16)
+        }
+        return iv
+    }()
+
+    private let hintLabel: StyledLabel = {
+        let label = StyledLabel()
+        return label
+    }()
+
+    private lazy var hintRow: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [hintIconView, hintLabel])
+        stack.axis = .horizontal
+        stack.spacing = 4
+        stack.alignment = .center
+        stack.isHidden = true
+        return stack
+    }()
+
+    private lazy var headerStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [titleLabel, hintRow])
+        stack.axis = .vertical
+        stack.spacing = 4
+        stack.alignment = .leading
+        return stack
+    }()
+
     private lazy var paydaySelectionView: PaydaySelectionView = {
         let view = PaydaySelectionView(initialPayday: initialPayday)
         view.delegate = self
@@ -64,8 +95,8 @@ final class PaydaySelectionBottomSheet: UIViewController {
             make.edges.equalToSuperview()
         }
 
-        contentView.addSubview(titleLabel)
-        titleLabel.snp.makeConstraints { make in
+        contentView.addSubview(headerStack)
+        headerStack.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
         }
@@ -76,10 +107,10 @@ final class PaydaySelectionBottomSheet: UIViewController {
             make.bottom.equalToSuperview().inset(24)
             make.height.equalTo(64)
         }
-        
+
         contentView.addSubview(paydaySelectionView)
         paydaySelectionView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(16)
+            make.top.equalTo(headerStack.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
             make.bottom.equalTo(confirmButton.snp.top).offset(-20)
         }
@@ -116,8 +147,23 @@ extension PaydaySelectionBottomSheet: PaydaySelectionViewDelegate {
     func paydaySelectionView(_ picker: PaydaySelectionView, didConfirmPayday payday: Int) {
         delegate?.paydaySelectionBottomSheet(self, didTapConfirmButton: payday)
     }
-    
+
     func paydaySelectionView(_ picker: PaydaySelectionView, didUpdatePayday payday: Int) {
-        
+        switch payday {
+        case 29, 30:
+            hintLabel.setText(
+                "해당 날짜가 없는 달에는 말일이 월급일로 설정돼요",
+                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
+            )
+            hintRow.isHidden = false
+        case 31:
+            hintLabel.setText(
+                "매 달 말일을 월급일로 설정할게요",
+                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
+            )
+            hintRow.isHidden = false
+        default:
+            hintRow.isHidden = true
+        }
     }
 }
