@@ -5,8 +5,6 @@
 //  Created by 정도현 on 3/17/26.
 //
 
-import UIKit
-
 // MARK: - WorkScheduleType
 
 enum WorkScheduleType {
@@ -39,19 +37,6 @@ enum WorkScheduleType {
              .vacation(let s, let e): return "\(s) - \(e)"
         case .payday(_, let salary):  return "\(salary)원"
         case .publicHoliday: return "근무 일정 없음"
-        }
-    }
-
-    var mainColor: UIColor {
-        return AppColor.IconAndText.highEmphasis
-    }
-
-    var iconImage: UIImage? {
-        switch self {
-        case .worked:    return UIImage(resource: .Icon.iconTicketWorked)
-        case .scheduled: return UIImage(resource: .Icon.iconTicketScheduled)
-        case .payday:    return UIImage(resource: .Icon.iconTicketPayday)
-        case .vacation, .publicHoliday:  return UIImage(resource: .Icon.iconTicketVacation)
         }
     }
 }
