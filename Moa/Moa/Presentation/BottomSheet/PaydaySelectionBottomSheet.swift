@@ -37,6 +37,7 @@ final class PaydaySelectionBottomSheet: UIViewController {
                 color: AppColor.IconAndText.highEmphasis
             )
         )
+        label.setContentHuggingPriority(.required, for: .vertical)
         return label
     }()
 
@@ -51,6 +52,8 @@ final class PaydaySelectionBottomSheet: UIViewController {
 
     private let hintLabel: StyledLabel = {
         let label = StyledLabel()
+        label.numberOfLines = 0
+        label.setContentHuggingPriority(.required, for: .vertical)
         return label
     }()
 
@@ -60,20 +63,23 @@ final class PaydaySelectionBottomSheet: UIViewController {
         stack.spacing = 4
         stack.alignment = .center
         stack.isHidden = true
+        stack.setContentHuggingPriority(.required, for: .vertical)
         return stack
     }()
 
     private lazy var headerStack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [titleLabel, hintRow])
         stack.axis = .vertical
-        stack.spacing = 4
+        stack.spacing = -8.5
         stack.alignment = .leading
+        stack.setContentHuggingPriority(.required, for: .vertical)
         return stack
     }()
 
     private lazy var paydaySelectionView: PaydaySelectionView = {
         let view = PaydaySelectionView(initialPayday: initialPayday)
         view.delegate = self
+        view.setContentHuggingPriority(.required, for: .vertical)
         return view
     }()
     
@@ -82,42 +88,40 @@ final class PaydaySelectionBottomSheet: UIViewController {
         btn.setTitle("확인", for: .normal)
         btn.applyStyle(.primary())
         btn.addTarget(self, action: #selector(confirmButtonTapped), for: .touchUpInside)
+        btn.setContentHuggingPriority(.required, for: .vertical)
         return btn
+    }()
+
+    private lazy var mainStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [headerStack, paydaySelectionView, confirmButton])
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 0
+        return stack
     }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let contentView = UIView()
-        contentView.backgroundColor = .clear
-        view.addSubview(contentView)
-        contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        contentView.addSubview(headerStack)
-        headerStack.snp.makeConstraints { make in
+        view.addSubview(mainStackView)
+        mainStackView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
+            make.bottom.equalToSuperview().inset(24)
         }
 
-        contentView.addSubview(confirmButton)
+        mainStackView.setCustomSpacing(16, after: headerStack)
+        mainStackView.setCustomSpacing(20, after: paydaySelectionView)
+
         confirmButton.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.bottom.equalToSuperview().inset(24)
             make.height.equalTo(64)
         }
 
-        contentView.addSubview(paydaySelectionView)
-        paydaySelectionView.snp.makeConstraints { make in
-            make.top.equalTo(headerStack.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(AppSpacing.screenHorizontal)
-            make.bottom.equalTo(confirmButton.snp.top).offset(-20)
-        }
-
         view.layoutIfNeeded()
+        updateHintRow(for: initialPayday)
     }
-    
+
     // MARK: - Init
     
     init(initialPayday: Int) {
@@ -128,7 +132,42 @@ final class PaydaySelectionBottomSheet: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+    private func updateHintRow(for payday: Int) {
+        let shouldHide: Bool
+        switch payday {
+        case 29, 30:
+            hintLabel.setText(
+                "해당 날짜가 없는 달에는 말일이 월급일로 설정돼요",
+                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
+            )
+            shouldHide = false
+        case 31:
+            hintLabel.setText(
+                "매 달 말일을 월급일로 설정할게요",
+                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
+            )
+            shouldHide = false
+        default:
+            shouldHide = true
+        }
+
+        hintRow.isHidden = shouldHide
+        
+        // 힌트가 있을 때는 이미 paydaySelectionView 내부에 16px 여백이 있으므로 
+        // mainStackView의 여백을 0으로 줄여 중첩을 방지
+        mainStackView.setCustomSpacing(shouldHide ? 16 : 0, after: headerStack)
+        
+        mainStackView.layoutIfNeeded()
+        view.layoutIfNeeded()
+        
+        if let bottomSheet = parent as? BottomSheetViewController {
+            bottomSheet.view.setNeedsLayout()
+            UIView.animate(withDuration: 0.25) {
+                bottomSheet.view.layoutIfNeeded()
+            }
+        }
+    }
+
     @objc private func confirmButtonTapped() {
         let selected = paydaySelectionView.selectedPayday
         delegate?.paydaySelectionBottomSheet(self, didTapConfirmButton: selected)
@@ -149,21 +188,6 @@ extension PaydaySelectionBottomSheet: PaydaySelectionViewDelegate {
     }
 
     func paydaySelectionView(_ picker: PaydaySelectionView, didUpdatePayday payday: Int) {
-        switch payday {
-        case 29, 30:
-            hintLabel.setText(
-                "해당 날짜가 없는 달에는 말일이 월급일로 설정돼요",
-                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
-            )
-            hintRow.isHidden = false
-        case 31:
-            hintLabel.setText(
-                "매 달 말일을 월급일로 설정할게요",
-                style: .init(typography: AppTypography.b2_500, color: AppColor.IconAndText.green)
-            )
-            hintRow.isHidden = false
-        default:
-            hintRow.isHidden = true
-        }
+        updateHintRow(for: payday)
     }
 }

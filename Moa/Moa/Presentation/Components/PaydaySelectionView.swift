@@ -59,13 +59,6 @@ final class PaydaySelectionView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        wheelPicker.setPayday(to: selectedPayday)
-        
-    }
-    
     // MARK: - Setup
     
     private func setupViews() {
