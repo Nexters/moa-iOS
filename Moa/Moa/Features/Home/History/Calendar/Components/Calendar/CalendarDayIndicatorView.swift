@@ -65,16 +65,23 @@ final class CalendarDayIndicatorView: UIView {
         reset()
         guard let schedule else { return }
 
-        let hasPayday  = schedule.events.contains(.payday)
-        let isVacation = schedule.contentType == .vacation
-        let isWork     = schedule.contentType == .work
+        let hasPayday   = schedule.events.contains(.payday)
+        let hasHoliday  = schedule.events.contains(.publicHoliday)
+        let isVacation  = schedule.contentType == .vacation
+        let isWork      = schedule.contentType == .work
 
         if hasPayday && isVacation {
-            showDualLabel(primary: "월급", secondary: "휴가")
+            showDualLabel(primary: "월급", secondary: "연차")
+        } else if hasPayday && hasHoliday {
+            showDualLabel(primary: "월급", secondary: "공휴일")
         } else if hasPayday {
             showSingleLabel("월급", color: AppColor.IconAndText.green)
+        } else if hasHoliday && isVacation {
+            showSingleLabel("공휴일", color: AppColor.IconAndText.mediumEmphasis)
         } else if isVacation {
-            showSingleLabel("휴가", color: AppColor.IconAndText.mediumEmphasis)
+            showSingleLabel("연차", color: AppColor.IconAndText.mediumEmphasis)
+        } else if hasHoliday {
+            showSingleLabel("공휴일", color: AppColor.IconAndText.mediumEmphasis)
         } else if isWork {
             switch schedule.status {
             case .completed:
