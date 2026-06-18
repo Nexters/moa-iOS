@@ -171,16 +171,7 @@ final class BottomSheetViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        let targetSize = CGSize(
-            width: view.bounds.width,
-            height: UIView.layoutFittingCompressedSize.height
-        )
-        
-        let contentHeight = contentViewController.view.systemLayoutSizeFitting(
-            targetSize,
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        ).height
+        let contentHeight = contentViewController.preferredHeight
         
         let totalHeight = contentHeight
             + configuration.handleTopPadding
@@ -193,7 +184,6 @@ final class BottomSheetViewController: UIViewController {
         }
         
         containerViewHeightConstraint?.update(offset: totalHeight)
-        containerViewBottomConstraint?.update(offset: totalHeight)
         view.layoutIfNeeded()
     }
     

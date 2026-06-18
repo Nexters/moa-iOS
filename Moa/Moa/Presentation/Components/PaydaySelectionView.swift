@@ -28,7 +28,7 @@ final class PaydaySelectionView: UIView {
     // MARK: - Constants
     
     private enum Constants {
-        static let range = 1...28
+        static let range = 1...31
         static let cellHeight: CGFloat = 44
         static let visibleRowCount: CGFloat = 5
     }
@@ -57,13 +57,6 @@ final class PaydaySelectionView: UIView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        wheelPicker.setPayday(to: selectedPayday)
-        
     }
     
     // MARK: - Setup
