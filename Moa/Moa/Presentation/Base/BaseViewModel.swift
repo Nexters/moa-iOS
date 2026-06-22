@@ -14,4 +14,6 @@ class BaseViewModel<Output> {
     func send(_ output: Output) {
         outputSubject.send(output)
     }
+
+    deinit {}
 }
